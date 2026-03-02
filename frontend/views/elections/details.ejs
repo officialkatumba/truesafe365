@@ -1,0 +1,245 @@
+<%- include('../partials/header') %> <%- include('../partials/navbar') %>
+
+<div class="main-wrapper">
+  <div class="content container py-4">
+    <div class="election-details-container">
+      <!-- Election Header -->
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0">
+          Election #<%= election.electionNumber %> (<%=
+          election.type.toUpperCase() %>)
+        </h3>
+        <span class="badge text-bg-info"
+          ><%= election.electionStatus.toUpperCase() %></span
+        >
+      </div>
+
+      <!-- Total Votes + Rejections count -->
+      <div class="mb-4 text-center">
+        <span class="badge bg-warning text-dark fs-5 p-3 shadow-sm">
+          🗳️ Total Submissions: <strong><%= totalVoteAndRejection %></strong>
+        </span>
+      </div>
+
+      <!-- Timer -->
+      <div class="timer-container text-center mb-4">
+        <div class="timer-label" id="timerLabel">TIME REMAINING</div>
+        <div class="timer" id="electionTimer">00:00:00:00</div>
+        <div class="timer-meta mt-1">
+          <small
+            ><strong>Start:</strong> <%= new
+            Date(election.startDate).toLocaleString() %> |
+            <strong>End:</strong> <%= new
+            Date(election.endDate).toLocaleString() %></small
+          >
+        </div>
+      </div>
+
+      <hr />
+
+      <!-- Candidate Section -->
+      <h4 class="text-center mb-4 fw-bold">🗳️ Candidate</h4>
+
+      <div class="d-flex justify-content-center">
+        <div
+          class="candidate-item text-center p-4 shadow-sm border rounded"
+          style="max-width: 600px; width: 100%"
+        >
+          <img
+            src="<%= election.candidates[0].profileImage || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png' %>"
+            class="img-fluid rounded-circle mb-3"
+            style="width: 150px; height: 150px; object-fit: cover"
+            alt="Candidate"
+          />
+
+          <h5 class="fw-bold"><%= election.candidates[0].name %></h5>
+          <p class="text-muted fst-italic mb-2">
+            Will Run In: <%= election.willRunIn || 'N/A' %>
+          </p>
+          <p class="text-muted fst-italic mb-3">
+            Party: <%= election.candidates[0].party || 'N/A' %>
+          </p>
+
+          <!-- Manifesto -->
+          <!-- <h6 class="mt-4 mb-2 text-decoration-underline">
+            A Summary Manifesto
+          </h6>
+          <% const bio = election.candidates[0].bio || ""; %>
+          <div class="manifesto-content">
+            <%- bio.replace(/\n{2,}/g, '<br /><br />').replace(/\n/g, '<br />')
+            %>
+          </div> -->
+
+          <!-- Manifesto -->
+          <h6 class="mt-4 mb-2 text-decoration-underline">
+            A Summary Manifesto
+          </h6>
+          <div class="manifesto-container">
+            <div class="manifesto-content" id="manifestoContent">
+              <%- (election.candidates[0].bio || "").replace(/\n{2,}/g, '<br /><br />').replace(/\n/g,
+              '<br />') %>
+            </div>
+            <button class="manifesto-toggle-btn" id="manifestoToggle">
+              Read More <i class="fas fa-chevron-down"></i>
+            </button>
+          </div>
+
+          <!-- Voting Question -->
+          <% if (!user && election.electionStatus === "ongoing") { %>
+          <div class="voting-question text-center mt-4 mb-3">
+            <h5 class="fw-bold mb-3">
+              Are you supporting <%= election.candidates[0].name %> For 2026
+              Elections?
+            </h5>
+            <div class="d-flex gap-2 justify-content-center">
+              <a
+                href="/api/votes/<%= election._id %>/vote/<%= election.candidates[0]._id %>"
+                class="btn btn-success btn-sm"
+              >
+                <i class="fas fa-check-circle"></i> Yes
+              </a>
+              <a
+                href="/api/votes/<%= election._id %>/reject"
+                class="btn btn-danger btn-sm"
+              >
+                <i class="fas fa-times-circle"></i> No
+              </a>
+            </div>
+          </div>
+          <% } %>
+
+          <!-- Voting Status -->
+          <% const stats = voteMap[election.candidates[0]._id.toString()] || {
+          votes: 0, voteLost: 0 }; const percentage = (stats.votes +
+          stats.voteLost) > 0 ? ((stats.votes / (stats.votes + stats.voteLost))
+          * 100).toFixed(1) : null; %>
+          <div class="vote-status mt-3 mb-3 small text-muted">
+            ✅ Yes: <strong><%= stats.votes %></strong> | ❌ No:
+            <strong><%= stats.voteLost %></strong> <% if (percentage !== null) {
+            %> | 📊 Approval: <strong><%= percentage %>%</strong>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <%- include('../partials/footer') %>
+</div>
+
+<style>
+  .manifesto-content {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background-color: #f8f9fa;
+    padding: 0.5rem 1rem;
+    white-space: pre-wrap;
+    text-align: left;
+  }
+
+  .vote-status {
+    font-size: 0.9rem;
+    color: #6c757d;
+  }
+
+  .btn-sm i {
+    margin-right: 5px;
+  }
+
+  .timer-container {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 5px solid #0d6efd;
+  }
+
+  .timer-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    letter-spacing: 1px;
+  }
+
+  .timer {
+    font-size: 1.8rem;
+    font-weight: bold;
+    font-family: "Courier New", monospace;
+    color: #343a40;
+  }
+
+  .timer-meta {
+    color: #6c757d;
+  }
+</style>
+
+<script>
+  const startDate = new Date("<%= election.startDate %>");
+  const endDate = new Date("<%= election.endDate %>");
+  const timerElement = document.getElementById("electionTimer");
+  const timerLabel = document.getElementById("timerLabel");
+  let timerInterval;
+
+  function updateTimer() {
+    const now = new Date();
+    let diff, label;
+
+    if (now < startDate) {
+      diff = startDate - now;
+      label = "ELECTION STARTS IN";
+    } else if (now < endDate) {
+      diff = endDate - now;
+      label = "TIME REMAINING";
+    } else {
+      diff = 0;
+      label = "ELECTION ENDED";
+      clearInterval(timerInterval);
+      timerElement.textContent = "00:00:00:00";
+      timerLabel.textContent = label;
+      return;
+    }
+
+    timerLabel.textContent = label;
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+    timerElement.textContent = `${days.toString().padStart(2, "0")}:${hours
+      .toString()
+      .padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
+  }
+
+  updateTimer();
+  if (new Date() < endDate) {
+    timerInterval = setInterval(updateTimer, 1000);
+  } else {
+    timerLabel.textContent = "ELECTION ENDED";
+    timerElement.textContent = "00:00:00:00";
+  }
+</script>
+
+<script>
+  // Manifesto toggle functionality
+  const manifestoContent = document.getElementById("manifestoContent");
+  const manifestoToggle = document.getElementById("manifestoToggle");
+
+  // Only show toggle if content is long enough to need truncation
+  if (manifestoContent.scrollHeight > manifestoContent.clientHeight) {
+    manifestoToggle.style.display = "inline-flex";
+  } else {
+    manifestoToggle.style.display = "none";
+  }
+
+  manifestoToggle.addEventListener("click", () => {
+    manifestoContent.classList.toggle("expanded");
+    manifestoToggle.classList.toggle("expanded");
+
+    if (manifestoContent.classList.contains("expanded")) {
+      manifestoToggle.innerHTML = 'Read Less <i class="fas fa-chevron-up"></i>';
+    } else {
+      manifestoToggle.innerHTML =
+        'Read More <i class="fas fa-chevron-down"></i>';
+    }
+  });
+</script>

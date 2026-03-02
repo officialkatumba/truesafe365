@@ -1,0 +1,76 @@
+# Dependency directories
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# IDE specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing and coverage
+coverage/
+*.lcov
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Process and log directories
+pids/
+logs/
+
+# Database files
+*.sqlite
+*.sqlite3
+*.db
+
+# Temporary and upload directories
+uploads/
+tmp/
+
+# PDF files and directories
+backend/pdfs/
+frontend/public/pdfs/
+*.pdf
+
+# Package manager specific
+.pnpm-store/
+.turbo/
+.vite/
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# Cache directories
+.cache/
+
+#Key file
+backend/key.jsonbackend/key.json
+backend/key.json
+
+#seed file
+backend/seed-admins.js

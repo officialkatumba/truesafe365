@@ -1,0 +1,44 @@
+<%- include('partials/header') %> <%- include('partials/navbar') %>
+
+<div class="content container py-5">
+  <div class="form-container mx-auto" style="max-width: 500px">
+    <h2 class="text-center mb-4">Login</h2>
+
+    <form action="/api/users/login" method="POST">
+      <div class="mb-3">
+        <label for="email" class="form-label">Email *</label>
+        <input
+          type="email"
+          class="form-control"
+          id="email"
+          name="email"
+          required
+        />
+      </div>
+
+      <div class="mb-3">
+        <label for="password" class="form-label">Password *</label>
+        <input
+          type="password"
+          class="form-control"
+          id="password"
+          name="password"
+          required
+        />
+        <div class="mt-1 text-end">
+          <a href="/users/forgot-password" class="small text-decoration-none">
+            Forgot Password?
+          </a>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100">Login</button>
+
+      <div class="text-center mt-3">
+        <a href="/api/candidates/register">Register as a Candidate</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
