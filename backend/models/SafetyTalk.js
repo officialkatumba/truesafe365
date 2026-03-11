@@ -5,17 +5,15 @@ const safetyTalkSchema = new mongoose.Schema(
   {
     talkNumber: { type: Number, unique: true },
 
-    // Core relationship
-    worksite: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Worksite",
-      required: true,
-    },
-    shift: {
-      type: String,
-      enum: ["morning", "afternoon", "night", "all"],
-      default: "all",
-    },
+    // Can target multiple work areas
+    targetWorkAreas: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "WorkArea", required: true },
+    ],
+
+    // Shift targeted
+    targetShifts: [
+      { type: String, enum: ["morning", "afternoon", "night", "all"] },
+    ],
 
     // Who conducted/created it
     conductedBy: { type: mongoose.Schema.Types.ObjectId, ref: "SafetyOfficer" },
@@ -26,12 +24,10 @@ const safetyTalkSchema = new mongoose.Schema(
     aiModel: { type: String, default: "gpt-4" },
     generationDate: { type: Date, default: Date.now },
 
-    // Talk content (AI-generated)
+    // Talk content
     title: { type: String, required: true },
     topic: String,
-
-    // The full AI-generated content (stored as markdown/HTML)
-    content: { type: String, required: true },
+    content: { type: String, required: true }, // Full AI-generated content
 
     // Structured sections for easier display
     sections: {
@@ -39,6 +35,7 @@ const safetyTalkSchema = new mongoose.Schema(
       mainPoints: [String],
       discussionQuestions: [String],
       workerEngagement: [String],
+      realLifeExamples: [String],
       keyTakeaways: [String],
       closing: String,
     },
@@ -51,31 +48,24 @@ const safetyTalkSchema = new mongoose.Schema(
       recentNearMisses: [
         { type: mongoose.Schema.Types.ObjectId, ref: "Incident" },
       ],
-      identifiedHazards: [
-        {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Worksite.identifiedHazards",
-        },
-      ],
+      identifiedHazards: [{ type: mongoose.Schema.Types.ObjectId }], // References to hazard IDs
       riskAssessments: [
-        {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Worksite.riskAssessments",
-        },
+        { type: mongoose.Schema.Types.ObjectId, ref: "RiskAssessment" },
       ],
 
       // AI's reasoning for generating this talk
       aiReasoning: String,
 
-      // Context used from site history
+      // Context used
       siteContextUsed: {
-        initialComments: Boolean,
-        knownChallenges: Boolean,
-        pastIncidents: Boolean,
+        workAreaConditions: Boolean,
+        recentEvents: Boolean,
+        seasonalFactors: Boolean,
+        workerFeedback: Boolean,
       },
     },
 
-    // Site-specific context that influenced the talk (from siteHistory)
+    // Site-specific context that influenced the talk
     siteContextInfluences: [
       {
         factor: String,
@@ -83,22 +73,29 @@ const safetyTalkSchema = new mongoose.Schema(
       },
     ],
 
-    // When and where it was used
+    // Schedule
     date: { type: Date, default: Date.now },
     duration: Number, // in minutes
+    scheduledFor: Date,
+    scheduledBy: { type: mongoose.Schema.Types.ObjectId, ref: "SafetyOfficer" },
 
-    // Attendance (optional)
-    attendees: [
-      {
-        name: String, // Anonymous if worker
-        userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        shift: String,
-        signature: String,
-        attendedAt: { type: Date, default: Date.now },
-        feedback: String,
-      },
-    ],
-    attendeeCount: { type: Number, default: 0 },
+    // Attendance
+    attendance: {
+      attendees: [
+        {
+          userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+          name: String,
+          shift: String,
+          workArea: { type: mongoose.Schema.Types.ObjectId, ref: "WorkArea" },
+          signature: String,
+          attendedAt: { type: Date, default: Date.now },
+          feedback: String,
+        },
+      ],
+      anonymousCount: { type: Number, default: 0 },
+      totalAttendees: { type: Number, default: 0 },
+      workAreasRepresented: [String],
+    },
 
     // Worker feedback (for continuous improvement)
     feedback: [
@@ -109,6 +106,7 @@ const safetyTalkSchema = new mongoose.Schema(
         comment: String,
         topicsRequested: [String],
         date: { type: Date, default: Date.now },
+        helpful: Boolean,
       },
     ],
 
@@ -120,6 +118,16 @@ const safetyTalkSchema = new mongoose.Schema(
       {
         item: String,
         context: String,
+        emphasized: { type: Boolean, default: false },
+      },
+    ],
+
+    // Hazards addressed
+    hazardsAddressed: [
+      {
+        hazard: String,
+        riskLevel: String,
+        controlsDiscussed: [String],
       },
     ],
 
@@ -129,19 +137,45 @@ const safetyTalkSchema = new mongoose.Schema(
         language: String,
         title: String,
         content: String,
+        translatedBy: { type: String, enum: ["ai", "human"] },
+      },
+    ],
+
+    // Materials
+    materials: [
+      {
+        type: {
+          type: String,
+          enum: ["handout", "poster", "presentation", "video"],
+        },
+        url: String,
+        description: String,
       },
     ],
 
     // Status
     status: {
       type: String,
-      enum: ["draft", "scheduled", "published", "conducted", "archived"],
+      enum: [
+        "draft",
+        "scheduled",
+        "published",
+        "conducted",
+        "cancelled",
+        "archived",
+      ],
       default: "draft",
     },
 
-    // Scheduling
-    scheduledFor: Date,
-    scheduledBy: { type: mongoose.Schema.Types.ObjectId, ref: "SafetyOfficer" },
+    // Approval workflow
+    requiresApproval: { type: Boolean, default: false },
+    approvalStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected", "not_required"],
+      default: "not_required",
+    },
+    approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "SafetyOfficer" },
+    approvedAt: Date,
 
     // Effectiveness rating (by safety officer)
     effectiveness: {
@@ -152,9 +186,10 @@ const safetyTalkSchema = new mongoose.Schema(
       },
       reviewedAt: Date,
       comments: String,
+      workerEngagement: { type: String, enum: ["low", "medium", "high"] },
     },
 
-    // Version tracking (for updates)
+    // Version tracking
     version: { type: Number, default: 1 },
     previousVersions: [
       {
@@ -164,6 +199,15 @@ const safetyTalkSchema = new mongoose.Schema(
         reason: String,
       },
     ],
+
+    // Reusable template
+    isTemplate: { type: Boolean, default: false },
+    templateName: String,
+    templateCategory: String,
+
+    // Metadata
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "SafetyOfficer" },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "SafetyOfficer" },
   },
   { timestamps: true },
 );
@@ -177,7 +221,7 @@ safetyTalkSchema.pre("save", async function (next) {
         { $inc: { seq: 1 } },
         { new: true, upsert: true },
       );
-      this.talkNumber = counter.seq + 5000; // Start from 5000
+      this.talkNumber = counter.seq + 5000;
     } catch (err) {
       return next(err);
     }
@@ -185,10 +229,10 @@ safetyTalkSchema.pre("save", async function (next) {
   next();
 });
 
-// Method to add attendance
+// Method to add attendee
 safetyTalkSchema.methods.addAttendee = function (attendeeData) {
-  this.attendees.push(attendeeData);
-  this.attendeeCount = this.attendees.length;
+  this.attendance.attendees.push(attendeeData);
+  this.attendance.totalAttendees = this.attendance.attendees.length;
   return this.save();
 };
 

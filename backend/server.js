@@ -149,6 +149,191 @@
 // const PORT = process.env.PORT || 5000;
 // app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
 
+// // -------------------- IMPORTS --------------------
+// const express = require("express");
+// const mongoose = require("mongoose");
+// const dotenv = require("dotenv");
+// const path = require("path");
+// const session = require("express-session");
+// const passport = require("passport");
+// const LocalStrategy = require("passport-local").Strategy;
+// const flash = require("connect-flash");
+
+// const User = require("./models/User");
+
+// // -------------------- CONFIG --------------------
+// dotenv.config();
+
+// // Connect to MongoDB
+// mongoose
+//   .connect(process.env.MONGO_URI)
+//   .then(() => console.log("✅ MongoDB connected"))
+//   .catch((err) => console.error("❌ MongoDB connection error:", err));
+
+// const app = express();
+
+// // -------------------- SESSION --------------------
+// app.use(
+//   session({
+//     secret: process.env.SESSION_SECRET || "secret",
+//     resave: false,
+//     saveUninitialized: false,
+//     cookie: {
+//       httpOnly: true,
+//       maxAge: 1000 * 60 * 60 * 2, // 2 hours
+//     },
+//   }),
+// );
+
+// // -------------------- FLASH & PASSPORT --------------------
+// app.use(flash());
+// app.use(passport.initialize());
+// app.use(passport.session());
+
+// // Passport config
+// passport.use(
+//   new LocalStrategy({ usernameField: "email" }, User.authenticate()),
+// );
+// passport.serializeUser(User.serializeUser());
+// passport.deserializeUser(User.deserializeUser());
+
+// // -------------------- MIDDLEWARE --------------------
+// app.use(express.json());
+// app.use(express.urlencoded({ extended: true }));
+
+// // -------------------- VIEWS --------------------
+// app.set("view engine", "ejs");
+// app.set("views", path.join(__dirname, "../frontend/views"));
+
+// // -------------------- LOCALS --------------------
+// app.use((req, res, next) => {
+//   res.locals.success = req.flash("success");
+//   res.locals.error = req.flash("error");
+//   res.locals.user = req.user;
+//   next();
+// });
+
+// // -------------------- ROUTES --------------------
+// app.get("/", (req, res) => {
+//   res.render("index", { user: req.user });
+// });
+
+// // Safety Officer routes
+// app.use("/safety-officers", require("./routes/safetyOfficerRoutes"));
+
+// // User routes (API style)
+// app.use("/api/users", require("./routes/usersRoutes"));
+
+// // -------------------- SERVER --------------------
+// const PORT = process.env.PORT || 5000;
+// app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+
+// // -------------------- IMPORTS --------------------
+// const express = require("express");
+// const mongoose = require("mongoose");
+// const dotenv = require("dotenv");
+// const path = require("path");
+// const session = require("express-session");
+// const passport = require("passport");
+// const LocalStrategy = require("passport-local").Strategy;
+// const flash = require("connect-flash");
+
+// const User = require("./models/User");
+
+// // -------------------- CONFIG --------------------
+// dotenv.config();
+
+// // Connect to MongoDB
+// mongoose
+//   .connect(process.env.MONGO_URI)
+//   .then(() => console.log("✅ MongoDB connected"))
+//   .catch((err) => console.error("❌ MongoDB connection error:", err));
+
+// const app = express();
+
+// // -------------------- SESSION --------------------
+// app.use(
+//   session({
+//     secret: process.env.SESSION_SECRET || "secret",
+//     resave: false,
+//     saveUninitialized: false,
+//     cookie: {
+//       httpOnly: true,
+//       maxAge: 1000 * 60 * 60 * 2, // 2 hours
+//     },
+//   }),
+// );
+
+// // -------------------- FLASH & PASSPORT --------------------
+// app.use(flash());
+// app.use(passport.initialize());
+// app.use(passport.session());
+
+// // Passport config
+// passport.use(
+//   new LocalStrategy({ usernameField: "email" }, User.authenticate()),
+// );
+// passport.serializeUser(User.serializeUser());
+// passport.deserializeUser(User.deserializeUser());
+
+// // -------------------- MIDDLEWARE --------------------
+// app.use(express.json());
+// app.use(express.urlencoded({ extended: true }));
+
+// // -------------------- VIEWS --------------------
+// app.set("view engine", "ejs");
+// app.set("views", path.join(__dirname, "../frontend/views"));
+
+// // -------------------- LOCALS --------------------
+// app.use((req, res, next) => {
+//   res.locals.success = req.flash("success");
+//   res.locals.error = req.flash("error");
+//   res.locals.user = req.user;
+//   next();
+// });
+
+// // -------------------- ROUTES --------------------
+// app.get("/", (req, res) => {
+//   res.render("index", { user: req.user });
+// });
+
+// // 🆕 Registration routes (solo & enterprise)
+// app.use("/register", require("./routes/registrationRoutes"));
+
+// // Safety Officer routes (existing)
+// app.use("/safety-officers", require("./routes/safetyOfficerRoutes"));
+
+// // User routes (API style)
+// app.use("/api/users", require("./routes/usersRoutes"));
+
+// // 🆕 Admin routes (enterprise features)
+// app.use("/admin", require("./routes/adminRoutes"));
+
+// // 🆕 Worksite routes
+// app.use("/worksites", require("./routes/worksiteRoutes"));
+
+// // 🆕 Work Area routes
+// app.use("/work-areas", require("./routes/workAreaRoutes"));
+
+// // 🆕 Incident routes
+// app.use("/incidents", require("./routes/incidentRoutes"));
+
+// // 🆕 Risk Assessment routes
+// app.use("/risk-assessments", require("./routes/riskAssessmentRoutes"));
+
+// // 🆕 Safety Talk routes
+// app.use("/safety-talks", require("./routes/safetyTalkRoutes"));
+
+// // 🆕 Permit routes
+// app.use("/permits", require("./routes/permitRoutes"));
+
+// // 🆕 PPE Checklist routes
+// app.use("/ppe", require("./routes/ppeRoutes"));
+
+// // -------------------- SERVER --------------------
+// const PORT = process.env.PORT || 5000;
+// app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+
 // -------------------- IMPORTS --------------------
 const express = require("express");
 const mongoose = require("mongoose");
@@ -218,11 +403,44 @@ app.get("/", (req, res) => {
   res.render("index", { user: req.user });
 });
 
-// Safety Officer routes
+// ✅ DASHBOARD ROUTES - Add this line
+app.use("/dashboard", require("./routes/dashboardRoutes"));
+
+// 🆕 Registration routes (solo & enterprise)
+app.use("/register", require("./routes/registrationRoutes"));
+
+// Safety Officer routes (existing)
 app.use("/safety-officers", require("./routes/safetyOfficerRoutes"));
 
 // User routes (API style)
 app.use("/api/users", require("./routes/usersRoutes"));
+
+// 🆕 Admin routes (enterprise features)
+app.use("/admin", require("./routes/adminRoutes"));
+
+// 🆕 Worksite routes
+app.use("/worksites", require("./routes/worksiteRoutes"));
+
+// 🆕 Work Area routes
+app.use("/work-areas", require("./routes/workAreaRoutes"));
+
+// 🆕 Incident routes
+app.use("/incidents", require("./routes/incidentRoutes"));
+
+// 🆕 Risk Assessment routes
+app.use("/risk-assessments", require("./routes/riskAssessmentRoutes"));
+
+// 🆕 Safety Talk routes
+app.use("/safety-talks", require("./routes/safetyTalkRoutes"));
+
+// 🆕 Permit routes
+app.use("/permits", require("./routes/permitRoutes"));
+
+// 🆕 PPE Checklist routes
+app.use("/ppe", require("./routes/ppeRoutes"));
+
+// Function pages routes (nested under safety-officer in views)
+app.use("/functions", require("./routes/functionRoutes"));
 
 // -------------------- SERVER --------------------
 const PORT = process.env.PORT || 5000;

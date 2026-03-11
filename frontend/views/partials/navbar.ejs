@@ -41,13 +41,20 @@
           <a class="nav-link" href="/">Home</a>
         </li>
         <% if (user) { %>
-          <% if (user.role === 'system_admin') { %>
+          <% if (user.isDualRole) { %>
+            <!-- Solo Practitioner -->
             <li class="nav-item">
-              <a class="nav-link" href="/admin-dashboard">Dashboard</a>
+              <a class="nav-link" href="/dashboard/solo">Dashboard</a>
+            </li>
+          <% } else if (user.role === 'system_admin' && user.accountType === 'enterprise_admin') { %>
+            <!-- Enterprise Admin -->
+            <li class="nav-item">
+              <a class="nav-link" href="/dashboard/admin">Dashboard</a>
             </li>
           <% } else if (user.role === 'safety_officer') { %>
+            <!-- Enterprise Safety Officer -->
             <li class="nav-item">
-              <a class="nav-link" href="/api/safety-officers/dashboard">Dashboard</a>
+              <a class="nav-link" href="/dashboard/officer">Dashboard</a>
             </li>
           <% } %>
           <li class="nav-item">
@@ -61,7 +68,9 @@
             <a class="nav-link" href="/api/users/login">Login</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/safety-officers/register">Register as Officer</a>
+            <a class="nav-link" href="/register/options">
+              <i class="bi bi-person-plus-fill me-1"></i>Register
+            </a>
           </li>
         <% } %>
       </ul>

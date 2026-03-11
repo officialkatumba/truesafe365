@@ -5,12 +5,14 @@ const incidentSchema = new mongoose.Schema(
   {
     incidentNumber: { type: Number, unique: true },
 
-    // Core relationship
-    worksite: {
+    // Core relationship - points to WorkArea
+    workArea: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Worksite",
+      ref: "WorkArea",
       required: true,
     },
+
+    // Shift when incident occurred
     shift: {
       type: String,
       enum: ["morning", "afternoon", "night", "unknown"],
@@ -25,6 +27,7 @@ const incidentSchema = new mongoose.Schema(
     },
     reporterName: { type: String }, // Optional, only if worker chooses to identify
     reportedByUser: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // If logged in
+    reporterContact: String, // Optional contact for follow-up
 
     // Incident details
     type: {
@@ -36,6 +39,7 @@ const incidentSchema = new mongoose.Schema(
         "unsafe_condition",
         "property_damage",
         "environmental",
+        "first_aid",
       ],
       required: true,
     },
@@ -48,14 +52,47 @@ const incidentSchema = new mongoose.Schema(
 
     dateTime: { type: Date, default: Date.now },
     location: String,
-    locationDetails: String, // Specific area within worksite
+    locationDetails: String, // Specific spot within work area
 
     description: { type: String, required: true },
     immediateAction: String,
 
+    // Work type at time of incident
+    workTypeAtTime: {
+      type: String,
+      enum: [
+        "excavation",
+        "foundation",
+        "structural",
+        "masonry",
+        "roofing",
+        "electrical",
+        "plumbing",
+        "hvac",
+        "finishing",
+        "landscaping",
+        "demolition",
+        "painting",
+        "welding",
+        "scaffolding",
+        "general",
+        "unknown",
+      ],
+    },
+
+    // Contractor involved
+    contractor: {
+      name: String,
+      supervisor: String,
+      employeeInvolved: String,
+      contact: String,
+    },
+
     // For AI context - additional notes that help the AI understand the situation
     aiContext: {
       weatherConditions: String,
+      lighting: String,
+      noise: String,
       contributingFactors: String,
       witnessObservations: String,
       reporterComments: String,
@@ -64,12 +101,10 @@ const incidentSchema = new mongoose.Schema(
     // Equipment involved (if any)
     equipmentInvolved: [
       {
-        equipment: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Worksite.equipment",
-        },
+        equipmentId: { type: mongoose.Schema.Types.ObjectId },
         name: String,
         condition: String,
+        wasInspected: Boolean,
       },
     ],
 
@@ -84,9 +119,12 @@ const incidentSchema = new mongoose.Schema(
           bodyPart: String,
           treatmentRequired: String,
           hospitalVisit: Boolean,
+          timeOffWork: Boolean,
+          daysOff: Number,
         },
       ],
       firstAidProvided: Boolean,
+      ambulanceCalled: Boolean,
     },
 
     // For near-misses
@@ -98,7 +136,7 @@ const incidentSchema = new mongoose.Schema(
       {
         url: String,
         type: { type: String, enum: ["image", "video", "document", "audio"] },
-        uploadedBy: String,
+        uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         uploadedAt: { type: Date, default: Date.now },
         description: String,
       },
@@ -115,16 +153,27 @@ const incidentSchema = new mongoose.Schema(
       rootCause: String,
       contributingFactors: [String],
       findings: String,
-      attachments: [String],
+      recommendations: [String],
+      attachments: [
+        {
+          url: String,
+          description: String,
+        },
+      ],
     },
 
     // Corrective actions
     correctiveActions: [
       {
-        action: String,
+        action: { type: String, required: true },
         assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         assignedToName: String,
         deadline: Date,
+        priority: {
+          type: String,
+          enum: ["high", "medium", "low"],
+          default: "medium",
+        },
         completed: { type: Boolean, default: false },
         completedDate: Date,
         completionNotes: String,
@@ -132,6 +181,7 @@ const incidentSchema = new mongoose.Schema(
           type: mongoose.Schema.Types.ObjectId,
           ref: "SafetyOfficer",
         },
+        verifiedAt: Date,
       },
     ],
 
@@ -144,9 +194,21 @@ const incidentSchema = new mongoose.Schema(
         "action_taken",
         "resolved",
         "closed",
+        "rejected",
       ],
       default: "reported",
     },
+
+    // Approval workflow
+    requiresApproval: { type: Boolean, default: false },
+    approvalStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected", "not_required"],
+      default: "not_required",
+    },
+    approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "SafetyOfficer" },
+    approvedAt: Date,
+    approvalComments: String,
 
     // For anonymous reporting
     anonymous: { type: Boolean, default: true },
@@ -159,6 +221,14 @@ const incidentSchema = new mongoose.Schema(
     // Learning points (for safety talks)
     lessonsLearned: String,
     usedInSafetyTalk: { type: Boolean, default: false },
+    safetyTalkGenerated: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "SafetyTalk",
+    },
+
+    // Metadata
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true },
 );
@@ -172,7 +242,7 @@ incidentSchema.pre("save", async function (next) {
         { $inc: { seq: 1 } },
         { new: true, upsert: true },
       );
-      this.incidentNumber = counter.seq + 10000; // Start from 10000
+      this.incidentNumber = counter.seq + 10000;
     } catch (err) {
       return next(err);
     }
@@ -180,21 +250,21 @@ incidentSchema.pre("save", async function (next) {
   next();
 });
 
-// After save, update worksite statistics
+// After save, update work area statistics
 incidentSchema.post("save", async function (doc) {
   try {
-    const Worksite = mongoose.model("Worksite");
-    const worksite = await Worksite.findById(doc.worksite);
+    const WorkArea = mongoose.model("WorkArea");
+    const workArea = await WorkArea.findById(doc.workArea);
 
-    if (worksite) {
+    if (workArea) {
       if (doc.type === "incident") {
-        await worksite.updateStatistics("incident");
+        await workArea.updateStatistics("incident");
       } else if (doc.type === "near_miss") {
-        await worksite.updateStatistics("nearMiss");
+        await workArea.updateStatistics("nearMiss");
       }
     }
   } catch (err) {
-    console.error("Error updating worksite statistics:", err);
+    console.error("Error updating work area statistics:", err);
   }
 });
 

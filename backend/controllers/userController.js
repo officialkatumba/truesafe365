@@ -1,74 +1,14 @@
-const passport = require("passport");
-const crypto = require("crypto");
-const nodemailer = require("nodemailer");
+// const passport = require("passport");
+// const crypto = require("crypto");
+// const nodemailer = require("nodemailer");
 
-const User = require("../models/User");
-const SafetyOfficer = require("../models/SafetyOfficer");
+// const User = require("../models/User");
+// const SafetyOfficer = require("../models/SafetyOfficer");
 
-// Show login form
-exports.showLoginForm = (req, res) => {
-  res.render("login");
-};
-
-// Handle login with role-based redirect
-exports.loginUser = (req, res, next) => {
-  passport.authenticate("local", async (err, user, info) => {
-    if (err) {
-      return next(err);
-    }
-
-    if (!user) {
-      req.flash("error", "Invalid email or password");
-      return res.redirect("/api/users/login");
-    }
-
-    req.logIn(user, async (err) => {
-      if (err) {
-        return next(err);
-      }
-
-      try {
-        if (user.role === "system_admin") {
-          req.flash("success", "Welcome system admin!");
-          return res.redirect("/admin-dashboard");
-        }
-
-        if (user.role === "safety_officer") {
-          const populatedUser = await User.findById(user._id).populate(
-            "safetyOfficer",
-          );
-
-          if (!populatedUser || !populatedUser.safetyOfficer) {
-            req.flash("error", "Safety officer data not found.");
-            return res.redirect("/api/users/login");
-          }
-
-          const name = populatedUser.safetyOfficer.name || populatedUser.email;
-          req.flash("success", `Welcome back, ${name}!`);
-          // FIXED: Removed /api/ from the path
-          return res.redirect("/safety-officers/dashboard");
-        }
-
-        if (user.role === "supervisor") {
-          req.flash("success", "Welcome supervisor!");
-          return res.redirect("/supervisor-dashboard");
-        }
-
-        if (user.role === "worker") {
-          req.flash("success", "Welcome worker!");
-          return res.redirect("/worker-dashboard");
-        }
-
-        req.flash("error", "Access denied: Role not recognized.");
-        return res.redirect("/api/users/login");
-      } catch (error) {
-        console.error("Login error:", error);
-        req.flash("error", "Unexpected error occurred during login.");
-        return res.redirect("/api/users/login");
-      }
-    });
-  })(req, res, next);
-};
+// // Show login form
+// exports.showLoginForm = (req, res) => {
+//   res.render("login");
+// };
 
 // // Handle login with role-based redirect
 // exports.loginUser = (req, res, next) => {
@@ -105,7 +45,8 @@ exports.loginUser = (req, res, next) => {
 
 //           const name = populatedUser.safetyOfficer.name || populatedUser.email;
 //           req.flash("success", `Welcome back, ${name}!`);
-//           return res.redirect("/api/safety-officers/dashboard");
+//           // FIXED: Removed /api/ from the path
+//           return res.redirect("/safety-officers/dashboard");
 //         }
 
 //         if (user.role === "supervisor") {
@@ -128,6 +69,601 @@ exports.loginUser = (req, res, next) => {
 //     });
 //   })(req, res, next);
 // };
+
+// // // Handle login with role-based redirect
+// // exports.loginUser = (req, res, next) => {
+// //   passport.authenticate("local", async (err, user, info) => {
+// //     if (err) {
+// //       return next(err);
+// //     }
+
+// //     if (!user) {
+// //       req.flash("error", "Invalid email or password");
+// //       return res.redirect("/api/users/login");
+// //     }
+
+// //     req.logIn(user, async (err) => {
+// //       if (err) {
+// //         return next(err);
+// //       }
+
+// //       try {
+// //         if (user.role === "system_admin") {
+// //           req.flash("success", "Welcome system admin!");
+// //           return res.redirect("/admin-dashboard");
+// //         }
+
+// //         if (user.role === "safety_officer") {
+// //           const populatedUser = await User.findById(user._id).populate(
+// //             "safetyOfficer",
+// //           );
+
+// //           if (!populatedUser || !populatedUser.safetyOfficer) {
+// //             req.flash("error", "Safety officer data not found.");
+// //             return res.redirect("/api/users/login");
+// //           }
+
+// //           const name = populatedUser.safetyOfficer.name || populatedUser.email;
+// //           req.flash("success", `Welcome back, ${name}!`);
+// //           return res.redirect("/api/safety-officers/dashboard");
+// //         }
+
+// //         if (user.role === "supervisor") {
+// //           req.flash("success", "Welcome supervisor!");
+// //           return res.redirect("/supervisor-dashboard");
+// //         }
+
+// //         if (user.role === "worker") {
+// //           req.flash("success", "Welcome worker!");
+// //           return res.redirect("/worker-dashboard");
+// //         }
+
+// //         req.flash("error", "Access denied: Role not recognized.");
+// //         return res.redirect("/api/users/login");
+// //       } catch (error) {
+// //         console.error("Login error:", error);
+// //         req.flash("error", "Unexpected error occurred during login.");
+// //         return res.redirect("/api/users/login");
+// //       }
+// //     });
+// //   })(req, res, next);
+// // };
+
+// // Logout user
+// exports.logoutUser = (req, res) => {
+//   req.logout(() => {
+//     req.flash("success", "You have been logged out.");
+//     res.redirect("/api/users/login");
+//   });
+// };
+
+// // Show change password form
+// exports.showChangePasswordForm = (req, res) => {
+//   res.render("change-password", {
+//     title: "Change Password",
+//     success: req.flash("success"),
+//     error: req.flash("error"),
+//   });
+// };
+
+// // Handle password change
+// exports.changePassword = async (req, res) => {
+//   try {
+//     const { currentPassword, newPassword, confirmPassword } = req.body;
+
+//     if (newPassword !== confirmPassword) {
+//       req.flash("error", "New passwords do not match");
+//       return res.redirect("/api/users/change-password");
+//     }
+
+//     const user = await User.findById(req.user._id);
+//     if (!user) {
+//       req.flash("error", "User not found");
+//       return res.redirect("/api/users/change-password");
+//     }
+
+//     const authenticatedUser = await new Promise((resolve) => {
+//       user.authenticate(currentPassword, (err, thisModel, passwordError) => {
+//         if (err || passwordError || !thisModel) return resolve(null);
+//         resolve(thisModel);
+//       });
+//     });
+
+//     if (!authenticatedUser) {
+//       req.flash("error", "Current password is incorrect");
+//       return res.redirect("/api/users/change-password");
+//     }
+
+//     await new Promise((resolve, reject) => {
+//       user.setPassword(newPassword, (err) => {
+//         if (err) return reject(err);
+//         resolve();
+//       });
+//     });
+
+//     await user.save();
+//     req.flash("success", "Password changed successfully");
+//     res.redirect("/api/users/change-password");
+//   } catch (err) {
+//     console.error("Password change error:", err);
+//     req.flash("error", "Error changing password");
+//     res.redirect("/api/users/change-password");
+//   }
+// };
+
+// // Show forgot password form
+// exports.showForgotForm = (req, res) => {
+//   res.render("forgot-password", {
+//     title: "Forgot Password",
+//     error: req.query.error,
+//     success: req.query.success,
+//   });
+// };
+
+// // Request password reset
+// exports.requestResetPassword = async (req, res) => {
+//   const { email } = req.body;
+
+//   try {
+//     const user = await User.findOne({ email });
+
+//     if (!user) {
+//       return res.redirect("/users/forgot-password?error=User+not+found");
+//     }
+
+//     const token = crypto.randomBytes(32).toString("hex");
+//     user.resetPasswordToken = token;
+//     user.resetPasswordExpires = Date.now() + 3600000;
+//     await user.save();
+
+//     const resetLink = `http://${req.headers.host}/users/reset-password/${token}`;
+
+//     const transporter = nodemailer.createTransport({
+//       host: process.env.EMAIL_HOST,
+//       port: process.env.EMAIL_PORT,
+//       secure: false,
+//       auth: {
+//         user: process.env.EMAIL_USER,
+//         pass: process.env.EMAIL_PASS,
+//       },
+//     });
+
+//     await transporter.sendMail({
+//       to: user.email,
+//       from: process.env.EMAIL_USER,
+//       subject: "Reset Your Password",
+//       text: `You requested a password reset.\n\nClick the link below to reset your password:\n\n${resetLink}\n\nIf you didn't request this, you can ignore the email.`,
+//     });
+
+//     return res.redirect(
+//       "/users/forgot-password?success=Reset+link+sent+to+your+email",
+//     );
+//   } catch (err) {
+//     console.error("Error sending reset email:", err);
+//     return res.redirect(
+//       "/users/forgot-password?error=Error+processing+request",
+//     );
+//   }
+// };
+
+// // Show reset password form
+// exports.showResetForm = async (req, res) => {
+//   const { token } = req.params;
+
+//   const user = await User.findOne({
+//     resetPasswordToken: token,
+//     resetPasswordExpires: { $gt: Date.now() },
+//   });
+
+//   if (!user) {
+//     return res.redirect(
+//       "/users/forgot-password?error=Invalid+or+expired+reset+token",
+//     );
+//   }
+
+//   res.render("reset-password", {
+//     token,
+//     email: user.email,
+//     error: req.query.error,
+//     success: req.query.success,
+//   });
+// };
+
+// // Handle new password submission
+// exports.resetPassword = async (req, res) => {
+//   const { token } = req.params;
+//   const { newPassword, confirmPassword } = req.body;
+
+//   if (newPassword !== confirmPassword) {
+//     req.flash("error", "Passwords do not match");
+//     return res.redirect(`/users/reset-password/${token}`);
+//   }
+
+//   try {
+//     const user = await User.findOne({
+//       resetPasswordToken: token,
+//       resetPasswordExpires: { $gt: Date.now() },
+//     });
+
+//     if (!user) {
+//       req.flash("error", "Invalid or expired reset token");
+//       return res.redirect("/users/forgot-password");
+//     }
+
+//     await new Promise((resolve, reject) => {
+//       user.setPassword(newPassword, (err) => {
+//         if (err) return reject(err);
+//         resolve();
+//       });
+//     });
+
+//     user.resetPasswordToken = undefined;
+//     user.resetPasswordExpires = undefined;
+//     await user.save();
+
+//     req.flash("success", "Password reset successfully");
+//     res.redirect("/api/users/login");
+//   } catch (err) {
+//     console.error("Reset error:", err);
+//     req.flash("error", "Unexpected error occurred");
+//     res.redirect(`/users/reset-password/${token}`);
+//   }
+// };
+
+// const passport = require("passport");
+// const crypto = require("crypto");
+// const nodemailer = require("nodemailer");
+
+// const User = require("../models/User");
+// const SafetyOfficer = require("../models/SafetyOfficer");
+
+// // Show login form
+// exports.showLoginForm = (req, res) => {
+//   res.render("login");
+// };
+
+// // Handle login with role-based redirect
+// exports.loginUser = (req, res, next) => {
+//   passport.authenticate("local", async (err, user, info) => {
+//     if (err) {
+//       return next(err);
+//     }
+
+//     if (!user) {
+//       req.flash("error", "Invalid email or password");
+//       return res.redirect("/api/users/login");
+//     }
+
+//     req.logIn(user, async (err) => {
+//       if (err) {
+//         return next(err);
+//       }
+
+//       try {
+//         // SOLO USER: Dual-role practitioner
+//         if (user.isDualRole) {
+//           const populatedUser = await User.findById(user._id).populate(
+//             "safetyOfficer",
+//           );
+
+//           if (!populatedUser || !populatedUser.safetyOfficer) {
+//             req.flash("error", "User data not found.");
+//             return res.redirect("/api/users/login");
+//           }
+
+//           const name = populatedUser.safetyOfficer.name || populatedUser.email;
+//           req.flash("success", `Welcome back, ${name}!`);
+//           // Send solo users to their specialized dashboard
+//           return res.redirect("/safety-officers/dashboard-solo");
+//         }
+
+//         // ENTERPRISE ADMIN
+//         if (
+//           user.role === "system_admin" &&
+//           user.accountType === "enterprise_admin"
+//         ) {
+//           req.flash("success", "Welcome enterprise admin!");
+//           return res.redirect("/admin/dashboard");
+//         }
+
+//         // ENTERPRISE SAFETY OFFICER
+//         if (user.role === "safety_officer") {
+//           const populatedUser = await User.findById(user._id).populate(
+//             "safetyOfficer",
+//           );
+
+//           if (!populatedUser || !populatedUser.safetyOfficer) {
+//             req.flash("error", "Safety officer data not found.");
+//             return res.redirect("/api/users/login");
+//           }
+
+//           const name = populatedUser.safetyOfficer.name || populatedUser.email;
+//           req.flash("success", `Welcome back, ${name}!`);
+//           return res.redirect("/safety-officers/dashboard-enterprise");
+//         }
+
+//         // SUPERVISOR (future)
+//         if (user.role === "supervisor") {
+//           req.flash("success", "Welcome supervisor!");
+//           return res.redirect("/supervisor-dashboard");
+//         }
+
+//         // WORKER (future)
+//         if (user.role === "worker") {
+//           req.flash("success", "Welcome worker!");
+//           return res.redirect("/worker-dashboard");
+//         }
+
+//         // Legacy/fallback: Regular system admin
+//         if (user.role === "system_admin") {
+//           req.flash("success", "Welcome system admin!");
+//           return res.redirect("/admin-dashboard");
+//         }
+
+//         req.flash("error", "Access denied: Role not recognized.");
+//         return res.redirect("/api/users/login");
+//       } catch (error) {
+//         console.error("Login error:", error);
+//         req.flash("error", "Unexpected error occurred during login.");
+//         return res.redirect("/api/users/login");
+//       }
+//     });
+//   })(req, res, next);
+// };
+
+// // Rest of your controller remains exactly the same...
+// // (logoutUser, changePassword, forgot password functions all unchanged)
+
+// // Logout user
+// exports.logoutUser = (req, res) => {
+//   req.logout(() => {
+//     req.flash("success", "You have been logged out.");
+//     res.redirect("/api/users/login");
+//   });
+// };
+
+// // Show change password form
+// exports.showChangePasswordForm = (req, res) => {
+//   res.render("change-password", {
+//     title: "Change Password",
+//     success: req.flash("success"),
+//     error: req.flash("error"),
+//   });
+// };
+
+// // Handle password change
+// exports.changePassword = async (req, res) => {
+//   try {
+//     const { currentPassword, newPassword, confirmPassword } = req.body;
+
+//     if (newPassword !== confirmPassword) {
+//       req.flash("error", "New passwords do not match");
+//       return res.redirect("/api/users/change-password");
+//     }
+
+//     const user = await User.findById(req.user._id);
+//     if (!user) {
+//       req.flash("error", "User not found");
+//       return res.redirect("/api/users/change-password");
+//     }
+
+//     const authenticatedUser = await new Promise((resolve) => {
+//       user.authenticate(currentPassword, (err, thisModel, passwordError) => {
+//         if (err || passwordError || !thisModel) return resolve(null);
+//         resolve(thisModel);
+//       });
+//     });
+
+//     if (!authenticatedUser) {
+//       req.flash("error", "Current password is incorrect");
+//       return res.redirect("/api/users/change-password");
+//     }
+
+//     await new Promise((resolve, reject) => {
+//       user.setPassword(newPassword, (err) => {
+//         if (err) return reject(err);
+//         resolve();
+//       });
+//     });
+
+//     await user.save();
+//     req.flash("success", "Password changed successfully");
+//     res.redirect("/api/users/change-password");
+//   } catch (err) {
+//     console.error("Password change error:", err);
+//     req.flash("error", "Error changing password");
+//     res.redirect("/api/users/change-password");
+//   }
+// };
+
+// // Show forgot password form
+// exports.showForgotForm = (req, res) => {
+//   res.render("forgot-password", {
+//     title: "Forgot Password",
+//     error: req.query.error,
+//     success: req.query.success,
+//   });
+// };
+
+// // Request password reset
+// exports.requestResetPassword = async (req, res) => {
+//   const { email } = req.body;
+
+//   try {
+//     const user = await User.findOne({ email });
+
+//     if (!user) {
+//       return res.redirect("/users/forgot-password?error=User+not+found");
+//     }
+
+//     const token = crypto.randomBytes(32).toString("hex");
+//     user.resetPasswordToken = token;
+//     user.resetPasswordExpires = Date.now() + 3600000;
+//     await user.save();
+
+//     const resetLink = `http://${req.headers.host}/users/reset-password/${token}`;
+
+//     const transporter = nodemailer.createTransport({
+//       host: process.env.EMAIL_HOST,
+//       port: process.env.EMAIL_PORT,
+//       secure: false,
+//       auth: {
+//         user: process.env.EMAIL_USER,
+//         pass: process.env.EMAIL_PASS,
+//       },
+//     });
+
+//     await transporter.sendMail({
+//       to: user.email,
+//       from: process.env.EMAIL_USER,
+//       subject: "Reset Your Password",
+//       text: `You requested a password reset.\n\nClick the link below to reset your password:\n\n${resetLink}\n\nIf you didn't request this, you can ignore the email.`,
+//     });
+
+//     return res.redirect(
+//       "/users/forgot-password?success=Reset+link+sent+to+your+email",
+//     );
+//   } catch (err) {
+//     console.error("Error sending reset email:", err);
+//     return res.redirect(
+//       "/users/forgot-password?error=Error+processing+request",
+//     );
+//   }
+// };
+
+// // Show reset password form
+// exports.showResetForm = async (req, res) => {
+//   const { token } = req.params;
+
+//   const user = await User.findOne({
+//     resetPasswordToken: token,
+//     resetPasswordExpires: { $gt: Date.now() },
+//   });
+
+//   if (!user) {
+//     return res.redirect(
+//       "/users/forgot-password?error=Invalid+or+expired+reset+token",
+//     );
+//   }
+
+//   res.render("reset-password", {
+//     token,
+//     email: user.email,
+//     error: req.query.error,
+//     success: req.query.success,
+//   });
+// };
+
+// // Handle new password submission
+// exports.resetPassword = async (req, res) => {
+//   const { token } = req.params;
+//   const { newPassword, confirmPassword } = req.body;
+
+//   if (newPassword !== confirmPassword) {
+//     req.flash("error", "Passwords do not match");
+//     return res.redirect(`/users/reset-password/${token}`);
+//   }
+
+//   try {
+//     const user = await User.findOne({
+//       resetPasswordToken: token,
+//       resetPasswordExpires: { $gt: Date.now() },
+//     });
+
+//     if (!user) {
+//       req.flash("error", "Invalid or expired reset token");
+//       return res.redirect("/users/forgot-password");
+//     }
+
+//     await new Promise((resolve, reject) => {
+//       user.setPassword(newPassword, (err) => {
+//         if (err) return reject(err);
+//         resolve();
+//       });
+//     });
+
+//     user.resetPasswordToken = undefined;
+//     user.resetPasswordExpires = undefined;
+//     await user.save();
+
+//     req.flash("success", "Password reset successfully");
+//     res.redirect("/api/users/login");
+//   } catch (err) {
+//     console.error("Reset error:", err);
+//     req.flash("error", "Unexpected error occurred");
+//     res.redirect(`/users/reset-password/${token}`);
+//   }
+// };
+
+const passport = require("passport");
+const crypto = require("crypto");
+const nodemailer = require("nodemailer");
+
+const User = require("../models/User");
+const SafetyOfficer = require("../models/SafetyOfficer");
+
+// Show login form
+exports.showLoginForm = (req, res) => {
+  res.render("login");
+};
+
+// Handle login with role-based redirect
+exports.loginUser = (req, res, next) => {
+  passport.authenticate("local", async (err, user, info) => {
+    if (err) {
+      return next(err);
+    }
+
+    if (!user) {
+      req.flash("error", "Invalid email or password");
+      return res.redirect("/api/users/login");
+    }
+
+    req.logIn(user, async (err) => {
+      if (err) {
+        return next(err);
+      }
+
+      try {
+        // Populate safety officer data if needed
+        if (user.role === "safety_officer" || user.isDualRole) {
+          await user.populate("safetyOfficer");
+        }
+
+        // SOLO USER: Dual-role practitioner
+        if (user.isDualRole) {
+          const name = user.safetyOfficer?.name || user.email;
+          req.flash("success", `Welcome back, ${name}!`);
+          return res.redirect("/dashboard/solo");
+        }
+
+        // ENTERPRISE SAFETY OFFICER
+        if (user.role === "safety_officer") {
+          const name = user.safetyOfficer?.name || user.email;
+          req.flash("success", `Welcome back, ${name}!`);
+          return res.redirect("/dashboard/officer");
+        }
+
+        // ENTERPRISE ADMIN
+        if (
+          user.role === "system_admin" &&
+          user.accountType === "enterprise_admin"
+        ) {
+          req.flash("success", "Welcome enterprise admin!");
+          return res.redirect("/dashboard/admin");
+        }
+
+        // If we get here, role not recognized
+        req.flash("error", "Access denied: Role not recognized.");
+        return res.redirect("/api/users/login");
+      } catch (error) {
+        console.error("Login error:", error);
+        req.flash("error", "Unexpected error occurred during login.");
+        return res.redirect("/api/users/login");
+      }
+    });
+  })(req, res, next);
+};
 
 // Logout user
 exports.logoutUser = (req, res) => {

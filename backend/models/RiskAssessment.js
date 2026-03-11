@@ -5,15 +5,10 @@ const riskAssessmentSchema = new mongoose.Schema(
   {
     assessmentNumber: { type: Number, unique: true },
 
-    // Core relationships
-    worksite: {
+    // Core relationship - points to WorkArea
+    workArea: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Worksite",
-      required: true,
-    },
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "SafetyOfficer",
+      ref: "WorkArea",
       required: true,
     },
 
@@ -23,30 +18,33 @@ const riskAssessmentSchema = new mongoose.Schema(
     assessmentDate: { type: Date, default: Date.now },
     reviewDate: Date,
 
-    // Type of assessment
-    assessmentType: {
-      type: String,
-      enum: [
-        "general",
-        "task_specific",
-        "chemical",
-        "biological",
-        "physical",
-        "ergonomic",
-        "psychosocial",
-      ],
-      default: "general",
-    },
-
-    // Scope
+    // Scope of assessment
     scope: {
-      departments: [String],
+      type: {
+        type: String,
+        enum: ["area_wide", "task_specific", "equipment_specific"],
+        default: "area_wide",
+      },
+      workTypes: [String],
+      tasks: [String],
+      equipment: [String],
       shifts: [
         { type: String, enum: ["morning", "afternoon", "night", "all"] },
       ],
-      tasks: [String],
-      locations: [String],
     },
+
+    // Assessment team
+    conductedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "SafetyOfficer",
+      required: true,
+    },
+    team: [
+      {
+        member: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        role: String,
+      },
+    ],
 
     // Hazards identified and risk ratings
     hazards: [
@@ -56,9 +54,20 @@ const riskAssessmentSchema = new mongoose.Schema(
           default: () => new mongoose.Types.ObjectId(),
         },
         description: { type: String, required: true },
-        category: String,
+        category: {
+          type: String,
+          enum: [
+            "physical",
+            "chemical",
+            "biological",
+            "ergonomic",
+            "psychosocial",
+            "electrical",
+            "mechanical",
+          ],
+        },
 
-        // Risk matrix before controls
+        // Initial risk (before controls)
         initialRisk: {
           likelihood: {
             type: String,
@@ -78,13 +87,14 @@ const riskAssessmentSchema = new mongoose.Schema(
             type: String,
             enum: ["low", "medium", "high", "extreme"],
           },
-          riskScore: Number, // 1-25 matrix score
+          riskScore: Number,
+          justification: String,
         },
 
         // Controls implemented
         controls: [
           {
-            measure: String,
+            measure: { type: String, required: true },
             type: {
               type: String,
               enum: [
@@ -93,18 +103,29 @@ const riskAssessmentSchema = new mongoose.Schema(
                 "engineering",
                 "administrative",
                 "ppe",
+                "training",
               ],
             },
             responsibleParty: String,
             implementationDate: Date,
             effectiveness: {
               type: String,
-              enum: ["effective", "partially_effective", "ineffective"],
+              enum: [
+                "effective",
+                "partially_effective",
+                "ineffective",
+                "pending",
+              ],
             },
+            verifiedBy: {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: "SafetyOfficer",
+            },
+            verifiedAt: Date,
           },
         ],
 
-        // Residual risk after controls
+        // Residual risk (after controls)
         residualRisk: {
           likelihood: {
             type: String,
@@ -126,19 +147,39 @@ const riskAssessmentSchema = new mongoose.Schema(
           },
           riskScore: Number,
           acceptable: { type: Boolean, default: false },
+          justification: String,
         },
 
-        // Additional info
-        affectedPersons: [String],
-        existingMeasures: String,
-        additionalNotes: String,
+        // Who is at risk
+        affectedGroups: [
+          {
+            group: {
+              type: String,
+              enum: [
+                "workers",
+                "supervisors",
+                "contractors",
+                "visitors",
+                "public",
+              ],
+            },
+            count: Number,
+            details: String,
+          },
+        ],
 
         // Status
         status: {
           type: String,
-          enum: ["active", "mitigated", "monitoring"],
+          enum: ["active", "mitigated", "monitoring", "closed"],
           default: "active",
         },
+        reviewRequired: { type: Boolean, default: false },
+        nextReviewDate: Date,
+
+        // Notes
+        additionalNotes: String,
+        references: [String],
       },
     ],
 
@@ -151,47 +192,66 @@ const riskAssessmentSchema = new mongoose.Schema(
 
     // Overall assessment
     overallFindings: String,
+    summary: String,
     recommendations: [String],
 
     // Action plan
     actionPlan: [
       {
-        action: String,
+        action: { type: String, required: true },
         priority: { type: String, enum: ["high", "medium", "low"] },
         assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         deadline: Date,
         completed: { type: Boolean, default: false },
         completedDate: Date,
-        verificationRequired: Boolean,
+        completionNotes: String,
+        verificationRequired: { type: Boolean, default: false },
+        verifiedBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "SafetyOfficer",
+        },
+        verifiedAt: Date,
       },
     ],
 
     // Approvals
-    approvals: [
-      {
-        approver: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "SafetyOfficer",
-        },
-        approvedAt: Date,
-        comments: String,
-        signature: String,
+    approvalWorkflow: {
+      required: { type: Boolean, default: true },
+      status: {
+        type: String,
+        enum: ["pending", "approved", "rejected", "changes_requested"],
+        default: "pending",
       },
-    ],
+      approvals: [
+        {
+          approver: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "SafetyOfficer",
+          },
+          approvedAt: Date,
+          comments: String,
+          signature: String,
+        },
+      ],
+      requestedChanges: String,
+    },
 
     // Related documents
-    relatedIncidents: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "Incident" },
-    ],
-    relatedSafetyTalks: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "SafetyTalk" },
-    ],
+    relatedDocuments: {
+      incidents: [{ type: mongoose.Schema.Types.ObjectId, ref: "Incident" }],
+      safetyTalks: [
+        { type: mongoose.Schema.Types.ObjectId, ref: "SafetyTalk" },
+      ],
+      permits: [{ type: mongoose.Schema.Types.ObjectId, ref: "Permit" }],
+      jsas: [{ type: mongoose.Schema.Types.ObjectId, ref: "JSA" }],
+    },
 
     // Attachments
     attachments: [
       {
         name: String,
         url: String,
+        type: String,
         uploadedBy: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "SafetyOfficer",
@@ -207,11 +267,25 @@ const riskAssessmentSchema = new mongoose.Schema(
       siteHistory: Boolean,
       pastIncidents: Boolean,
       previousAssessments: Boolean,
+      hazardsFromWorkArea: Boolean,
     },
+    aiPrompt: String,
+    aiResponse: String,
 
     // Version control
     version: { type: Number, default: 1 },
     supersedes: { type: mongoose.Schema.Types.ObjectId, ref: "RiskAssessment" },
+    revisionHistory: [
+      {
+        version: Number,
+        date: Date,
+        updatedBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "SafetyOfficer",
+        },
+        changes: String,
+      },
+    ],
 
     // Status
     status: {
@@ -219,6 +293,10 @@ const riskAssessmentSchema = new mongoose.Schema(
       enum: ["draft", "under_review", "approved", "active", "archived"],
       default: "draft",
     },
+
+    // Metadata
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "SafetyOfficer" },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "SafetyOfficer" },
   },
   { timestamps: true },
 );
@@ -232,7 +310,7 @@ riskAssessmentSchema.pre("save", async function (next) {
         { $inc: { seq: 1 } },
         { new: true, upsert: true },
       );
-      this.assessmentNumber = counter.seq + 2000;
+      this.assessmentNumber = counter.seq + 3000;
     } catch (err) {
       return next(err);
     }
