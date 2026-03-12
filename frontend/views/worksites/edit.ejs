@@ -1,0 +1,163 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-lg border-0">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+          <h3 class="fw-bold mb-0" style="color: #2196f3">
+            <i class="fas fa-edit me-2"></i>Edit Worksite
+          </h3>
+          <p class="text-muted">Update worksite information</p>
+        </div>
+        <div class="card-body p-4">
+          <form action="/worksites/<%= worksite._id %>/edit" method="POST">
+            <!-- Basic Information -->
+            <div class="mb-4">
+              <h5 class="fw-bold mb-3" style="color: #1e3c5c">Basic Information</h5>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label for="name" class="form-label fw-semibold">Worksite Name *</label>
+                  <input type="text" class="form-control form-control-lg" id="name" name="name" 
+                         value="<%= worksite.name %>" placeholder="e.g., Lusaka City Mall Construction" required>
+                </div>
+                <div class="col-md-6">
+                  <label for="location" class="form-label fw-semibold">Location *</label>
+                  <input type="text" class="form-control form-control-lg" id="location" name="location" 
+                         value="<%= worksite.location %>" placeholder="e.g., Lusaka, Zambia" required>
+                </div>
+                <div class="col-md-6">
+                  <label for="siteType" class="form-label fw-semibold">Site Type *</label>
+                  <select class="form-select form-select-lg" id="siteType" name="siteType" required>
+                    <option value="">Select site type</option>
+                    <option value="construction" <%= worksite.siteType === 'construction' ? 'selected' : '' %>>Construction</option>
+                    <option value="mining" <%= worksite.siteType === 'mining' ? 'selected' : '' %>>Mining</option>
+                    <option value="manufacturing" <%= worksite.siteType === 'manufacturing' ? 'selected' : '' %>>Manufacturing</option>
+                    <option value="oil_gas" <%= worksite.siteType === 'oil_gas' ? 'selected' : '' %>>Oil & Gas</option>
+                    <option value="warehouse" <%= worksite.siteType === 'warehouse' ? 'selected' : '' %>>Warehouse</option>
+                    <option value="office" <%= worksite.siteType === 'office' ? 'selected' : '' %>>Office</option>
+                    <option value="other" <%= worksite.siteType === 'other' ? 'selected' : '' %>>Other</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label for="status" class="form-label fw-semibold">Status</label>
+                  <select class="form-select form-select-lg" id="status" name="status">
+                    <option value="active" <%= worksite.status === 'active' ? 'selected' : '' %>>Active</option>
+                    <option value="inactive" <%= worksite.status === 'inactive' ? 'selected' : '' %>>Inactive</option>
+                    <option value="under_review" <%= worksite.status === 'under_review' ? 'selected' : '' %>>Under Review</option>
+                    <option value="completed" <%= worksite.status === 'completed' ? 'selected' : '' %>>Completed</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label for="clientName" class="form-label fw-semibold">Client Name</label>
+                  <input type="text" class="form-control form-control-lg" id="clientName" name="clientName" 
+                         value="<%= worksite.clientName || '' %>" placeholder="e.g., Zambia National Construction">
+                </div>
+                <div class="col-md-6">
+                  <label for="clientContact" class="form-label fw-semibold">Client Contact</label>
+                  <input type="text" class="form-control form-control-lg" id="clientContact" name="clientContact" 
+                         value="<%= worksite.clientContact || '' %>" placeholder="e.g., +260977123456">
+                </div>
+                <div class="col-12">
+                  <label for="description" class="form-label fw-semibold">Description</label>
+                  <textarea class="form-control" id="description" name="description" rows="3" 
+                            placeholder="Brief description of the worksite..."><%= worksite.description || '' %></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Site Context for AI -->
+            <div class="mb-4">
+              <h5 class="fw-bold mb-3" style="color: #1e3c5c">Site Context <small class="text-muted">(Optional but helpful for AI)</small></h5>
+              <div class="row g-3">
+                <div class="col-12">
+                  <label for="siteOverview" class="form-label fw-semibold">Site Overview</label>
+                  <textarea class="form-control" id="siteOverview" name="siteOverview" rows="2" 
+                            placeholder="General overview of the site..."><%= worksite.siteContext?.overview || '' %></textarea>
+                </div>
+                <div class="col-12">
+                  <label for="knownChallenges" class="form-label fw-semibold">Known Challenges</label>
+                  <textarea class="form-control" id="knownChallenges" name="knownChallenges" rows="2" 
+                            placeholder="e.g., confined spaces, working at heights, nearby traffic..."><%= worksite.siteContext?.knownChallenges ? worksite.siteContext.knownChallenges.join(', ') : '' %></textarea>
+                  <small class="text-muted">Separate multiple challenges with commas</small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Shifts Configuration -->
+            <div class="mb-4">
+              <h5 class="fw-bold mb-3" style="color: #1e3c5c">Shift Configuration</h5>
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="shiftMorning" name="shifts[]" value="morning"
+                           <%= worksite.shifts && worksite.shifts.some(s => s.name === 'morning') ? 'checked' : '' %>>
+                    <label class="form-check-label" for="shiftMorning">
+                      <i class="fas fa-sun me-1 text-warning"></i> Morning Shift
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="shiftAfternoon" name="shifts[]" value="afternoon"
+                           <%= worksite.shifts && worksite.shifts.some(s => s.name === 'afternoon') ? 'checked' : '' %>>
+                    <label class="form-check-label" for="shiftAfternoon">
+                      <i class="fas fa-cloud-sun me-1 text-info"></i> Afternoon Shift
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="shiftNight" name="shifts[]" value="night"
+                           <%= worksite.shifts && worksite.shifts.some(s => s.name === 'night') ? 'checked' : '' %>>
+                    <label class="form-check-label" for="shiftNight">
+                      <i class="fas fa-moon me-1 text-secondary"></i> Night Shift
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Assigned Safety Officers (Read-only for edit) -->
+            <% if (worksite.assignedSafetyOfficers && worksite.assignedSafetyOfficers.length > 0) { %>
+            <div class="mb-4">
+              <h5 class="fw-bold mb-3" style="color: #1e3c5c">Currently Assigned Safety Officers</h5>
+              <div class="row g-3">
+                <% worksite.assignedSafetyOfficers.forEach(assignment => { %>
+                <div class="col-md-6">
+                  <div class="d-flex align-items-center p-2 rounded bg-light">
+                    <div class="rounded-circle bg-primary bg-opacity-10 p-2 me-2">
+                      <i class="fas fa-user-tie" style="color: #2196f3;"></i>
+                    </div>
+                    <div>
+                      <strong><%= assignment.officer?.name || 'Unknown' %></strong><br>
+                      <small class="text-muted">Role: <%= assignment.role %></small>
+                      <% if (assignment.isPrimary) { %>
+                      <span class="badge bg-success ms-2">Primary</span>
+                      <% } %>
+                    </div>
+                  </div>
+                </div>
+                <% }) %>
+              </div>
+              <p class="text-muted small mt-2">
+                <i class="fas fa-info-circle me-1"></i> To modify officer assignments, use the Assign Officers page.
+              </p>
+            </div>
+            <% } %>
+
+            <div class="d-flex gap-2 justify-content-end mt-4">
+              <a href="/worksites/<%= worksite._id %>" class="btn btn-secondary btn-lg px-4">Cancel</a>
+              <button type="submit" class="btn btn-primary btn-lg px-4" style="background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%); border: none;">
+                <i class="fas fa-save me-2"></i> Update Worksite
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

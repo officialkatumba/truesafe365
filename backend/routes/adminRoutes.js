@@ -7,7 +7,7 @@ const { ensureAuthenticated, ensureAdmin } = require("../middlewares/auth");
 router.use(ensureAuthenticated, ensureAdmin);
 
 // Dashboard
-router.get("/dashboard", adminController.showAdminDashboard);
+// router.get("/dashboard", adminController.showAdminDashboard);
 
 // Safety Officer management
 router.get("/safety-officers", adminController.listSafetyOfficers);
