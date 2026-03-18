@@ -10,14 +10,23 @@ router.use(ensureAuthenticated, ensureAdmin);
 // router.get("/dashboard", adminController.showAdminDashboard);
 
 // Safety Officer management
+// IMPORTANT: Specific routes MUST come before /:id routes
+router.get(
+  "/safety-officers/create",
+  adminController.showCreateSafetyOfficerForm,
+);
+router.post(
+  "/safety-officers/create",
+  adminController.adminCreateSafetyOfficer,
+);
 router.get("/safety-officers", adminController.listSafetyOfficers);
 router.get("/safety-officers/:id", adminController.viewSafetyOfficer);
 router.post("/safety-officers/:id/verify", adminController.verifySafetyOfficer);
 
 // Worksite management
-router.get("/worksites", adminController.listWorksites);
 router.get("/worksites/create", adminController.showCreateWorksiteForm);
 router.post("/worksites/create", adminController.createWorksite);
+router.get("/worksites", adminController.listWorksites);
 router.get("/worksites/:id", adminController.viewWorksite);
 router.post(
   "/worksites/:worksiteId/assign-officer",

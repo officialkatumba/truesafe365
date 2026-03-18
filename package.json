@@ -12,6 +12,7 @@
   "description": "",
   "dependencies": {
     "@google-cloud/storage": "^7.16.0",
+    "bcrypt": "^6.0.0",
     "body-parser": "^2.2.0",
     "connect-flash": "^0.1.1",
     "connect-mongo": "^5.1.0",

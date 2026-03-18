@@ -56,6 +56,11 @@ const userSchema = new mongoose.Schema({
     enum: ["solo", "enterprise_officer", "enterprise_admin"],
     default: "solo",
   },
+  safetyOfficer: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "SafetyOfficer",
+    sparse: true,
+  },
 
   // Who created this account (for enterprise)
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },

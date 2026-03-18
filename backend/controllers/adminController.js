@@ -5,6 +5,7 @@ const WorkArea = require("../models/WorkArea");
 const Incident = require("../models/Incident");
 const RiskAssessment = require("../models/RiskAssessment");
 const Permit = require("../models/Permit");
+const bcrypt = require("bcrypt"); // or require('bcryptjs') if you installed that
 
 // Show admin dashboard
 exports.showAdminDashboard = async (req, res) => {
@@ -174,6 +175,58 @@ exports.listSafetyOfficers = async (req, res) => {
 };
 
 // View single safety officer
+// exports.viewSafetyOfficer = async (req, res) => {
+//   try {
+//     const officer = await SafetyOfficer.findById(req.params.id).populate({
+//       path: "worksites",
+//       populate: { path: "workAreas" },
+//     });
+
+//     if (!officer) {
+//       req.flash("error", "Safety officer not found");
+//       return res.redirect("/admin/safety-officers");
+//     }
+
+//     // Get all worksites this officer is assigned to
+//     const assignedWorksites = await Worksite.find({
+//       "assignedSafetyOfficers.officer": officer._id,
+//     }).populate("workAreas");
+
+//     // Get work areas this officer manages
+//     const workAreas = await WorkArea.find({
+//       "assignedSafetyOfficers.officer": officer._id,
+//     }).populate("worksite", "name");
+
+//     // Get recent activity
+//     const recentIncidents = await Incident.find({
+//       workArea: { $in: workAreas.map((wa) => wa._id) },
+//     })
+//       .sort({ createdAt: -1 })
+//       .limit(10)
+//       .populate("workArea", "name");
+
+//     const recentAssessments = await RiskAssessment.find({
+//       workArea: { $in: workAreas.map((wa) => wa._id) },
+//     })
+//       .sort({ createdAt: -1 })
+//       .limit(5);
+
+//     res.render("admin/safety-officers/view", {
+//       user: req.user,
+//       officer,
+//       assignedWorksites,
+//       workAreas,
+//       recentIncidents,
+//       recentAssessments,
+//     });
+//   } catch (error) {
+//     console.error("Error viewing safety officer:", error);
+//     req.flash("error", "Error loading safety officer details");
+//     res.redirect("/admin/safety-officers");
+//   }
+// };
+
+// View single safety officer
 exports.viewSafetyOfficer = async (req, res) => {
   try {
     const officer = await SafetyOfficer.findById(req.params.id).populate({
@@ -210,6 +263,13 @@ exports.viewSafetyOfficer = async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(5);
 
+    // Get available worksites for assignment modal (exclude already assigned ones)
+    const assignedWorksiteIds = assignedWorksites.map((w) => w._id);
+    const availableWorksites = await Worksite.find({
+      status: "active",
+      _id: { $nin: assignedWorksiteIds }, // Exclude already assigned worksites
+    }).select("name location");
+
     res.render("admin/safety-officers/view", {
       user: req.user,
       officer,
@@ -217,6 +277,10 @@ exports.viewSafetyOfficer = async (req, res) => {
       workAreas,
       recentIncidents,
       recentAssessments,
+      availableWorksites, // This was missing!
+      success: req.flash("success"),
+      error: req.flash("error"),
+      info: req.flash("info"),
     });
   } catch (error) {
     console.error("Error viewing safety officer:", error);
@@ -477,12 +541,10 @@ exports.assignOfficerToWorksite = async (req, res) => {
     );
 
     if (alreadyAssigned) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Officer already assigned to this worksite",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Officer already assigned to this worksite",
+      });
     }
 
     worksite.assignedSafetyOfficers.push({
@@ -528,12 +590,10 @@ exports.assignOfficerToWorkArea = async (req, res) => {
     );
 
     if (alreadyAssigned) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Officer already assigned to this shift",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Officer already assigned to this shift",
+      });
     }
 
     // If setting as primary, unset other primaries for this shift
@@ -694,5 +754,280 @@ exports.getAnalytics = async (req, res) => {
     console.error("Error getting analytics:", error);
     req.flash("error", "Error loading analytics");
     res.redirect("/admin/dashboard");
+  }
+};
+
+// Show create safety officer form
+exports.showCreateSafetyOfficerForm = async (req, res) => {
+  try {
+    // Get worksites for the assignment dropdown
+    const worksites = await Worksite.find({ status: "active" })
+      .select("name location")
+      .sort({ name: 1 });
+
+    res.render("admin/safety-officers/create", {
+      user: req.user,
+      worksites,
+      title: "Create Safety Officer",
+    });
+  } catch (error) {
+    console.error("Error loading create safety officer form:", error);
+    req.flash("error", "Error loading form");
+    res.redirect("/admin/safety-officers");
+  }
+};
+
+// Process create safety officer form
+// exports.adminCreateSafetyOfficer = async (req, res) => {
+//   try {
+//     const { name, email, phone, bio, assignToWorksite } = req.body;
+
+//     // Check if officer already exists
+//     const existingOfficer = await SafetyOfficer.findOne({ email });
+//     if (existingOfficer) {
+//       req.flash("error", "A safety officer with this email already exists");
+//       return res.redirect("/admin/safety-officers/create");
+//     }
+
+//     // Generate a temporary password
+//     const tempPassword =
+//       Math.random().toString(36).slice(-8) +
+//       Math.random().toString(36).slice(-8).toUpperCase();
+
+//     // Generate officer number
+//     const officerCount = await SafetyOfficer.countDocuments();
+//     const officerNumber = `SO${String(officerCount + 1).padStart(5, "0")}`;
+
+//     // Create new safety officer
+//     const newOfficer = new SafetyOfficer({
+//       name,
+//       email,
+//       phone,
+//       bio,
+//       officerNumber,
+//       password: tempPassword, // Make sure to hash this!
+//       verificationStatus: "pending",
+//       createdBy: req.user._id,
+//       createdAt: new Date(),
+//     });
+
+//     // Hash the password if you're using bcrypt (you should be)
+//     // const bcrypt = require('bcrypt');
+//     // newOfficer.password = await bcrypt.hash(tempPassword, 10);
+
+//     await newOfficer.save();
+
+//     // If worksite assignment was selected
+//     if (assignToWorksite) {
+//       const worksite = await Worksite.findById(assignToWorksite);
+//       if (worksite) {
+//         worksite.assignedSafetyOfficers.push({
+//           officer: newOfficer._id,
+//           role: "assistant",
+//           assignedDate: new Date(),
+//           isActive: true,
+//         });
+//         await worksite.save();
+
+//         // Update officer's worksites list
+//         newOfficer.worksites.push(worksite._id);
+//         await newOfficer.save();
+//       }
+//     }
+
+//     // TODO: Send email with credentials
+//     // await sendCredentialsEmail(email, tempPassword);
+
+//     req.flash(
+//       "success",
+//       `Safety officer ${name} created successfully. Temporary password: ${tempPassword}`,
+//     );
+//     res.redirect(`/admin/safety-officers/${newOfficer._id}`);
+//   } catch (error) {
+//     console.error("Error creating safety officer:", error);
+//     req.flash("error", "Error creating safety officer");
+//     res.redirect("/admin/safety-officers/create");
+//   }
+// };
+
+// Process create safety officer form
+// exports.adminCreateSafetyOfficer = async (req, res) => {
+//   try {
+//     const { name, email, phone, bio, assignToWorksite } = req.body;
+
+//     // Check if officer already exists
+//     const existingOfficer = await SafetyOfficer.findOne({ email });
+//     if (existingOfficer) {
+//       req.flash("error", "A safety officer with this email already exists");
+//       return res.redirect("/admin/safety-officers/create");
+//     }
+
+//     // Generate a temporary password
+//     const tempPassword =
+//       Math.random().toString(36).slice(-8) +
+//       Math.random().toString(36).slice(-8).toUpperCase();
+
+//     // Generate officer number as STRING with prefix
+//     const officerCount = await SafetyOfficer.countDocuments();
+//     const officerNumber = `SO${String(officerCount + 1).padStart(5, "0")}`; // "SO00001"
+
+//     // Create new safety officer - AUTO-VERIFIED since admin creates them
+//     const newOfficer = new SafetyOfficer({
+//       name,
+//       email,
+//       phone,
+//       bio,
+//       officerNumber, // Now a string "SO00001"
+//       password: tempPassword,
+//       verificationStatus: "verified", // Auto-verified!
+//       verifiedBy: req.user._id, // Track who created/verified them
+//       verifiedAt: new Date(),
+//       createdBy: req.user._id,
+//       createdAt: new Date(),
+//     });
+
+//     // Hash the password
+//     const bcrypt = require("bcrypt");
+//     newOfficer.password = await bcrypt.hash(tempPassword, 10);
+
+//     await newOfficer.save();
+
+//     // If worksite assignment was selected
+//     if (assignToWorksite) {
+//       const worksite = await Worksite.findById(assignToWorksite);
+//       if (worksite) {
+//         worksite.assignedSafetyOfficers.push({
+//           officer: newOfficer._id,
+//           role: "assistant",
+//           assignedDate: new Date(),
+//           isActive: true,
+//         });
+//         await worksite.save();
+
+//         // Update officer's worksites list
+//         newOfficer.worksites.push(worksite._id);
+//         await newOfficer.save();
+//       }
+//     }
+
+//     req.flash(
+//       "success",
+//       `Safety officer ${name} created successfully and auto-verified. Temporary password: ${tempPassword}`,
+//     );
+//     res.redirect(`/admin/safety-officers/${newOfficer._id}`);
+//   } catch (error) {
+//     console.error("Error creating safety officer:", error);
+//     req.flash("error", "Error creating safety officer");
+//     res.redirect("/admin/safety-officers/create");
+//   }
+// };
+
+exports.adminCreateSafetyOfficer = async (req, res) => {
+  try {
+    const { name, email, phone, bio, assignToWorksite } = req.body;
+
+    // Check if user already exists in User collection
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      req.flash("error", "A user with this email already exists");
+      return res.redirect("/admin/safety-officers/create");
+    }
+
+    // Check if officer already exists
+    const existingOfficer = await SafetyOfficer.findOne({ email });
+    if (existingOfficer) {
+      req.flash("error", "A safety officer with this email already exists");
+      return res.redirect("/admin/safety-officers/create");
+    }
+
+    // Generate a temporary password
+    const tempPassword =
+      Math.random().toString(36).slice(-8) +
+      Math.random().toString(36).slice(-8).toUpperCase();
+
+    // Hash the password
+    const bcrypt = require("bcrypt");
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+    // Generate officer number as STRING with prefix
+    const officerCount = await SafetyOfficer.countDocuments();
+    const officerNumber = `SO${String(officerCount + 1).padStart(5, "0")}`; // "SO00001"
+
+    // Create User account first
+    const newUser = new User({
+      name,
+      email,
+      password: hashedPassword,
+      role: "safety_officer",
+      isActive: true,
+      createdBy: req.user._id,
+      createdAt: new Date(),
+    });
+
+    await newUser.save();
+
+    // Create new safety officer with reference to user
+    const newOfficer = new SafetyOfficer({
+      name,
+      email,
+      phone,
+      bio,
+      officerNumber,
+      password: hashedPassword, // Store hashed password
+      verificationStatus: "verified",
+      verifiedBy: req.user._id,
+      verifiedAt: new Date(),
+      createdBy: req.user._id,
+      user: newUser._id, // Link to User account
+      isActive: true,
+    });
+
+    await newOfficer.save();
+
+    // Update User with reference to SafetyOfficer (optional)
+    newUser.safetyOfficer = newOfficer._id;
+    await newUser.save();
+
+    // If worksite assignment was selected
+    if (assignToWorksite) {
+      const worksite = await Worksite.findById(assignToWorksite);
+      if (worksite) {
+        worksite.assignedSafetyOfficers.push({
+          officer: newOfficer._id,
+          role: "assistant",
+          assignedDate: new Date(),
+          isActive: true,
+        });
+        await worksite.save();
+
+        // Update officer's worksites list
+        newOfficer.worksites.push(worksite._id);
+        await newOfficer.save();
+      }
+    }
+
+    req.flash(
+      "success",
+      `Safety officer ${name} created successfully. They can login with email and temporary password: ${tempPassword}`,
+    );
+    res.redirect(`/admin/safety-officers/${newOfficer._id}`);
+  } catch (error) {
+    console.error("Error creating safety officer:", error);
+
+    // Cleanup: If User was created but SafetyOfficer failed, delete the User
+    if (error.name === "ValidationError" || error.code === 11000) {
+      // Attempt to find and delete the user if it was created
+      try {
+        const user = await User.findOne({ email: req.body.email });
+        if (user) {
+          await User.deleteOne({ _id: user._id });
+        }
+      } catch (cleanupError) {
+        console.error("Cleanup error:", cleanupError);
+      }
+    }
+
+    req.flash("error", "Error creating safety officer");
+    res.redirect("/admin/safety-officers/create");
   }
 };

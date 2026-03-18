@@ -1,0 +1,204 @@
+<%- include('../../partials/header') %>
+<%- include('../../partials/navbar') %>
+
+<div class="main-wrapper">
+  <div class="content container py-4">
+    <div class="create-officer-container" style="max-width: 700px; margin: 0 auto;">
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+          <h3 class="mb-1">
+            <i class="fas fa-user-plus me-2" style="color: #f093fb;"></i>
+            Create Safety Officer
+          </h3>
+          <p class="text-muted small">Add a new safety officer to the company</p>
+        </div>
+        <a href="/admin/safety-officers" class="btn btn-outline-secondary btn-sm" style="border-radius: 40px;">
+          <i class="fas fa-arrow-left me-2"></i>Back to Officers
+        </a>
+      </div>
+
+      <!-- Form Card -->
+      <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+        <div class="card-body p-4">
+          <form action="/admin/safety-officers/create" method="POST">
+            <!-- Basic Information -->
+            <div class="mb-4">
+              <h5 class="fw-bold mb-3" style="color: #1e3c5c">Officer Information</h5>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label for="name" class="form-label fw-semibold">Full Name *</label>
+                  <input type="text" class="form-control" id="name" name="name" 
+                         placeholder="Enter full name" required style="border-radius: 40px;">
+                </div>
+                <div class="col-md-6">
+                  <label for="email" class="form-label fw-semibold">Email Address *</label>
+                  <input type="email" class="form-control" id="email" name="email" 
+                         placeholder="officer@company.com" required style="border-radius: 40px;">
+                  <small class="text-muted">This will be their username for login</small>
+                </div>
+                <div class="col-md-6">
+                  <label for="phone" class="form-label fw-semibold">Phone Number *</label>
+                  <input type="tel" class="form-control" id="phone" name="phone" 
+                         placeholder="+260 XXX XXX XXX" required style="border-radius: 40px;">
+                </div>
+                <div class="col-md-6">
+                  <label for="employeeId" class="form-label fw-semibold">Employee ID (Optional)</label>
+                  <input type="text" class="form-control" id="employeeId" name="employeeId" 
+                         placeholder="Company employee ID" style="border-radius: 40px;">
+                </div>
+                <div class="col-12">
+                  <label for="bio" class="form-label fw-semibold">Bio / Qualifications</label>
+                  <textarea class="form-control" id="bio" name="bio" rows="3" 
+                            placeholder="Brief description of qualifications and experience..." style="border-radius: 16px;"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Role & Permissions -->
+            <div class="mb-4">
+              <h5 class="fw-bold mb-3" style="color: #1e3c5c">Role & Permissions</h5>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label for="role" class="form-label fw-semibold">Officer Role *</label>
+                  <select class="form-select" id="role" name="role" required style="border-radius: 40px;">
+                    <option value="safety_officer">Safety Officer</option>
+                    <option value="senior_safety_officer">Senior Safety Officer</option>
+                    <option value="safety_supervisor">Safety Supervisor</option>
+                    <option value="safety_manager">Safety Manager</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label for="department" class="form-label fw-semibold">Department</label>
+                  <input type="text" class="form-control" id="department" name="department" 
+                         placeholder="e.g., Construction, Mining, etc." style="border-radius: 40px;">
+                </div>
+              </div>
+            </div>
+
+            <!-- Optional: Assign to Worksite -->
+            <div class="mb-4">
+              <h5 class="fw-bold mb-3" style="color: #1e3c5c">Initial Assignment (Optional)</h5>
+              <div class="row g-3">
+                <div class="col-12">
+                  <label for="assignToWorksite" class="form-label fw-semibold">Assign to Worksite</label>
+                  <select class="form-select" id="assignToWorksite" name="assignToWorksite" style="border-radius: 40px;">
+                    <option value="">-- Select worksite (optional) --</option>
+                    <% worksites.forEach(worksite => { %>
+                    <option value="<%= worksite._id %>"><%= worksite.name %> - <%= worksite.location %></option>
+                    <% }) %>
+                  </select>
+                  <small class="text-muted">You can assign them to worksites later from the worksite page</small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Credentials Information Card -->
+            <div class="mb-4 p-4 rounded-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+              <h6 class="fw-bold mb-3">
+                <i class="fas fa-key me-2"></i>Account Credentials
+              </h6>
+              
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <div class="d-flex align-items-center mb-2">
+                    <i class="fas fa-user-circle me-2" style="font-size: 1.2rem;"></i>
+                    <div>
+                      <small class="opacity-75">Username</small>
+                      <p class="mb-0 fw-bold">Email address entered above</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="col-md-6">
+                  <div class="d-flex align-items-center mb-2">
+                    <i class="fas fa-lock me-2" style="font-size: 1.2rem;"></i>
+                    <div>
+                      <small class="opacity-75">Password</small>
+                      <p class="mb-0 fw-bold">Auto-generated temporary password</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-3 p-3 rounded-3" style="background: rgba(255,255,255,0.2);">
+                <div class="d-flex align-items-start">
+                  <i class="fas fa-info-circle me-2 mt-1"></i>
+                  <small>
+                    <strong>Important:</strong> A secure temporary password will be automatically generated. 
+                    The officer will receive their credentials via email and will be required to change 
+                    their password on first login. Make sure the email address is correct.
+                  </small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Notifications -->
+            <div class="mb-4">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="sendEmail" name="sendEmail" value="true" checked>
+                <label class="form-check-label" for="sendEmail">
+                  <strong>Send welcome email with credentials</strong>
+                  <small class="d-block text-muted">The officer will receive an email with login instructions and temporary password</small>
+                </label>
+              </div>
+            </div>
+
+            <!-- Summary Card -->
+            <div class="mb-4 p-3 rounded-3" style="background: #f8f9fa;">
+              <h6 class="fw-bold mb-2" style="color: #1e3c5c;">What happens next?</h6>
+              <ol class="mb-0 small">
+                <li class="mb-1">Officer account is created with auto-generated officer number: <strong>SOxxxxx</strong></li>
+                <li class="mb-1">Temporary password is generated and can be sent via email</li>
+                <li class="mb-1">Officer can login immediately with email and temporary password</li>
+                <li class="mb-1">Officer will be prompted to change password on first login</li>
+                <li>You can assign them to worksites and work areas from the officer profile</li>
+              </ol>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="d-flex gap-2 justify-content-end mt-4">
+              <a href="/admin/safety-officers" class="btn btn-outline-secondary px-4" style="border-radius: 40px;">Cancel</a>
+              <button type="submit" class="btn px-4" style="background: #26a69a; color: white; border-radius: 40px;">
+                <i class="fas fa-save me-2"></i>Create Officer Account
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .main-wrapper {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .content {
+    flex: 1;
+  }
+  
+  .form-control, .form-select {
+    border: 1px solid #dee2e6;
+    transition: border-color 0.2s ease;
+  }
+  
+  .form-control:focus, .form-select:focus {
+    border-color: #26a69a;
+    box-shadow: 0 0 0 0.2rem rgba(38, 166, 154, 0.25);
+  }
+  
+  .hover-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+  }
+</style>
+
+<%- include('../../partials/footer') %>
