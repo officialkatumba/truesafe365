@@ -43,22 +43,10 @@
                          placeholder="+260 XXX XXX XXX" required style="border-radius: 40px;">
                 </div>
                 <div class="col-md-6">
-                  <label for="employeeId" class="form-label fw-semibold">Employee ID (Optional)</label>
+                  <label for="employeeId" class="form-label fw-semibold">Employee ID</label>
                   <input type="text" class="form-control" id="employeeId" name="employeeId" 
                          placeholder="Company employee ID" style="border-radius: 40px;">
                 </div>
-                <div class="col-12">
-                  <label for="bio" class="form-label fw-semibold">Bio / Qualifications</label>
-                  <textarea class="form-control" id="bio" name="bio" rows="3" 
-                            placeholder="Brief description of qualifications and experience..." style="border-radius: 16px;"></textarea>
-                </div>
-              </div>
-            </div>
-
-            <!-- Role & Permissions -->
-            <div class="mb-4">
-              <h5 class="fw-bold mb-3" style="color: #1e3c5c">Role & Permissions</h5>
-              <div class="row g-3">
                 <div class="col-md-6">
                   <label for="role" class="form-label fw-semibold">Officer Role *</label>
                   <select class="form-select" id="role" name="role" required style="border-radius: 40px;">
@@ -71,7 +59,30 @@
                 <div class="col-md-6">
                   <label for="department" class="form-label fw-semibold">Department</label>
                   <input type="text" class="form-control" id="department" name="department" 
-                         placeholder="e.g., Construction, Mining, etc." style="border-radius: 40px;">
+                         placeholder="e.g., Construction, Mining" style="border-radius: 40px;">
+                </div>
+                <div class="col-12">
+                  <label for="bio" class="form-label fw-semibold">Bio / Qualifications</label>
+                  <textarea class="form-control" id="bio" name="bio" rows="3" 
+                            placeholder="Brief description of qualifications and experience..." style="border-radius: 16px;"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Password Section - NEW -->
+            <div class="mb-4">
+              <h5 class="fw-bold mb-3" style="color: #1e3c5c">Set Password</h5>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label for="password" class="form-label fw-semibold">Password *</label>
+                  <input type="password" class="form-control" id="password" name="password" 
+                         placeholder="Enter a password" required style="border-radius: 40px;">
+                  <small class="text-muted">Minimum 6 characters</small>
+                </div>
+                <div class="col-md-6">
+                  <label for="confirmPassword" class="form-label fw-semibold">Confirm Password *</label>
+                  <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" 
+                         placeholder="Confirm password" required style="border-radius: 40px;">
                 </div>
               </div>
             </div>
@@ -93,65 +104,12 @@
               </div>
             </div>
 
-            <!-- Credentials Information Card -->
-            <div class="mb-4 p-4 rounded-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-              <h6 class="fw-bold mb-3">
-                <i class="fas fa-key me-2"></i>Account Credentials
-              </h6>
-              
-              <div class="row g-3">
-                <div class="col-md-6">
-                  <div class="d-flex align-items-center mb-2">
-                    <i class="fas fa-user-circle me-2" style="font-size: 1.2rem;"></i>
-                    <div>
-                      <small class="opacity-75">Username</small>
-                      <p class="mb-0 fw-bold">Email address entered above</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div class="col-md-6">
-                  <div class="d-flex align-items-center mb-2">
-                    <i class="fas fa-lock me-2" style="font-size: 1.2rem;"></i>
-                    <div>
-                      <small class="opacity-75">Password</small>
-                      <p class="mb-0 fw-bold">Auto-generated temporary password</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="mt-3 p-3 rounded-3" style="background: rgba(255,255,255,0.2);">
-                <div class="d-flex align-items-start">
-                  <i class="fas fa-info-circle me-2 mt-1"></i>
-                  <small>
-                    <strong>Important:</strong> A secure temporary password will be automatically generated. 
-                    The officer will receive their credentials via email and will be required to change 
-                    their password on first login. Make sure the email address is correct.
-                  </small>
-                </div>
-              </div>
-            </div>
-
-            <!-- Notifications -->
-            <div class="mb-4">
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="sendEmail" name="sendEmail" value="true" checked>
-                <label class="form-check-label" for="sendEmail">
-                  <strong>Send welcome email with credentials</strong>
-                  <small class="d-block text-muted">The officer will receive an email with login instructions and temporary password</small>
-                </label>
-              </div>
-            </div>
-
             <!-- Summary Card -->
             <div class="mb-4 p-3 rounded-3" style="background: #f8f9fa;">
               <h6 class="fw-bold mb-2" style="color: #1e3c5c;">What happens next?</h6>
               <ol class="mb-0 small">
                 <li class="mb-1">Officer account is created with auto-generated officer number: <strong>SOxxxxx</strong></li>
-                <li class="mb-1">Temporary password is generated and can be sent via email</li>
-                <li class="mb-1">Officer can login immediately with email and temporary password</li>
-                <li class="mb-1">Officer will be prompted to change password on first login</li>
+                <li class="mb-1">Officer can login immediately with email and password you set</li>
                 <li>You can assign them to worksites and work areas from the officer profile</li>
               </ol>
             </div>
@@ -190,15 +148,23 @@
     border-color: #26a69a;
     box-shadow: 0 0 0 0.2rem rgba(38, 166, 154, 0.25);
   }
-  
-  .hover-card {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-  
-  .hover-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
-  }
 </style>
+
+<script>
+  // Password confirmation validation
+  const password = document.getElementById('password');
+  const confirmPassword = document.getElementById('confirmPassword');
+  
+  function validatePassword() {
+    if (password.value !== confirmPassword.value) {
+      confirmPassword.setCustomValidity("Passwords don't match");
+    } else {
+      confirmPassword.setCustomValidity('');
+    }
+  }
+  
+  password.onchange = validatePassword;
+  confirmPassword.onkeyup = validatePassword;
+</script>
 
 <%- include('../../partials/footer') %>

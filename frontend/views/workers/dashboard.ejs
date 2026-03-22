@@ -1,0 +1,271 @@
+<!-- frontend/views/worker/dashboard.ejs -->
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="main-wrapper">
+  <div class="content container py-4">
+    <div class="worker-dashboard-container" style="max-width: 1200px; margin: 0 auto;">
+      <!-- Worker Header -->
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+          <h3 class="mb-1">
+            <i class="fas fa-hard-hat me-2" style="color: #4caf50;"></i>
+            Worker Dashboard
+          </h3>
+          <div class="d-flex gap-2">
+            <span class="badge text-bg-secondary">
+              <i class="fas fa-id-card me-1"></i> <%= worker.workerNumber || user.workerNumber %>
+            </span>
+            <span class="badge text-bg-success">
+              <i class="fas fa-check-circle me-1"></i> Active
+            </span>
+            <span class="badge text-bg-info">
+              <i class="fas fa-calendar me-1"></i> <%= new Date().toLocaleDateString() %>
+            </span>
+          </div>
+        </div>
+        <span class="text-muted small">
+          <i class="fas fa-user me-1"></i> Welcome, <strong><%= worker.name || user.name %></strong>
+        </span>
+      </div>
+
+      <!-- Company Information -->
+      <div class="safety-talk-container text-center mb-4">
+        <div class="timer-label">MY COMPANY</div>
+        <div class="safety-talk-content">
+          <strong><%= company.companyName %></strong>
+          <small class="d-block text-muted">Worker ID: <%= worker.workerNumber || user.workerNumber %></small>
+        </div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-4 col-6">
+          <div class="d-flex align-items-center p-2 rounded bg-light">
+            <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="background: #f44336; width: 35px; height: 35px;">
+              <i class="fas fa-flag text-white" style="font-size: 0.9rem;"></i>
+            </div>
+            <div>
+              <strong><%= stats.incidentsReported || 0 %></strong>
+              <small class="text-muted d-block">My Incidents</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 col-6">
+          <div class="d-flex align-items-center p-2 rounded bg-light">
+            <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="background: #ff9800; width: 35px; height: 35px;">
+              <i class="fas fa-eye text-white" style="font-size: 0.9rem;"></i>
+            </div>
+            <div>
+              <strong><%= stats.observations || 0 %></strong>
+              <small class="text-muted d-block">Observations</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 col-6">
+          <div class="d-flex align-items-center p-2 rounded bg-light">
+            <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="background: #2196f3; width: 35px; height: 35px;">
+              <i class="fas fa-helmet-safety text-white" style="font-size: 0.9rem;"></i>
+            </div>
+            <div>
+              <strong><%= stats.safetyTalks || 0 %></strong>
+              <small class="text-muted d-block">Safety Talks</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Primary Action Buttons -->
+      <div class="d-flex gap-2 justify-content-center flex-wrap mb-4">
+        <button class="btn btn-danger btn-sm" onclick="showIncidentModal()">
+          <i class="fas fa-flag me-1"></i> Report Incident
+        </button>
+        <button class="btn btn-warning btn-sm" onclick="showObservationModal()">
+          <i class="fas fa-eye me-1"></i> Safety Observation
+        </button>
+        <button class="btn btn-info btn-sm" onclick="showSafetyTalkModal()">
+          <i class="fas fa-chalkboard-teacher me-1"></i> View Safety Talk
+        </button>
+      </div>
+
+      <hr />
+
+      <!-- My Work Area Section -->
+      <h4 class="text-center mb-4 fw-bold">
+        <i class="fas fa-map-marked-alt me-2" style="color: #4caf50;"></i>
+        My Work Area
+      </h4>
+
+      <div class="row g-4 mb-5">
+        <div class="col-md-12">
+          <div class="card shadow-sm border-0 h-100 hover-card">
+            <div class="card-body p-4">
+              <div class="d-flex align-items-center mb-3">
+                <div class="icon-circle me-3" style="background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                  <i class="fas fa-hard-hat fa-1x text-white"></i>
+                </div>
+                <div>
+                  <h5 class="fw-bold mb-0"><%= workArea?.name || 'Not Assigned' %></h5>
+                  <p class="text-muted small mb-0"><%= workArea?.location || 'No work area assigned yet' %></p>
+                </div>
+              </div>
+              <div class="row mt-3">
+                <div class="col-md-6">
+                  <small class="text-muted">Shift</small>
+                  <p><strong><%= worker.shift || 'Morning' %></strong></p>
+                </div>
+                <div class="col-md-6">
+                  <small class="text-muted">Position</small>
+                  <p><strong><%= worker.position || 'General Worker' %></strong></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity Feed -->
+      <div class="card shadow-sm border-0 mt-4">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+          <h5 class="fw-bold mb-0">
+            <i class="fas fa-history me-2" style="color: #4caf50;"></i>
+            Recent Activity
+          </h5>
+        </div>
+        <div class="card-body p-4">
+          <% if (recentActivities && recentActivities.length > 0) { %>
+            <div class="list-group list-group-flush">
+              <% recentActivities.slice(0, 5).forEach(activity => { %>
+                <div class="list-group-item px-0 d-flex align-items-center">
+                  <div class="me-3">
+                    <span class="badge bg-<%= activity.type === 'incident' ? 'danger' : 'warning' %> rounded-pill">
+                      <%= activity.type %>
+                    </span>
+                  </div>
+                  <div class="flex-grow-1">
+                    <p class="mb-0"><%= activity.description %></p>
+                    <small class="text-muted"><%= new Date(activity.createdAt).toLocaleString() %></small>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          <% } else { %>
+            <p class="text-muted text-center py-4">No recent activity. Report an incident or make a safety observation.</p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Incident Report Modal -->
+<div class="modal fade" id="incidentModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content" style="border-radius: 16px;">
+      <div class="modal-header border-0">
+        <h5 class="modal-title fw-bold">Report Incident</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form action="/worker/incidents" method="POST">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Work Area *</label>
+            <select class="form-select" name="workAreaId" required style="border-radius: 40px;">
+              <option value="<%= workArea?._id %>"><%= workArea?.name || 'My Work Area' %></option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Incident Type *</label>
+            <select class="form-select" name="incidentType" required style="border-radius: 40px;">
+              <option value="accident">Accident with injury</option>
+              <option value="near_miss">Near Miss</option>
+              <option value="unsafe_condition">Unsafe Condition</option>
+              <option value="unsafe_act">Unsafe Act</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Description *</label>
+            <textarea class="form-control" name="description" rows="4" required style="border-radius: 16px;"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-radius: 40px;">Cancel</button>
+          <button type="submit" class="btn btn-danger" style="border-radius: 40px;">Report Incident</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Safety Observation Modal -->
+<div class="modal fade" id="observationModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content" style="border-radius: 16px;">
+      <div class="modal-header border-0">
+        <h5 class="modal-title fw-bold">Safety Observation</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form action="/worker/observations" method="POST">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Work Area *</label>
+            <select class="form-select" name="workAreaId" required style="border-radius: 40px;">
+              <option value="<%= workArea?._id %>"><%= workArea?.name || 'My Work Area' %></option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Observation Type *</label>
+            <select class="form-select" name="type" required style="border-radius: 40px;">
+              <option value="positive">Positive - Safe Behavior Observed</option>
+              <option value="at_risk">At-Risk - Unsafe Behavior</option>
+              <option value="condition">Condition - Unsafe Condition</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Description *</label>
+            <textarea class="form-control" name="description" rows="4" required style="border-radius: 16px;"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-radius: 40px;">Cancel</button>
+          <button type="submit" class="btn btn-warning" style="border-radius: 40px;">Submit Observation</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showIncidentModal() {
+    new bootstrap.Modal(document.getElementById('incidentModal')).show();
+  }
+  function showObservationModal() {
+    new bootstrap.Modal(document.getElementById('observationModal')).show();
+  }
+  function showSafetyTalkModal() {
+    Swal.fire({
+      icon: 'info',
+      title: 'Today\'s Safety Talk',
+      html: `<div class="text-start">${safetyTalkContent || 'Always wear your PPE. Check your tools before use. Report any unsafe conditions immediately.'}</div>`,
+      confirmButtonColor: '#4caf50'
+    });
+  }
+</script>
+
+<style>
+  .main-wrapper { min-height: 100vh; display: flex; flex-direction: column; }
+  .content { flex: 1; }
+  .hover-card { transition: transform 0.3s ease, box-shadow 0.3s ease; border-radius: 16px; }
+  .hover-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important; }
+  .icon-circle { transition: transform 0.3s ease; }
+  .hover-card:hover .icon-circle { transform: scale(1.1); }
+  .btn { transition: all 0.3s ease; border-radius: 40px; }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); }
+  .card { border-radius: 16px; }
+  .badge { font-size: 0.8rem; padding: 0.4rem 0.6rem; border-radius: 40px; }
+  .safety-talk-container { background-color: #f8f9fa; padding: 1rem; border-radius: 8px; border-left: 5px solid #4caf50; }
+  .safety-talk-content { font-size: 1rem; color: #343a40; background-color: white; padding: 0.75rem 1rem; border-radius: 6px; margin-top: 0.5rem; border: 1px solid #e9ecef; }
+  .timer-label { font-size: 0.9rem; color: #6c757d; letter-spacing: 1px; font-weight: 600; }
+</style>
+
+<%- include('../partials/footer') %>

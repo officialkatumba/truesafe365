@@ -41,20 +41,20 @@
           <a class="nav-link" href="/">Home</a>
         </li>
         <% if (user) { %>
-          <% if (user.isDualRole) { %>
-            <!-- Solo Practitioner -->
-            <li class="nav-item">
-              <a class="nav-link" href="/dashboard/solo">Dashboard</a>
-            </li>
-          <% } else if (user.role === 'system_admin' && user.accountType === 'enterprise_admin') { %>
+          <% if (user.role === 'system_admin') { %>
             <!-- Enterprise Admin -->
             <li class="nav-item">
               <a class="nav-link" href="/dashboard/admin">Dashboard</a>
             </li>
           <% } else if (user.role === 'safety_officer') { %>
-            <!-- Enterprise Safety Officer -->
+            <!-- Safety Officer -->
             <li class="nav-item">
               <a class="nav-link" href="/dashboard/officer">Dashboard</a>
+            </li>
+          <% } else if (user.role === 'worker') { %>
+            <!-- Worker -->
+            <li class="nav-item">
+              <a class="nav-link" href="/dashboard/worker">Dashboard</a>
             </li>
           <% } %>
           <li class="nav-item">
@@ -67,13 +67,147 @@
           <li class="nav-item">
             <a class="nav-link" href="/api/users/login">Login</a>
           </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/register/options">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="registerDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               <i class="bi bi-person-plus-fill me-1"></i>Register
             </a>
+            <ul class="dropdown-menu" aria-labelledby="registerDropdown">
+              <li>
+                <a class="dropdown-item" href="/register/enterprise-admin">
+                  <i class="bi bi-building me-2"></i>Enterprise Admin
+                  <small class="d-block text-muted">Register your company</small>
+                </a>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <a class="dropdown-item" href="/register/safety-officer/join">
+                  <i class="bi bi-shield-check me-2"></i>Safety Officer
+                  <small class="d-block text-muted">Join with company PIN</small>
+                </a>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <a class="dropdown-item" href="/register/worker/join">
+                  <i class="bi bi-person-badge me-2"></i>Worker
+                  <small class="d-block text-muted">Join with company PIN</small>
+                </a>
+              </li>
+            </ul>
           </li>
         <% } %>
       </ul>
     </div>
   </div>
 </nav>
+
+<style>
+  .emergency-banner {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+    padding: 8px 0;
+    font-size: 0.85rem;
+  }
+  
+  .emergency-banner a {
+    text-decoration: none;
+    transition: opacity 0.3s ease;
+  }
+  
+  .emergency-banner a:hover {
+    opacity: 0.8;
+  }
+  
+  .navbar {
+    background: transparent;
+    padding: 12px 0;
+    box-shadow: none;
+    border-bottom: none;
+  }
+  
+  .navbar-brand {
+    font-size: 1.5rem;
+    color: #1e3c5c !important;
+    font-weight: 700;
+  }
+  
+  .navbar-brand i {
+    color: #e67e22;
+  }
+  
+  .nav-link {
+    color: #4a5568 !important;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    margin: 0 4px;
+  }
+  
+  .nav-link:hover {
+    color: #e67e22 !important;
+  }
+  
+  .dropdown-menu {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    margin-top: 8px;
+    padding: 8px 0;
+    background: white;
+  }
+  
+  .dropdown-item {
+    padding: 8px 20px;
+    transition: all 0.3s ease;
+    color: #4a5568;
+  }
+  
+  .dropdown-item:hover {
+    background-color: #f8f9fa;
+    color: #e67e22;
+    padding-left: 25px;
+  }
+  
+  .dropdown-item small {
+    font-size: 0.7rem;
+    color: #6c757d;
+  }
+  
+  .dropdown-item i {
+    width: 20px;
+    color: #e67e22;
+    margin-right: 8px;
+  }
+  
+  .dropdown-divider {
+    margin: 8px 0;
+  }
+  
+  @media (max-width: 768px) {
+    .navbar {
+      background: transparent;
+    }
+    
+    .dropdown-menu {
+      border: none;
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: none;
+      padding-left: 20px;
+    }
+    
+    .dropdown-item {
+      color: #4a5568 !important;
+    }
+    
+    .dropdown-item small {
+      color: #6c757d !important;
+    }
+    
+    .dropdown-item i {
+      color: #e67e22;
+    }
+    
+    .dropdown-item:hover {
+      background: #f8f9fa;
+      padding-left: 25px;
+    }
+  }
+</style>

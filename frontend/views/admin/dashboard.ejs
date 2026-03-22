@@ -4,7 +4,7 @@
 <div class="main-wrapper">
   <div class="content container py-4">
     <div class="admin-dashboard-container" style="max-width: 900px; margin: 0 auto;">
-      <!-- Admin Header - Work Area Style -->
+      <!-- Admin Header -->
       <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div>
           <h3 class="mb-1">
@@ -28,7 +28,45 @@
         </span>
       </div>
 
-      <!-- Critical Alerts Banner - Work Area Style -->
+      <!-- Company PIN Card -->
+      <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
+        <div class="card-body p-4">
+          <h5 class="fw-bold mb-3" style="color: #1e3c5c;">
+            <i class="fas fa-building me-2" style="color: #e67e22;"></i>
+            Company Information
+          </h5>
+          <div class="row">
+            <div class="col-md-6">
+              <p class="mb-2"><strong>Company Name:</strong> <%= user.companyName || 'Not set' %></p>
+              <p class="mb-2">
+                <strong>Company PIN:</strong> 
+                <span class="badge bg-primary fs-6 p-2"><%= user.companyPin || 'Not generated' %></span>
+                <% if (user.companyPin) { %>
+                <button class="btn btn-sm btn-outline-secondary ms-2" onclick="copyPIN()">
+                  <i class="fas fa-copy"></i> Copy
+                </button>
+                <% } %>
+              </p>
+            </div>
+            <div class="col-md-6">
+              <% if (user.companyPinExpiresAt) { %>
+              <p class="mb-2"><strong>PIN Expires:</strong> <%= new Date(user.companyPinExpiresAt).toLocaleDateString() %></p>
+              <p class="mb-2"><strong>PIN Uses Left:</strong> <%= (user.maxPinUses || 1) - ((user.companyPinUsedBy && user.companyPinUsedBy.length) || 0) %></p>
+              <% } else { %>
+              <p class="mb-2 text-muted"><i class="fas fa-info-circle me-1"></i> No PIN generated yet</p>
+              <% } %>
+            </div>
+          </div>
+          <div class="mt-3 p-3 rounded-3" style="background: #f8f9fa;">
+            <small class="text-muted">
+              <i class="fas fa-info-circle me-1" style="color: #e67e22;"></i>
+              Share this PIN with safety officers and workers to join your company. Each PIN can be used up to <%= user.maxPinUses || 1 %> time(s).
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Critical Alerts Banner -->
       <% 
         const criticalAlerts = [
           { type: 'incident', count: 2, message: 'Unresolved critical incidents requiring investigation', severity: 'critical', link: '/incidents?severity=critical' },
@@ -68,7 +106,7 @@
       </div>
       <% } %>
 
-      <!-- Company Performance Overview - Work Area Style Stats Row -->
+      <!-- Company Performance Overview Stats Row -->
       <div class="row g-3 mb-4">
         <div class="col-md-3 col-6">
           <div class="d-flex align-items-center p-2 rounded bg-light">
@@ -116,7 +154,7 @@
         </div>
       </div>
 
-      <!-- Quick Actions Row (like work area action buttons) -->
+      <!-- Quick Actions Row -->
       <div class="d-flex gap-2 justify-content-center flex-wrap mb-4">
         <a href="/worksites/create" class="btn btn-outline-primary btn-sm">
           <i class="fas fa-plus-circle me-1"></i> New Worksite
@@ -141,7 +179,6 @@
       </h4>
 
       <div class="row g-4 mb-5">
-        <!-- Create Worksite Card -->
         <div class="col-lg-4 col-md-6">
           <div class="card shadow-sm border-0 h-100 hover-card">
             <div class="card-body text-center p-4">
@@ -149,7 +186,7 @@
                 <i class="fas fa-plus-circle fa-2x text-white"></i>
               </div>
               <h5 class="fw-bold mb-2">Create Worksite</h5>
-              <p class="text-muted small mb-3">Add new company worksites. Each worksite will have its own work areas and needed  safety data.</p>
+              <p class="text-muted small mb-3">Add new company worksites. Each worksite will have its own work areas and needed safety data.</p>
               <a href="/worksites/create" class="btn w-100" style="background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%); color: white; border-radius: 40px;">
                 <i class="fas fa-plus-circle me-2"></i> Create
               </a>
@@ -157,7 +194,6 @@
           </div>
         </div>
         
-        <!-- All Worksites Card -->
         <div class="col-lg-4 col-md-6">
           <div class="card shadow-sm border-0 h-100 hover-card">
             <div class="card-body text-center p-4">
@@ -173,7 +209,6 @@
           </div>
         </div>
 
-        <!-- All Work Areas Card -->
         <div class="col-lg-4 col-md-6">
           <div class="card shadow-sm border-0 h-100 hover-card">
             <div class="card-body text-center p-4">
@@ -197,23 +232,21 @@
       </h4>
 
       <div class="row g-4 mb-5">
-  <!-- Create Safety Officer Card -->
-<div class="col-lg-4 col-md-6">
-  <div class="card shadow-sm border-0 h-100 hover-card">
-    <div class="card-body text-center p-4">
-      <div class="icon-circle mb-3 mx-auto" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-        <i class="fas fa-user-plus fa-2x text-white"></i>
-      </div>
-      <h5 class="fw-bold mb-2">Create Safety Officer</h5>
-      <p class="text-muted small mb-3">Create new safety officer accounts with auto-generated credentials. They will be verified and ready to assign to worksites.</p>
-      <a href="/admin/safety-officers/create" class="btn w-100" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); color: white; border-radius: 40px;">
-        <i class="fas fa-user-plus me-2"></i> Create Officer
-      </a>
-    </div>
-  </div>
-</div>
+        <div class="col-lg-4 col-md-6">
+          <div class="card shadow-sm border-0 h-100 hover-card">
+            <div class="card-body text-center p-4">
+              <div class="icon-circle mb-3 mx-auto" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-user-plus fa-2x text-white"></i>
+              </div>
+              <h5 class="fw-bold mb-2">Create Safety Officer</h5>
+              <p class="text-muted small mb-3">Create new safety officer accounts with auto-generated credentials.</p>
+              <a href="/admin/safety-officers/create" class="btn w-100" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); color: white; border-radius: 40px;">
+                <i class="fas fa-user-plus me-2"></i> Create Officer
+              </a>
+            </div>
+          </div>
+        </div>
 
-        <!-- All Officers Card -->
         <div class="col-lg-4 col-md-6">
           <div class="card shadow-sm border-0 h-100 hover-card">
             <div class="card-body text-center p-4">
@@ -229,7 +262,6 @@
           </div>
         </div>
 
-        <!-- Training & Certifications Card -->
         <div class="col-lg-4 col-md-6">
           <div class="card shadow-sm border-0 h-100 hover-card">
             <div class="card-body text-center p-4">
@@ -253,7 +285,6 @@
       </h4>
 
       <div class="row g-4 mb-5">
-        <!-- Pending Approvals Card -->
         <div class="col-lg-4 col-md-6">
           <div class="card shadow-sm border-0 h-100 hover-card">
             <div class="card-body text-center p-4">
@@ -261,7 +292,7 @@
                 <i class="fas fa-clock fa-2x text-white"></i>
               </div>
               <h5 class="fw-bold mb-2">Pending Approvals</h5>
-              <p class="text-muted small mb-3">Review and approve safety documents, incident reports, and permit requests from officers.</p>
+              <p class="text-muted small mb-3">Review and approve safety documents, incident reports, and permit requests.</p>
               <a href="/admin/approvals" class="btn w-100" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); color: white; border-radius: 40px;">
                 <i class="fas fa-check-circle me-2"></i> Review
               </a>
@@ -269,7 +300,6 @@
           </div>
         </div>
 
-        <!-- Safety Reports Card -->
         <div class="col-lg-4 col-md-6">
           <div class="card shadow-sm border-0 h-100 hover-card">
             <div class="card-body text-center p-4">
@@ -277,7 +307,7 @@
                 <i class="fas fa-file-alt fa-2x text-white"></i>
               </div>
               <h5 class="fw-bold mb-2">Safety Reports</h5>
-              <p class="text-muted small mb-3">View all incident reports, risk assessments, and safety talks across the company.</p>
+              <p class="text-muted small mb-3">View all incident reports, risk assessments, and safety talks.</p>
               <a href="/admin/reports" class="btn w-100" style="background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%); color: white; border-radius: 40px;">
                 <i class="fas fa-file-alt me-2"></i> View Reports
               </a>
@@ -285,7 +315,6 @@
           </div>
         </div>
 
-        <!-- Compliance Dashboard Card -->
         <div class="col-lg-4 col-md-6">
           <div class="card shadow-sm border-0 h-100 hover-card">
             <div class="card-body text-center p-4">
@@ -311,6 +340,19 @@
     </div>
   </div>
 </div>
+
+<script>
+function copyPIN() {
+  navigator.clipboard.writeText('<%= user.companyPin %>');
+  Swal.fire({
+    icon: 'success',
+    title: 'Copied!',
+    text: 'Company PIN copied to clipboard',
+    timer: 1500,
+    showConfirmButton: false
+  });
+}
+</script>
 
 <style>
   .main-wrapper {

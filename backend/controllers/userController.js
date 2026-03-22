@@ -608,6 +608,122 @@ exports.showLoginForm = (req, res) => {
 };
 
 // Handle login with role-based redirect
+// exports.loginUser = (req, res, next) => {
+//   passport.authenticate("local", async (err, user, info) => {
+//     if (err) {
+//       return next(err);
+//     }
+
+//     if (!user) {
+//       req.flash("error", "Invalid email or password");
+//       return res.redirect("/api/users/login");
+//     }
+
+//     req.logIn(user, async (err) => {
+//       if (err) {
+//         return next(err);
+//       }
+
+//       try {
+//         // Populate safety officer data if needed
+//         if (user.role === "safety_officer" || user.isDualRole) {
+//           await user.populate("safetyOfficer");
+//         }
+
+//         // SOLO USER: Dual-role practitioner
+//         if (user.isDualRole) {
+//           const name = user.safetyOfficer?.name || user.email;
+//           req.flash("success", `Welcome back, ${name}!`);
+//           return res.redirect("/dashboard/solo");
+//         }
+
+//         // ENTERPRISE SAFETY OFFICER
+//         if (user.role === "safety_officer") {
+//           const name = user.safetyOfficer?.name || user.email;
+//           req.flash("success", `Welcome back, ${name}!`);
+//           return res.redirect("/dashboard/officer");
+//         }
+
+//         // ENTERPRISE ADMIN
+//         if (
+//           user.role === "system_admin" &&
+//           user.accountType === "enterprise_admin"
+//         ) {
+//           req.flash("success", "Welcome enterprise admin!");
+//           return res.redirect("/dashboard/admin");
+//         }
+
+//         // If we get here, role not recognized
+//         req.flash("error", "Access denied: Role not recognized.");
+//         return res.redirect("/api/users/login");
+//       } catch (error) {
+//         console.error("Login error:", error);
+//         req.flash("error", "Unexpected error occurred during login.");
+//         return res.redirect("/api/users/login");
+//       }
+//     });
+//   })(req, res, next);
+// };
+
+// exports.loginUser = (req, res, next) => {
+//   passport.authenticate("local", async (err, user, info) => {
+//     if (err) {
+//       return next(err);
+//     }
+
+//     if (!user) {
+//       req.flash("error", "Invalid email or password");
+//       return res.redirect("/api/users/login");
+//     }
+
+//     req.logIn(user, async (err) => {
+//       if (err) {
+//         return next(err);
+//       }
+
+//       try {
+//         // Populate safety officer data if needed
+//         if (user.role === "safety_officer") {
+//           await user.populate("safetyOfficer");
+//         }
+
+//         // ENTERPRISE ADMIN - Check role only, not accountType
+//         if (user.role === "system_admin") {
+//           req.flash("success", `Welcome, ${user.name}!`);
+//           return res.redirect("/admin/dashboard");
+//         }
+
+//         // ENTERPRISE SAFETY OFFICER
+//         if (user.role === "safety_officer") {
+//           const name = user.safetyOfficer?.name || user.name || user.email;
+//           req.flash("success", `Welcome back, ${name}!`);
+//           return res.redirect("/safety-officer/dashboard");
+//         }
+
+//         // SUPERVISOR
+//         if (user.role === "supervisor") {
+//           req.flash("success", `Welcome, ${user.name}!`);
+//           return res.redirect("/supervisor/dashboard");
+//         }
+
+//         // WORKER
+//         if (user.role === "worker") {
+//           req.flash("success", `Welcome, ${user.name}!`);
+//           return res.redirect("/worker/dashboard");
+//         }
+
+//         // If we get here, role not recognized
+//         req.flash("error", "Access denied: Role not recognized.");
+//         return res.redirect("/api/users/login");
+//       } catch (error) {
+//         console.error("Login error:", error);
+//         req.flash("error", "Unexpected error occurred during login.");
+//         return res.redirect("/api/users/login");
+//       }
+//     });
+//   })(req, res, next);
+// };
+
 exports.loginUser = (req, res, next) => {
   passport.authenticate("local", async (err, user, info) => {
     if (err) {
@@ -626,31 +742,33 @@ exports.loginUser = (req, res, next) => {
 
       try {
         // Populate safety officer data if needed
-        if (user.role === "safety_officer" || user.isDualRole) {
+        if (user.role === "safety_officer") {
           await user.populate("safetyOfficer");
         }
 
-        // SOLO USER: Dual-role practitioner
-        if (user.isDualRole) {
-          const name = user.safetyOfficer?.name || user.email;
-          req.flash("success", `Welcome back, ${name}!`);
-          return res.redirect("/dashboard/solo");
+        // ENTERPRISE ADMIN - Redirect to dashboard/admin route
+        if (user.role === "system_admin") {
+          req.flash("success", `Welcome, ${user.name}!`);
+          return res.redirect("/dashboard/admin"); // ✅ Changed this
         }
 
         // ENTERPRISE SAFETY OFFICER
         if (user.role === "safety_officer") {
-          const name = user.safetyOfficer?.name || user.email;
+          const name = user.safetyOfficer?.name || user.name || user.email;
           req.flash("success", `Welcome back, ${name}!`);
-          return res.redirect("/dashboard/officer");
+          return res.redirect("/dashboard/officer"); // ✅ Changed to match dashboard route
         }
 
-        // ENTERPRISE ADMIN
-        if (
-          user.role === "system_admin" &&
-          user.accountType === "enterprise_admin"
-        ) {
-          req.flash("success", "Welcome enterprise admin!");
-          return res.redirect("/dashboard/admin");
+        // SUPERVISOR
+        if (user.role === "supervisor") {
+          req.flash("success", `Welcome, ${user.name}!`);
+          return res.redirect("/dashboard/supervisor");
+        }
+
+        // WORKER
+        if (user.role === "worker") {
+          req.flash("success", `Welcome, ${user.name}!`);
+          return res.redirect("/dashboard/worker");
         }
 
         // If we get here, role not recognized
