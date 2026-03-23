@@ -159,9 +159,9 @@
         <a href="/worksites/create" class="btn btn-outline-primary btn-sm">
           <i class="fas fa-plus-circle me-1"></i> New Worksite
         </a>
-        <a href="/work-areas/create" class="btn btn-outline-success btn-sm">
+        <!-- <a href="/work-areas/create" class="btn btn-outline-success btn-sm">
           <i class="fas fa-map-marked-alt me-1"></i> New Work Area
-        </a>
+        </a> -->
         <a href="/admin/safety-officers/create" class="btn btn-outline-warning btn-sm">
           <i class="fas fa-user-plus me-1"></i> Add Officer
         </a>
@@ -171,7 +171,6 @@
       </div>
 
       <hr />
-
       <!-- SECTION 1: Site Management Cards -->
       <h4 class="text-center mb-4 fw-bold">
         <i class="fas fa-hard-hat me-2" style="color: #f093fb;"></i>
@@ -212,19 +211,18 @@
         <div class="col-lg-4 col-md-6">
           <div class="card shadow-sm border-0 h-100 hover-card">
             <div class="card-body text-center p-4">
-              <div class="icon-circle mb-3 mx-auto" style="background: linear-gradient(135deg, #26a69a 0%, #00897b 100%); width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-map-marked-alt fa-2x text-white"></i>
+              <div class="icon-circle mb-3 mx-auto" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-file-signature fa-2x text-white"></i>
               </div>
-              <h5 class="fw-bold mb-2">All Work Areas</h5>
-              <p class="text-muted small mb-3">View all work areas across worksites. Click any area to manage hazards, incidents, and safety talks.</p>
-              <a href="/work-areas" class="btn w-100" style="background: linear-gradient(135deg, #26a69a 0%, #00897b 100%); color: white; border-radius: 40px;">
-                <i class="fas fa-arrow-right me-2"></i> View All
+              <h5 class="fw-bold mb-2">Worksite Permits</h5>
+              <p class="text-muted small mb-3">View and manage all worksite permits. Track permit status, expiry dates, and compliance requirements.</p>
+              <a href="/admin/permits" class="btn w-100" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); color: white; border-radius: 40px;">
+                <i class="fas fa-arrow-right me-2"></i> View Permits
               </a>
             </div>
           </div>
         </div>
       </div>
-
       <!-- SECTION 2: Personnel Management Cards -->
       <h4 class="text-center mb-4 fw-bold">
         <i class="fas fa-users me-2" style="color: #f093fb;"></i>
@@ -232,28 +230,14 @@
       </h4>
 
       <div class="row g-4 mb-5">
-        <div class="col-lg-4 col-md-6">
-          <div class="card shadow-sm border-0 h-100 hover-card">
-            <div class="card-body text-center p-4">
-              <div class="icon-circle mb-3 mx-auto" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-user-plus fa-2x text-white"></i>
-              </div>
-              <h5 class="fw-bold mb-2">Create Safety Officer</h5>
-              <p class="text-muted small mb-3">Create new safety officer accounts with auto-generated credentials.</p>
-              <a href="/admin/safety-officers/create" class="btn w-100" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); color: white; border-radius: 40px;">
-                <i class="fas fa-user-plus me-2"></i> Create Officer
-              </a>
-            </div>
-          </div>
-        </div>
-
+        <!-- All Safety Officers Card -->
         <div class="col-lg-4 col-md-6">
           <div class="card shadow-sm border-0 h-100 hover-card">
             <div class="card-body text-center p-4">
               <div class="icon-circle mb-3 mx-auto" style="background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%); width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                 <i class="fas fa-users-cog fa-2x text-white"></i>
               </div>
-              <h5 class="fw-bold mb-2">All Officers</h5>
+              <h5 class="fw-bold mb-2">All Safety Officers</h5>
               <p class="text-muted small mb-3">View all safety officers. Manage their profiles, permissions, and assignments.</p>
               <a href="/admin/safety-officers" class="btn w-100" style="background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%); color: white; border-radius: 40px;">
                 <i class="fas fa-arrow-right me-2"></i> View All
@@ -262,6 +246,23 @@
           </div>
         </div>
 
+        <!-- All Workers Card -->
+        <div class="col-lg-4 col-md-6">
+          <div class="card shadow-sm border-0 h-100 hover-card">
+            <div class="card-body text-center p-4">
+              <div class="icon-circle mb-3 mx-auto" style="background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%); width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-users fa-2x text-white"></i>
+              </div>
+              <h5 class="fw-bold mb-2">All Workers</h5>
+              <p class="text-muted small mb-3">View all workers across all worksites. Manage assignments and track safety records.</p>
+              <a href="/admin/workers" class="btn w-100" style="background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%); color: white; border-radius: 40px;">
+                <i class="fas fa-arrow-right me-2"></i> View All
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Certifications Card -->
         <div class="col-lg-4 col-md-6">
           <div class="card shadow-sm border-0 h-100 hover-card">
             <div class="card-body text-center p-4">
@@ -278,53 +279,58 @@
         </div>
       </div>
 
-      <!-- SECTION 3: Compliance & Oversight Cards -->
+
+       
+            <!-- SECTION 3: Compliance & Oversight Cards -->
       <h4 class="text-center mb-4 fw-bold">
         <i class="fas fa-shield-alt me-2" style="color: #f093fb;"></i>
         Compliance & Oversight
       </h4>
 
       <div class="row g-4 mb-5">
-        <div class="col-lg-4 col-md-6">
-          <div class="card shadow-sm border-0 h-100 hover-card">
-            <div class="card-body text-center p-4">
-              <div class="icon-circle mb-3 mx-auto" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-clock fa-2x text-white"></i>
-              </div>
-              <h5 class="fw-bold mb-2">Pending Approvals</h5>
-              <p class="text-muted small mb-3">Review and approve safety documents, incident reports, and permit requests.</p>
-              <a href="/admin/approvals" class="btn w-100" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); color: white; border-radius: 40px;">
-                <i class="fas fa-check-circle me-2"></i> Review
-              </a>
-            </div>
-          </div>
-        </div>
-
+        <!-- Safety & Health Compliance Card -->
         <div class="col-lg-4 col-md-6">
           <div class="card shadow-sm border-0 h-100 hover-card">
             <div class="card-body text-center p-4">
               <div class="icon-circle mb-3 mx-auto" style="background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%); width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-file-alt fa-2x text-white"></i>
+                <i class="fas fa-chart-line fa-2x text-white"></i>
               </div>
-              <h5 class="fw-bold mb-2">Safety Reports</h5>
-              <p class="text-muted small mb-3">View all incident reports, risk assessments, and safety talks.</p>
-              <a href="/admin/reports" class="btn w-100" style="background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%); color: white; border-radius: 40px;">
-                <i class="fas fa-file-alt me-2"></i> View Reports
+              <h5 class="fw-bold mb-2">Safety & Health Compliance</h5>
+              <p class="text-muted small mb-3">Monitor regulatory compliance, track standards adherence, identify gaps, and view comprehensive safety metrics.</p>
+              <a href="/admin/compliance" class="btn w-100" style="background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%); color: white; border-radius: 40px;">
+                <i class="fas fa-chart-line me-2"></i> View Dashboard
               </a>
             </div>
           </div>
         </div>
 
+        <!-- Actions Needed Card -->
         <div class="col-lg-4 col-md-6">
           <div class="card shadow-sm border-0 h-100 hover-card">
             <div class="card-body text-center p-4">
               <div class="icon-circle mb-3 mx-auto" style="background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%); width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-gavel fa-2x text-white"></i>
+                <i class="fas fa-bell fa-2x text-white"></i>
               </div>
-              <h5 class="fw-bold mb-2">Compliance Dashboard</h5>
-              <p class="text-muted small mb-3">Monitor regulatory compliance, track standards adherence, and identify gaps.</p>
-              <a href="/admin/compliance" class="btn w-100" style="background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%); color: white; border-radius: 40px;">
-                <i class="fas fa-check-circle me-2"></i> View Compliance
+              <h5 class="fw-bold mb-2">Immediate Actions Needed</h5>
+              <p class="text-muted small mb-3">Review pending approvals, address overdue tasks, respond to urgent safety requests, and manage critical issues.</p>
+              <a href="/admin/actions" class="btn w-100" style="background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%); color: white; border-radius: 40px;">
+                <i class="fas fa-tasks me-2"></i> View Actions
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Enhanced Safety Reports Card -->
+        <div class="col-lg-4 col-md-6">
+          <div class="card shadow-sm border-0 h-100 hover-card">
+            <div class="card-body text-center p-4">
+              <div class="icon-circle mb-3 mx-auto" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-chart-pie fa-2x text-white"></i>
+              </div>
+              <h5 class="fw-bold mb-2">Safety Reports & Analytics</h5>
+              <p class="text-muted small mb-3">Comprehensive incident reports, risk assessments, safety talks, trends analysis, and performance metrics.</p>
+              <a href="/admin/reports" class="btn w-100" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); color: white; border-radius: 40px;">
+                <i class="fas fa-chart-pie me-2"></i> View Reports
               </a>
             </div>
           </div>
