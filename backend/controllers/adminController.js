@@ -227,6 +227,69 @@ exports.listSafetyOfficers = async (req, res) => {
 // };
 
 // View single safety officer
+// exports.viewSafetyOfficer = async (req, res) => {
+//   try {
+//     const officer = await SafetyOfficer.findById(req.params.id).populate({
+//       path: "worksites",
+//       populate: { path: "workAreas" },
+//     });
+
+//     if (!officer) {
+//       req.flash("error", "Safety officer not found");
+//       return res.redirect("/admin/safety-officers");
+//     }
+
+//     // Get all worksites this officer is assigned to
+//     const assignedWorksites = await Worksite.find({
+//       "assignedSafetyOfficers.officer": officer._id,
+//     }).populate("workAreas");
+
+//     // Get work areas this officer manages
+//     const workAreas = await WorkArea.find({
+//       "assignedSafetyOfficers.officer": officer._id,
+//     }).populate("worksite", "name");
+
+//     // Get recent activity
+//     const recentIncidents = await Incident.find({
+//       workArea: { $in: workAreas.map((wa) => wa._id) },
+//     })
+//       .sort({ createdAt: -1 })
+//       .limit(10)
+//       .populate("workArea", "name");
+
+//     const recentAssessments = await RiskAssessment.find({
+//       workArea: { $in: workAreas.map((wa) => wa._id) },
+//     })
+//       .sort({ createdAt: -1 })
+//       .limit(5);
+
+//     // Get available worksites for assignment modal (exclude already assigned ones)
+//     const assignedWorksiteIds = assignedWorksites.map((w) => w._id);
+//     const availableWorksites = await Worksite.find({
+//       status: "active",
+//       _id: { $nin: assignedWorksiteIds }, // Exclude already assigned worksites
+//     }).select("name location");
+
+//     res.render("admin/safety-officers/view", {
+//       user: req.user,
+//       officer,
+//       assignedWorksites,
+//       workAreas,
+//       recentIncidents,
+//       recentAssessments,
+//       availableWorksites, // This was missing!
+//       success: req.flash("success"),
+//       error: req.flash("error"),
+//       info: req.flash("info"),
+//     });
+//   } catch (error) {
+//     console.error("Error viewing safety officer:", error);
+//     req.flash("error", "Error loading safety officer details");
+//     res.redirect("/admin/safety-officers");
+//   }
+// };
+
+// View single safety officer (UPDATED with availableWorkAreas)
 exports.viewSafetyOfficer = async (req, res) => {
   try {
     const officer = await SafetyOfficer.findById(req.params.id).populate({
@@ -249,6 +312,13 @@ exports.viewSafetyOfficer = async (req, res) => {
       "assignedSafetyOfficers.officer": officer._id,
     }).populate("worksite", "name");
 
+    // Get available work areas (not already assigned to this officer)
+    const assignedWorkAreaIds = workAreas.map((wa) => wa._id);
+    const availableWorkAreas = await WorkArea.find({
+      _id: { $nin: assignedWorkAreaIds },
+      status: "active",
+    }).populate("worksite", "name location");
+
     // Get recent activity
     const recentIncidents = await Incident.find({
       workArea: { $in: workAreas.map((wa) => wa._id) },
@@ -267,7 +337,7 @@ exports.viewSafetyOfficer = async (req, res) => {
     const assignedWorksiteIds = assignedWorksites.map((w) => w._id);
     const availableWorksites = await Worksite.find({
       status: "active",
-      _id: { $nin: assignedWorksiteIds }, // Exclude already assigned worksites
+      _id: { $nin: assignedWorksiteIds },
     }).select("name location");
 
     res.render("admin/safety-officers/view", {
@@ -277,7 +347,8 @@ exports.viewSafetyOfficer = async (req, res) => {
       workAreas,
       recentIncidents,
       recentAssessments,
-      availableWorksites, // This was missing!
+      availableWorksites,
+      availableWorkAreas, // Add this line
       success: req.flash("success"),
       error: req.flash("error"),
       info: req.flash("info"),
@@ -1029,5 +1100,99 @@ exports.adminCreateSafetyOfficer = async (req, res) => {
 
     req.flash("error", "Error creating safety officer");
     res.redirect("/admin/safety-officers/create");
+  }
+};
+
+// ==================== WORK AREA ASSIGNMENT FUNCTIONS ====================
+
+// Assign work area to safety officer
+exports.assignWorkAreaToOfficer = async (req, res) => {
+  try {
+    const { officerId } = req.params;
+    const { workAreaId, shift, isPrimary } = req.body;
+
+    // Find officer
+    const officer = await SafetyOfficer.findById(officerId);
+    if (!officer) {
+      req.flash("error", "Safety officer not found");
+      return res.redirect(`/admin/safety-officers/${officerId}`);
+    }
+
+    // Find work area
+    const workArea = await WorkArea.findById(workAreaId);
+    if (!workArea) {
+      req.flash("error", "Work area not found");
+      return res.redirect(`/admin/safety-officers/${officerId}`);
+    }
+
+    // Check if already assigned
+    const alreadyAssigned =
+      officer.workAreas && officer.workAreas.includes(workAreaId);
+    if (alreadyAssigned) {
+      req.flash("error", "Officer already assigned to this work area");
+      return res.redirect(`/admin/safety-officers/${officerId}`);
+    }
+
+    // Add work area to officer
+    if (!officer.workAreas) officer.workAreas = [];
+    officer.workAreas.push(workAreaId);
+    await officer.save();
+
+    // Add officer to work area's assigned safety officers
+    workArea.assignedSafetyOfficers.push({
+      officer: officerId,
+      shift: shift || "morning",
+      isPrimary: isPrimary === "true" || isPrimary === true,
+      assignedFrom: new Date(),
+      isActive: true,
+    });
+    await workArea.save();
+
+    req.flash("success", `Work area "${workArea.name}" assigned successfully`);
+    res.redirect(`/admin/safety-officers/${officerId}`);
+  } catch (error) {
+    console.error("Error assigning work area:", error);
+    req.flash("error", "Error assigning work area");
+    res.redirect(`/admin/safety-officers/${req.params.officerId}`);
+  }
+};
+
+// Remove work area from safety officer
+exports.removeWorkAreaFromOfficer = async (req, res) => {
+  try {
+    const { officerId, workAreaId } = req.params;
+
+    // Find officer
+    const officer = await SafetyOfficer.findById(officerId);
+    if (!officer) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Officer not found" });
+    }
+
+    // Find work area
+    const workArea = await WorkArea.findById(workAreaId);
+    if (!workArea) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Work area not found" });
+    }
+
+    // Remove work area from officer
+    officer.workAreas = officer.workAreas.filter(
+      (id) => id.toString() !== workAreaId,
+    );
+    await officer.save();
+
+    // Remove officer from work area's assigned safety officers
+    workArea.assignedSafetyOfficers = workArea.assignedSafetyOfficers.filter(
+      (assignment) => assignment.officer.toString() !== officerId,
+    );
+    await workArea.save();
+
+    res.json({ success: true, message: "Officer removed from work area" });
+  } catch (error) {
+    console.error("Error removing work area:", error);
+    res.status(500).json({ success: false, message: "Error removing officer" });
   }
 };

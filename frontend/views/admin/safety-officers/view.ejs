@@ -30,47 +30,30 @@
             <% } %>
           </div>
         </div>
-        <span class="text-muted small">
-          <i class="fas fa-calendar-alt me-1"></i> Joined: <%= officer.createdAt ? new Date(officer.createdAt).toLocaleDateString() : 'N/A' %>
-        </span>
-      </div>
-
-      <!-- Daily Safety Talk Section (like timer section) - Personal Message -->
-      <div class="safety-talk-container text-center mb-4">
-        <div class="timer-label" id="safetyTalkLabel">OFFICER'S DAILY SAFETY COMMITMENT</div>
-        <div class="safety-talk-content" id="safetyTalkContent">
-          "I commit to leading by example, enforcing safety protocols, and ensuring every worker goes home safe today."
-        </div>
-        <div class="timer-meta mt-2">
-          <small>
-            <i class="fas fa-robot me-1" style="color: #26a69a;"></i>
-            Auto-generated | Updated: <%= new Date().toLocaleDateString() %>
-          </small>
+        <div class="text-end">
+          <span class="text-muted small d-block">
+            <i class="fas fa-calendar-alt me-1"></i> Joined: <%= officer.createdAt ? new Date(officer.createdAt).toLocaleDateString() : 'N/A' %>
+          </span>
+          <span class="text-muted small mt-1 d-block">
+            <i class="fas fa-user me-1"></i> Welcome back, <strong><%= user.email %></strong>
+            <span class="badge <%= user.role === 'system_admin' ? 'bg-warning text-dark' : (user.role === 'safety_officer' ? 'bg-success' : 'bg-info') %> ms-2">
+              <i class="fas fa-<%= user.role === 'system_admin' ? 'crown' : (user.role === 'safety_officer' ? 'user-shield' : 'user') %> me-1"></i>
+              <%= user.role === 'system_admin' ? 'System Admin' : (user.role === 'safety_officer' ? 'Safety Officer' : (user.role === 'supervisor' ? 'Supervisor' : 'Worker')) %>
+            </span>
+          </span>
         </div>
       </div>
 
-      <!-- Compact Action Buttons Row (like voting buttons) -->
+      <!-- Compact Action Buttons Row -->
       <div class="d-flex gap-2 justify-content-center flex-wrap mb-4">
-        <a href="/admin/safety-officers" class="btn btn-outline-secondary btn-sm">
-          <i class="fas fa-arrow-left me-1"></i> Back to Officers
-        </a>
-        <a href="/admin/safety-officers/<%= officer._id %>/edit" class="btn btn-outline-primary btn-sm">
-          <i class="fas fa-edit me-1"></i> Edit Officer
-        </a>
         <button class="btn btn-outline-danger btn-sm" onclick="confirmSuspend('<%= officer._id %>')">
           <i class="fas fa-ban me-1"></i> Suspend
-        </button>
-        <a href="/admin/worksites/create?assignOfficer=<%= officer._id %>" class="btn btn-outline-success btn-sm">
-          <i class="fas fa-plus-circle me-1"></i> Create Worksite
-        </a>
-        <button class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="#assignWorksiteModal">
-          <i class="fas fa-hard-hat me-1"></i> Assign to Worksite
         </button>
       </div>
 
       <hr />
 
-      <!-- Officer Details Section (Full Width) -->
+      <!-- Officer Details Section -->
       <h4 class="text-center mb-4 fw-bold">
         <i class="fas fa-info-circle me-2" style="color: #26a69a;"></i>
         Officer Information
@@ -124,7 +107,7 @@
           </div>
           <% } %>
 
-          <!-- Stats Row (compact) -->
+          <!-- Stats Row -->
           <div class="row mt-3 pt-3 border-top">
             <div class="col-3 text-center">
               <h5 class="fw-bold text-primary"><%= officer.worksitesManaged || 0 %></h5>
@@ -182,20 +165,20 @@
             </div>
           <% } else { %>
             <p class="text-muted text-center py-4">No worksites assigned yet.</p>
-            <div class="text-center">
-              <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#assignWorksiteModal">
-                <i class="fas fa-plus-circle me-1"></i> Assign to Worksite
-              </button>
-            </div>
           <% } %>
         </div>
       </div>
 
-      <!-- Work Areas Section -->
-      <h4 class="text-center mt-5 mb-4 fw-bold">
-        <i class="fas fa-layer-group me-2" style="color: #26a69a;"></i>
-        Monitored Work Areas
-      </h4>
+      <!-- Work Areas Section with Assign Button -->
+      <div class="d-flex justify-content-between align-items-center mt-5 mb-4">
+        <h4 class="fw-bold mb-0">
+          <i class="fas fa-layer-group me-2" style="color: #26a69a;"></i>
+          Monitored Work Areas
+        </h4>
+        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#assignWorkAreaModal" style="border-radius: 40px;">
+          <i class="fas fa-plus-circle me-1"></i> Assign Work Area
+        </button>
+      </div>
 
       <div class="d-flex justify-content-center">
         <div class="workareas-panel shadow-sm border rounded p-4" style="max-width: 800px; width: 100%;">
@@ -206,6 +189,7 @@
                   <tr>
                     <th>Area Name</th>
                     <th>Worksite</th>
+                    <th>Location</th>
                     <th>Status</th>
                     <th>Actions</th>
                   </tr>
@@ -213,17 +197,23 @@
                 <tbody>
                   <% workAreas.forEach(area => { %>
                     <tr>
-                      <td><%= area.name %></td>
+                      <td><strong><%= area.name %></strong></td>
                       <td><%= area.worksite ? area.worksite.name : 'N/A' %></td>
+                      <td><%= area.location?.zone || area.location || 'Not specified' %></td>
                       <td>
                         <span class="badge <%= area.status === 'active' ? 'bg-success' : 'bg-warning' %>">
                           <%= area.status || 'active' %>
                         </span>
                       </td>
                       <td>
-                        <a href="/admin/work-areas/<%= area._id %>" class="btn btn-sm btn-outline-secondary" style="border-radius: 40px;">
-                          <i class="fas fa-eye me-1"></i> View
-                        </a>
+                        <div class="d-flex gap-2">
+                          <a href="/work-areas/<%= area._id %>" class="btn btn-sm btn-outline-primary" style="border-radius: 40px;">
+                            <i class="fas fa-eye me-1"></i> View
+                          </a>
+                          <button class="btn btn-sm btn-outline-danger" onclick="removeWorkArea('<%= officer._id %>', '<%= area._id %>')" style="border-radius: 40px;">
+                            <i class="fas fa-trash me-1"></i> Remove
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   <% }) %>
@@ -232,143 +222,12 @@
             </div>
           <% } else { %>
             <p class="text-muted text-center py-4">No work areas assigned yet.</p>
+            <div class="text-center">
+              <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#assignWorkAreaModal">
+                <i class="fas fa-plus-circle me-1"></i> Assign Work Area
+              </button>
+            </div>
           <% } %>
-        </div>
-      </div>
-
-      <!-- Documents Section with Tabs -->
-      <div class="row mt-5">
-        <div class="col-12">
-          <h4 class="fw-bold mb-3" style="color: #26a69a;">
-            <i class="fas fa-folder-open me-2"></i>Activity & Documents
-          </h4>
-          
-          <!-- Tabs Navigation -->
-          <ul class="nav nav-tabs" id="documentTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-              <button class="nav-link active" id="incidents-tab" data-bs-toggle="tab" data-bs-target="#incidents" type="button" role="tab">
-                <i class="fas fa-exclamation-triangle me-1"></i> Incidents 
-                <span class="badge bg-secondary ms-1"><%= recentIncidents?.length || 0 %></span>
-              </button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button class="nav-link" id="assessments-tab" data-bs-toggle="tab" data-bs-target="#assessments" type="button" role="tab">
-                <i class="fas fa-chart-pie me-1"></i> Risk Assessments
-                <span class="badge bg-secondary ms-1"><%= recentAssessments?.length || 0 %></span>
-              </button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button class="nav-link" id="talks-tab" data-bs-toggle="tab" data-bs-target="#talks" type="button" role="tab">
-                <i class="fas fa-chalkboard-teacher me-1"></i> Safety Talks
-                <span class="badge bg-secondary ms-1"><%= officer.safetyTalksConducted || 0 %></span>
-              </button>
-            </li>
-          </ul>
-
-          <!-- Tabs Content -->
-          <div class="tab-content p-4 border border-top-0 rounded-bottom shadow-sm" style="background-color: white;">
-            
-            <!-- Incidents Tab -->
-            <div class="tab-pane fade show active" id="incidents" role="tabpanel">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold mb-0"><i class="fas fa-exclamation-triangle me-2" style="color: #f44336;"></i>Reported Incidents</h5>
-                <a href="/incidents/report?officerId=<%= officer._id %>" class="btn btn-sm" style="background: #f44336; color: white; border-radius: 40px;">
-                  <i class="fas fa-flag me-1"></i> Report Incident
-                </a>
-              </div>
-              
-              <% if (recentIncidents && recentIncidents.length > 0) { %>
-                <div class="list-group">
-                  <% recentIncidents.slice(0, 3).forEach(incident => { %>
-                    <a href="/incidents/<%= incident._id %>" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                      <div>
-                        <strong><%= incident.type || incident.title %></strong>
-                        <span class="badge <%= 
-                          incident.severity === 'critical' ? 'bg-danger' : 
-                          incident.severity === 'high' ? 'bg-warning text-dark' : 
-                          incident.severity === 'medium' ? 'bg-info' : 
-                          'bg-success' 
-                        %> ms-2"><%= incident.severity %></span>
-                        <div class="small text-muted">
-                          <i class="fas fa-calendar me-1"></i> <%= new Date(incident.dateTime || incident.createdAt).toLocaleDateString() %>
-                          | <%= incident.workArea?.name || 'N/A' %>
-                        </div>
-                      </div>
-                      <i class="fas fa-chevron-right text-muted"></i>
-                    </a>
-                  <% }) %>
-                </div>
-                <% if (recentIncidents.length > 3) { %>
-                  <div class="text-center mt-3">
-                    <a href="/incidents?officerId=<%= officer._id %>" class="btn btn-sm btn-outline-secondary">
-                      View All <%= recentIncidents.length %> Incidents
-                    </a>
-                  </div>
-                <% } %>
-              <% } else { %>
-                <p class="text-muted text-center py-4">No incidents reported by this officer.</p>
-              <% } %>
-            </div>
-
-            <!-- Risk Assessments Tab -->
-            <div class="tab-pane fade" id="assessments" role="tabpanel">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold mb-0"><i class="fas fa-chart-pie me-2" style="color: #26a69a;"></i>Risk Assessments</h5>
-                <a href="/risk-assessments/new?officerId=<%= officer._id %>" class="btn btn-sm" style="background: #26a69a; color: white; border-radius: 40px;">
-                  <i class="fas fa-plus-circle me-1"></i> New Assessment
-                </a>
-              </div>
-              
-              <% if (recentAssessments && recentAssessments.length > 0) { %>
-                <div class="list-group">
-                  <% recentAssessments.slice(0, 3).forEach(assessment => { %>
-                    <a href="/risk-assessments/<%= assessment._id %>" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                      <div>
-                        <strong><%= assessment.title %></strong>
-                        <span class="badge <%= 
-                          assessment.status === 'active' ? 'bg-success' : 
-                          assessment.status === 'draft' ? 'bg-secondary' : 
-                          'bg-info' 
-                        %> ms-2"><%= assessment.status %></span>
-                        <div class="small text-muted">
-                          <i class="fas fa-calendar me-1"></i> <%= new Date(assessment.createdAt).toLocaleDateString() %>
-                          | Hazards: <%= assessment.hazards?.length || 0 %>
-                        </div>
-                      </div>
-                      <i class="fas fa-chevron-right text-muted"></i>
-                    </a>
-                  <% }) %>
-                </div>
-                <% if (recentAssessments.length > 3) { %>
-                  <div class="text-center mt-3">
-                    <a href="/risk-assessments?officerId=<%= officer._id %>" class="btn btn-sm btn-outline-secondary">
-                      View All <%= recentAssessments.length %> Assessments
-                    </a>
-                  </div>
-                <% } %>
-              <% } else { %>
-                <p class="text-muted text-center py-4">No risk assessments created by this officer.</p>
-              <% } %>
-            </div>
-
-            <!-- Safety Talks Tab -->
-            <div class="tab-pane fade" id="talks" role="tabpanel">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold mb-0"><i class="fas fa-chalkboard-teacher me-2" style="color: #5f2c82;"></i>Safety Talks</h5>
-                <a href="/safety-talks/generate?officerId=<%= officer._id %>" class="btn btn-sm" style="background: #5f2c82; color: white; border-radius: 40px;">
-                  <i class="fas fa-robot me-1"></i> Generate Talk
-                </a>
-              </div>
-              
-              <p class="text-muted text-center py-4">Total talks conducted: <strong><%= officer.safetyTalksConducted || 0 %></strong></p>
-              
-              <div class="text-center mt-2">
-                <a href="/safety-talks/history?officerId=<%= officer._id %>" class="btn btn-sm btn-outline-secondary">
-                  View Talk History
-                </a>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -382,35 +241,43 @@
   </div>
 </div>
 
-<!-- Assign Worksite Modal -->
-<div class="modal fade" id="assignWorksiteModal" tabindex="-1">
+<!-- Assign Work Area Modal -->
+<div class="modal fade" id="assignWorkAreaModal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content" style="border-radius: 16px;">
       <div class="modal-header border-0">
-        <h5 class="modal-title fw-bold">Assign to Worksite</h5>
+        <h5 class="modal-title fw-bold">Assign to Work Area</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <form action="/admin/worksites/assign-officer" method="POST" id="assignWorksiteForm">
+      <form action="/admin/safety-officers/<%= officer._id %>/assign-work-area" method="POST" id="assignWorkAreaForm">
         <div class="modal-body">
-          <input type="hidden" name="officerId" value="<%= officer._id %>">
           <div class="mb-3">
-            <label class="form-label fw-semibold">Select Worksite</label>
-            <select class="form-select" name="worksiteId" required style="border-radius: 40px;">
-              <option value="">Choose worksite...</option>
-              <% if (availableWorksites) { %>
-                <% availableWorksites.forEach(worksite => { %>
-                <option value="<%= worksite._id %>"><%= worksite.name %> - <%= worksite.location %></option>
+            <label class="form-label fw-semibold">Select Work Area</label>
+            <select class="form-select" name="workAreaId" required style="border-radius: 40px;">
+              <option value="">Choose work area...</option>
+              <% if (availableWorkAreas && availableWorkAreas.length > 0) { %>
+                <% availableWorkAreas.forEach(area => { %>
+                <option value="<%= area._id %>"><%= area.name %> - <%= area.worksite?.name || 'No worksite' %></option>
                 <% }) %>
+              <% } else { %>
+                <option value="">No available work areas</option>
               <% } %>
             </select>
+            <small class="text-muted">Work areas not already assigned to this officer</small>
           </div>
           <div class="mb-3">
-            <label class="form-label fw-semibold">Role</label>
-            <select class="form-select" name="role" style="border-radius: 40px;">
-              <option value="lead">Lead Officer</option>
-              <option value="assistant" selected>Assistant Officer</option>
-              <option value="trainee">Trainee</option>
+            <label class="form-label fw-semibold">Shift</label>
+            <select class="form-select" name="shift" style="border-radius: 40px;">
+              <option value="morning">Morning Shift</option>
+              <option value="afternoon">Afternoon Shift</option>
+              <option value="night">Night Shift</option>
             </select>
+          </div>
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" name="isPrimary" value="true" id="isPrimary">
+            <label class="form-check-label" for="isPrimary">
+              Make this officer the primary contact for this work area
+            </label>
           </div>
         </div>
         <div class="modal-footer border-0">
@@ -457,6 +324,54 @@
               icon: 'error',
               title: 'Error!',
               text: data.message || 'Failed to suspend officer'
+            });
+          }
+        })
+        .catch(error => {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: 'An error occurred'
+          });
+        });
+      }
+    });
+  }
+
+  function removeWorkArea(officerId, workAreaId) {
+    Swal.fire({
+      title: 'Remove from Work Area?',
+      text: "This officer will no longer have access to this work area.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, remove',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch(`/admin/safety-officers/${officerId}/work-areas/${workAreaId}/remove`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Removed!',
+              text: 'Officer removed from work area.',
+              timer: 2000
+            }).then(() => {
+              location.reload();
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error!',
+              text: data.message || 'Failed to remove officer'
             });
           }
         })

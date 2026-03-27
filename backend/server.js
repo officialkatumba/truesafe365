@@ -442,6 +442,14 @@ app.use("/ppe", require("./routes/ppeRoutes"));
 // Function pages routes (nested under safety-officer in views)
 app.use("/functions", require("./routes/functionRoutes"));
 
+// // Add to server.js
+// const aiDocumentRoutes = require("../backend/routes/aiDocumentRoutes");
+// app.use("/api/ai", aiDocumentRoutes);
+
+// Add to server.js
+const aiDocumentRoutes = require("../backend/routes/aiDocumentRoutes");
+app.use("/ai", aiDocumentRoutes);
+
 // -------------------- SERVER --------------------
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));

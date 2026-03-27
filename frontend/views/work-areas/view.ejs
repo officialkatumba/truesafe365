@@ -3,7 +3,7 @@
 
 <div class="main-wrapper">
   <div class="content container py-4">
-    <div class="workarea-details-container">
+    <div class="workarea-details-container" style="max-width: 900px; margin: 0 auto;">
       <!-- Work Area Header -->
       <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div>
@@ -26,47 +26,75 @@
             </span>
           </div>
         </div>
-        <span class="text-muted small">
-          <i class="fas fa-calendar-alt me-1"></i> Created: <%= workArea.createdAt ? new Date(workArea.createdAt).toLocaleDateString() : 'N/A' %>
-        </span>
+        <div class="text-end">
+          <span class="text-muted small d-block">
+            <i class="fas fa-calendar-alt me-1"></i> Created: <%= workArea.createdAt ? new Date(workArea.createdAt).toLocaleDateString() : 'N/A' %>
+          </span>
+          <span class="text-muted small mt-1 d-block">
+            <i class="fas fa-user me-1"></i> Welcome back, <strong><%= user.email %></strong>
+            <span class="badge <%= user.role === 'system_admin' ? 'bg-warning text-dark' : (user.role === 'safety_officer' ? 'bg-success' : 'bg-info') %> ms-2">
+              <i class="fas fa-<%= user.role === 'system_admin' ? 'crown' : (user.role === 'safety_officer' ? 'user-shield' : 'user') %> me-1"></i>
+              <%= user.role === 'system_admin' ? 'System Admin' : (user.role === 'safety_officer' ? 'Safety Officer' : (user.role === 'supervisor' ? 'Supervisor' : 'Worker')) %>
+            </span>
+          </span>
+        </div>
       </div>
 
-      <!-- Daily Safety Talk Section (like timer section) -->
+      <!-- Daily Safety Talk Section (Collapsible) -->
       <div class="safety-talk-container text-center mb-4">
-        <div class="timer-label" id="safetyTalkLabel">TODAY'S 50-WORD SAFETY TALK</div>
-        <div class="safety-talk-content" id="safetyTalkContent">
-          <%= workArea.dailySafetyTalk || 'Always wear your PPE. Check your tools before use. Report any unsafe conditions immediately. Stay aware of your surroundings. Safety first, always.' %>
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="timer-label" id="safetyTalkLabel">TODAY'S 150-WORD SAFETY TALK</div>
+          <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#safetyTalkContent" aria-expanded="false">
+            <i class="fas fa-chevron-down me-1"></i> Read More
+          </button>
         </div>
-        <div class="timer-meta mt-2">
-          <small>
-            <i class="fas fa-robot me-1" style="color: #26a69a;"></i>
-            AI-Generated | Updated: <%= new Date().toLocaleDateString() %>
-          </small>
+        <div class="collapse" id="safetyTalkContent">
+          <div class="safety-talk-content mt-2">
+            <%= workArea.dailySafetyTalk || 'Always wear your PPE. Check your tools before use. Report any unsafe conditions immediately. Stay aware of your surroundings. Safety first, always. Remember that safety is everyone\'s responsibility. Take time to assess risks before starting any task. If you see something unsafe, say something. Your safety and the safety of your colleagues depends on everyone working together. Never take shortcuts when it comes to safety procedures. Proper training and equipment are essential for preventing accidents. Report near misses to help prevent future incidents. Stay hydrated, take breaks, and look out for one another.' %>
+          </div>
+          <div class="timer-meta mt-2">
+            <small>
+              <i class="fas fa-robot me-1" style="color: #26a69a;"></i>
+              AI-Generated | Updated: <%= new Date().toLocaleDateString() %>
+            </small>
+          </div>
         </div>
       </div>
 
-      <!-- Compact Action Buttons Row (like voting buttons) -->
+      <!-- Compact Action Buttons Row - Conditional based on user role -->
       <div class="d-flex gap-2 justify-content-center flex-wrap mb-4">
-        <a href="/work-areas/<%= workArea._id %>/edit" class="btn btn-outline-primary btn-sm">
-          <i class="fas fa-edit me-1"></i> Edit Work Area
-        </a>
-        <a href="/incidents/report?workAreaId=<%= workArea._id %>" class="btn btn-outline-danger btn-sm">
-          <i class="fas fa-flag me-1"></i> Report Incident
-        </a>
-        <a href="/safety-talks/generate?workAreaId=<%= workArea._id %>" class="btn btn-outline-success btn-sm">
-          <i class="fas fa-robot me-1"></i> Generate Safety Talk
-        </a>
-        <a href="/work-areas/<%= workArea._id %>/manage-officers" class="btn btn-outline-info btn-sm">
-          <i class="fas fa-user-cog me-1"></i> Manage Officers
-        </a>
-        <a href="/risk-assessments/new?workAreaId=<%= workArea._id %>" class="btn btn-outline-warning btn-sm">
-          <i class="fas fa-chart-pie me-1"></i> New Assessment
-        </a>
+        <% if (user.role === 'system_admin') { %>
+          <a href="/work-areas/<%= workArea._id %>/edit" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-edit me-1"></i> Edit Work Area
+          </a>
+          <a href="/work-areas/<%= workArea._id %>/manage-officers" class="btn btn-outline-info btn-sm">
+            <i class="fas fa-user-cog me-1"></i> Manage Officers
+          </a>
+        <% } else if (user.role === 'safety_officer') { %>
+          <a href="/work-areas/<%= workArea._id %>/edit" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-edit me-1"></i> Edit Work Area
+          </a>
+          <a href="/work-areas/<%= workArea._id %>/manage-officers" class="btn btn-outline-info btn-sm">
+            <i class="fas fa-user-cog me-1"></i> Manage Officers
+          </a>
+          <a href="/incidents/report?workAreaId=<%= workArea._id %>" class="btn btn-outline-danger btn-sm">
+            <i class="fas fa-flag me-1"></i> Report Incident
+          </a>
+          <a href="/safety-talks/generate?workAreaId=<%= workArea._id %>" class="btn btn-outline-success btn-sm">
+            <i class="fas fa-robot me-1"></i> Generate Safety Talk
+          </a>
+          <a href="/risk-assessments/new?workAreaId=<%= workArea._id %>" class="btn btn-outline-warning btn-sm">
+            <i class="fas fa-chart-pie me-1"></i> New Assessment
+          </a>
+          <a href="/ppe/checklist?workAreaId=<%= workArea._id %>" class="btn btn-outline-info btn-sm">
+            <i class="fas fa-helmet-safety me-1"></i> PPE Checklist
+          </a>
+        <% } %>
       </div>
 
       <hr />
 
-      <!-- Work Area Details Section (Full Width) -->
+      <!-- Work Area Details Section -->
       <h4 class="text-center mb-4 fw-bold">
         <i class="fas fa-info-circle me-2" style="color: #26a69a;"></i>
         Work Area Details
@@ -74,7 +102,6 @@
 
       <div class="d-flex justify-content-center">
         <div class="details-panel shadow-sm border rounded p-4" style="max-width: 800px; width: 100%;">
-          <!-- Location & Description -->
           <div class="row mb-3">
             <div class="col-md-6">
               <h6 class="fw-bold"><i class="fas fa-map-pin me-2 text-secondary"></i>Location</h6>
@@ -102,7 +129,6 @@
             <p class="text-muted"><%= workArea.description || 'No description provided' %></p>
           </div>
 
-          <!-- Schedule Info -->
           <div class="row">
             <div class="col-md-4">
               <h6 class="fw-bold"><i class="fas fa-calendar-plus me-2 text-secondary"></i>Planned Start</h6>
@@ -126,7 +152,6 @@
             </div>
           </div>
 
-          <!-- Stats Row (compact) -->
           <div class="row mt-3 pt-3 border-top">
             <div class="col-3 text-center">
               <h5 class="fw-bold text-danger"><%= workArea.statistics?.incidents || 0 %></h5>
@@ -148,7 +173,7 @@
         </div>
       </div>
 
-      <!-- Assigned Safety Officers Section (Full Width) -->
+      <!-- Assigned Safety Officers Section -->
       <h4 class="text-center mt-5 mb-4 fw-bold">
         <i class="fas fa-users me-2" style="color: #26a69a;"></i>
         Assigned Safety Officers
@@ -179,11 +204,13 @@
             </div>
           <% } else { %>
             <p class="text-muted text-center py-3">No safety officers assigned to this work area.</p>
+            <% if (user.role === 'safety_officer' || user.role === 'system_admin') { %>
             <div class="text-center">
               <a href="/work-areas/<%= workArea._id %>/manage-officers" class="btn btn-sm btn-outline-primary">
                 <i class="fas fa-user-plus me-1"></i> Assign Officers
               </a>
             </div>
+            <% } %>
           <% } %>
         </div>
       </div>
@@ -198,7 +225,6 @@
         <div class="ppe-panel shadow-sm border rounded p-4" style="max-width: 800px; width: 100%;">
           <div class="row g-2">
             <% 
-              // Default PPE items if none are stored
               const ppeItems = (workArea.initialContext?.requiredPPE && workArea.initialContext.requiredPPE.length > 0) 
                 ? workArea.initialContext.requiredPPE 
                 : [
@@ -219,7 +245,6 @@
             <% }) %>
           </div>
           
-          <!-- Compliance Score (optional) -->
           <% if (workArea.statistics?.ppeComplianceScore) { %>
           <div class="mt-3 pt-2 border-top text-center">
             <small class="text-muted">
@@ -231,7 +256,7 @@
         </div>
       </div>
 
-      <!-- Hazards Section (if any) - Compact version -->
+      <!-- Hazards Section -->
       <% if (workArea.identifiedHazards && workArea.identifiedHazards.length > 0) { %>
       <div class="row mt-4">
         <div class="col-12">
@@ -260,14 +285,27 @@
       <% } %>
 
 
-      <!-- Documents Section with Tabs -->
+      <div class="d-flex gap-2 mb-4">
+  <a href="/work-areas/<%= workArea._id %>/generate-risk-assessment" class="btn btn-primary btn-sm">
+    <i class="fas fa-chart-pie me-1"></i> Generate Risk Assessment
+  </a>
+  <a href="/work-areas/<%= workArea._id %>/generate-ppe" class="btn btn-info btn-sm">
+    <i class="fas fa-helmet-safety me-1"></i> Generate PPE Requirements
+  </a>
+  <a href="/work-areas/<%= workArea._id %>/generate-jsa" class="btn btn-warning btn-sm">
+    <i class="fas fa-tasks me-1"></i> Generate JSA
+  </a>
+  <a href="/work-areas/<%= workArea._id %>/generate-safety-talk" class="btn btn-success btn-sm">
+    <i class="fas fa-chalkboard-teacher me-1"></i> Generate Safety Talk
+  </a>
+</div>
+<!-- Documents Section with Tabs - Conditional Buttons -->
 <div class="row mt-5">
   <div class="col-12">
     <h4 class="fw-bold mb-3" style="color: #26a69a;">
       <i class="fas fa-folder-open me-2"></i>Safety Documents
     </h4>
     
-    <!-- Tabs Navigation -->
     <ul class="nav nav-tabs" id="documentTabs" role="tablist">
       <li class="nav-item" role="presentation">
         <button class="nav-link active" id="risk-tab" data-bs-toggle="tab" data-bs-target="#risk" type="button" role="tab">
@@ -307,16 +345,17 @@
       </li>
     </ul>
 
-    <!-- Tabs Content -->
     <div class="tab-content p-4 border border-top-0 rounded-bottom shadow-sm" style="background-color: white;">
       
       <!-- Risk Assessments Tab -->
       <div class="tab-pane fade show active" id="risk" role="tabpanel">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h5 class="fw-bold mb-0"><i class="fas fa-chart-pie me-2" style="color: #26a69a;"></i>Risk Assessments</h5>
-          <a href="/risk-assessments/new?workAreaId=<%= workArea._id %>" class="btn btn-sm" style="background: #26a69a; color: white; border-radius: 40px;">
-            <i class="fas fa-plus-circle me-1"></i> New Assessment
-          </a>
+          <% if (user.role === 'safety_officer') { %>
+            <a href="/ai/work-areas/<%= workArea._id %>/generate-risk-assessment" class="btn btn-sm" style="background: #26a69a; color: white; border-radius: 40px;">                         
+              <i class="fas fa-plus-circle me-1"></i> New Assessment
+            </a>
+          <% } %>
         </div>
         
         <% if (riskAssessments && riskAssessments.length > 0) { %>
@@ -348,7 +387,7 @@
             </div>
           <% } %>
         <% } else { %>
-          <p class="text-muted text-center py-4">No risk assessments yet. Create your first assessment.</p>
+          <p class="text-muted text-center py-4">No risk assessments yet.</p>
         <% } %>
       </div>
 
@@ -356,9 +395,11 @@
       <div class="tab-pane fade" id="incidents" role="tabpanel">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h5 class="fw-bold mb-0"><i class="fas fa-exclamation-triangle me-2" style="color: #f44336;"></i>Incidents</h5>
-          <a href="/incidents/report?workAreaId=<%= workArea._id %>" class="btn btn-sm" style="background: #f44336; color: white; border-radius: 40px;">
-            <i class="fas fa-flag me-1"></i> Report Incident
-          </a>
+          <% if (user.role === 'safety_officer') { %>
+            <a href="/incidents/report?workAreaId=<%= workArea._id %>" class="btn btn-sm" style="background: #f44336; color: white; border-radius: 40px;">
+              <i class="fas fa-flag me-1"></i> Report Incident
+            </a>
+          <% } %>
         </div>
         
         <% if (recentIncidents && recentIncidents.length > 0) { %>
@@ -398,9 +439,11 @@
       <div class="tab-pane fade" id="safety-talks" role="tabpanel">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h5 class="fw-bold mb-0"><i class="fas fa-chalkboard-teacher me-2" style="color: #5f2c82;"></i>Safety Talks</h5>
-          <a href="/safety-talks/generate?workAreaId=<%= workArea._id %>" class="btn btn-sm" style="background: #5f2c82; color: white; border-radius: 40px;">
-            <i class="fas fa-robot me-1"></i> Generate Talk
-          </a>
+          <% if (user.role === 'safety_officer') { %>
+            <a href="/safety-talks/generate?workAreaId=<%= workArea._id %>" class="btn btn-sm" style="background: #5f2c82; color: white; border-radius: 40px;">
+              <i class="fas fa-robot me-1"></i> Generate Talk
+            </a>
+          <% } %>
         </div>
         
         <% if (safetyTalks && safetyTalks.length > 0) { %>
@@ -439,9 +482,11 @@
       <div class="tab-pane fade" id="permits" role="tabpanel">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h5 class="fw-bold mb-0"><i class="fas fa-file-signature me-2" style="color: #f093fb;"></i>Permits</h5>
-          <a href="/permits/new?workAreaId=<%= workArea._id %>" class="btn btn-sm" style="background: #f093fb; color: white; border-radius: 40px;">
-            <i class="fas fa-plus-circle me-1"></i> New Permit
-          </a>
+          <% if (user.role === 'safety_officer') { %>
+            <a href="/permits/new?workAreaId=<%= workArea._id %>" class="btn btn-sm" style="background: #f093fb; color: white; border-radius: 40px;">
+              <i class="fas fa-plus-circle me-1"></i> New Permit
+            </a>
+          <% } %>
         </div>
         
         <% if (permits && permits.length > 0) { %>
@@ -481,9 +526,11 @@
       <div class="tab-pane fade" id="jsa" role="tabpanel">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h5 class="fw-bold mb-0"><i class="fas fa-tasks me-2" style="color: #ff9a9e;"></i>Job Safety Analysis</h5>
-          <a href="/jsa/new?workAreaId=<%= workArea._id %>" class="btn btn-sm" style="background: #ff9a9e; color: white; border-radius: 40px;">
-            <i class="fas fa-plus-circle me-1"></i> New JSA
-          </a>
+          <% if (user.role === 'safety_officer') { %>
+            <a href="/jsa/new?workAreaId=<%= workArea._id %>" class="btn btn-sm" style="background: #ff9a9e; color: white; border-radius: 40px;">
+              <i class="fas fa-plus-circle me-1"></i> New JSA
+            </a>
+          <% } %>
         </div>
         
         <% if (jsa && jsa.length > 0) { %>
@@ -522,9 +569,11 @@
       <div class="tab-pane fade" id="ppe" role="tabpanel">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h5 class="fw-bold mb-0"><i class="fas fa-helmet-safety me-2" style="color: #26a69a;"></i>PPE Checklists</h5>
-          <a href="/ppe/new?workAreaId=<%= workArea._id %>" class="btn btn-sm" style="background: #26a69a; color: white; border-radius: 40px;">
-            <i class="fas fa-plus-circle me-1"></i> New Checklist
-          </a>
+          <% if (user.role === 'safety_officer') { %>
+            <a href="/ppe/new?workAreaId=<%= workArea._id %>" class="btn btn-sm" style="background: #26a69a; color: white; border-radius: 40px;">
+              <i class="fas fa-plus-circle me-1"></i> New Checklist
+            </a>
+          <% } %>
         </div>
         
         <% if (ppeChecklists && ppeChecklists.length > 0) { %>
@@ -571,8 +620,6 @@
     </div>
   </div>
 </div>
-
-<%- include('../partials/footer') %>
 
 <style>
   .workarea-details-container {
@@ -638,5 +685,6 @@
 
 <script>
   // You can add any dynamic functionality here if needed
-  // For example, updating safety talk daily
 </script>
+
+<%- include('../partials/footer') %>

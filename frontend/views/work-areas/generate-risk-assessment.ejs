@@ -1,0 +1,445 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="main-wrapper">
+  <div class="content container py-4">
+    <div class="generate-form-container" style="max-width: 800px; margin: 0 auto;">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold">
+          <i class="fas fa-chart-pie me-2" style="color: #ff9800;"></i>
+          Generate Risk Assessment
+        </h3>
+        <a href="/work-areas/<%= workArea._id %>" class="btn btn-outline-secondary btn-sm">
+          <i class="fas fa-arrow-left me-1"></i> Back to Work Area
+        </a>
+      </div>
+
+      <!-- Work Area Context Card -->
+      <div class="card shadow-sm border-0 mb-4" style="border-radius: 16px;">
+        <div class="card-body p-4">
+          <h5 class="fw-bold mb-3"><i class="fas fa-info-circle me-2"></i>Work Area Context</h5>
+          <div class="row">
+            <div class="col-md-6">
+              <p><strong>Work Area:</strong> <%= workArea.name %></p>
+              <p><strong>Worksite:</strong> <%- workArea.worksite ? workArea.worksite.name : 'Not specified' %></p>
+              <p><strong>Location:</strong> <%- workArea.location?.zone || 'Not specified' %></p>
+            </div>
+            <div class="col-md-6">
+              <p><strong>Status:</strong> <%= workArea.status %></p>
+              <p><strong>Work Types:</strong> <%- workArea.currentWorkTypes ? workArea.currentWorkTypes.map(function(w) { return w.workType; }).join(', ') : 'Various' %></p>
+              <p><strong>Active Shifts:</strong> <%- workArea.activeShifts ? workArea.activeShifts.map(function(s) { return s.name; }).join(', ') : 'Not specified' %></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Risk Assessment Form -->
+      <div class="card shadow-sm border-0" style="border-radius: 16px;">
+        <div class="card-body p-4">
+          <h5 class="fw-bold mb-3"><i class="fas fa-clipboard-list me-2"></i>Provide Assessment Details</h5>
+          <p class="text-muted small mb-4">Fill in as much detail as possible. The AI will use this information to generate a professional risk assessment.</p>
+          
+          <form id="riskAssessmentForm">
+            <input type="hidden" name="workAreaId" value="<%= workArea._id %>">
+            
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Activity Description *</label>
+              <textarea class="form-control" name="activityDescription" rows="3" placeholder="Describe the work activities being assessed (e.g., 'Excavation for foundation works', 'Roof installation', 'Electrical panel installation')" required></textarea>
+              <div class="form-text">Be specific about what work is being done</div>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Hazards Identified *</label>
+              <textarea class="form-control" name="hazardsIdentified" rows="4" placeholder="List all hazards you've observed or anticipate:&#10;- Working at heights (roof work, scaffolding)&#10;- Electrical hazards (live wires, exposed cables)&#10;- Heavy equipment operation (cranes, excavators)&#10;- Manual handling (lifting heavy materials)&#10;- Confined spaces&#10;- Chemical exposure (paints, solvents, fuels)&#10;- Noise (machinery, equipment)&#10;- Dust/fumes (cutting, grinding, welding)" required></textarea>
+              <div class="form-text">List each hazard on a new line. Be as comprehensive as possible.</div>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Who is Affected? *</label>
+              <textarea class="form-control" name="affectedGroups" rows="2" placeholder="e.g., Workers performing the task, nearby workers, supervisors, contractors, visitors, public" required></textarea>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Existing Controls</label>
+              <textarea class="form-control" name="existingControls" rows="3" placeholder="What safety measures are already in place?&#10;- Safety harnesses for work at heights&#10;- Guardrails around open edges&#10;- Lockout/tagout procedures for electrical work&#10;- Barricades for heavy equipment zones&#10;- Hearing protection zones&#10;- Ventilation systems"></textarea>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">Weather/Lighting Conditions</label>
+                <textarea class="form-control" name="weatherConditions" rows="2" placeholder="e.g., Outdoor work, variable weather, poor lighting in areas, high winds"></textarea>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">Equipment Involved</label>
+                <textarea class="form-control" name="equipmentInvolved" rows="2" placeholder="e.g., Cranes, excavators, scaffolding, power tools, ladders"></textarea>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">Number of Workers</label>
+                <input type="text" class="form-control" name="personnelCount" placeholder="e.g., 5-10 workers, 2-3 supervisors">
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">Worker Experience Level</label>
+                <select class="form-select" name="experienceLevel">
+                  <option value="All experienced workers">All experienced workers</option>
+                  <option value="Mixed (experienced and new)">Mixed (experienced and new)</option>
+                  <option value="Mostly new workers">Mostly new workers</option>
+                  <option value="Apprentices/trainees">Apprentices/trainees</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Previous Incidents/Issues</label>
+              <textarea class="form-control" name="previousIncidents" rows="2" placeholder="Any previous incidents, near misses, or safety concerns related to this work?"></textarea>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Specific Concerns</label>
+              <textarea class="form-control" name="specificConcerns" rows="2" placeholder="Any particular safety concerns you want the assessment to address?"></textarea>
+            </div>
+            
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Regulatory Requirements</label>
+              <textarea class="form-control" name="regulatoryRequirements" rows="2" placeholder="e.g., OSHA 1926 Subpart M (Fall Protection), NFPA 70E (Electrical Safety), Local regulations"></textarea>
+            </div>
+            
+            <div class="alert alert-info mb-4">
+              <i class="fas fa-info-circle me-2"></i>
+              <strong>Pro Tip:</strong> The more detail you provide, the more comprehensive and accurate the risk assessment will be. Include specific hazards, controls, and work conditions.
+            </div>
+            
+            <button type="button" class="btn btn-primary w-100 py-2" onclick="generateRiskAssessment()" style="border-radius: 40px;">
+              <i class="fas fa-robot me-2"></i> Generate Risk Assessment
+            </button>
+          </form>
+        </div>
+      </div>
+      
+      <!-- Loading Indicator -->
+      <div id="loadingIndicator" class="text-center py-5 mt-4" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2">AI is analyzing your inputs and generating a professional risk assessment...</p>
+        <small class="text-muted">This may take 30-60 seconds</small>
+      </div>
+      
+      <!-- Result Display -->
+      <div id="resultDisplay" class="card shadow-sm border-0 mt-4" style="display: none; border-radius: 16px;">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0">
+              <i class="fas fa-file-alt me-2" style="color: #26a69a;"></i>
+              <span id="documentTitle"></span>
+            </h5>
+            <div>
+              <button class="btn btn-sm btn-outline-secondary me-2" onclick="editDocument()">
+                <i class="fas fa-edit me-1"></i> Edit
+              </button>
+              <button class="btn btn-sm btn-outline-info" onclick="downloadPDF()">
+                <i class="fas fa-file-pdf me-1"></i> Download PDF
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="card-body p-4">
+          <div id="generatedContent" class="p-4 rounded-3" style="background: #f8f9fa; white-space: pre-wrap; max-height: 500px; overflow-y: auto;"></div>
+          
+          <div class="mt-4 border-top pt-4">
+            <h6 class="fw-bold mb-3">Need Improvements?</h6>
+            <div class="row">
+              <div class="col-md-8 mb-2">
+                <textarea id="enhanceNotes" class="form-control" rows="2" placeholder="Tell the AI how to improve this document. Example: 'Add more specific controls for working at heights' or 'Include emergency procedures for chemical spills'"></textarea>
+              </div>
+              <div class="col-md-4">
+                <button class="btn btn-outline-warning w-100" onclick="enhanceDocument()">
+                  <i class="fas fa-magic me-1"></i> Enhance with AI
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mt-3 d-flex gap-2">
+            <button class="btn btn-success flex-grow-1" onclick="approveDocument()">
+              <i class="fas fa-check-circle me-1"></i> Approve & Finalize
+            </button>
+            <button class="btn btn-outline-secondary" onclick="hideResult()">
+              <i class="fas fa-times me-1"></i> Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentDocumentId = null;
+  let currentDocumentType = 'risk_assessment';
+  let currentContent = '';
+  let currentTitle = '';
+  
+  async function generateRiskAssessment() {
+    const form = document.getElementById('riskAssessmentForm');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    // Validate required fields
+    if (!data.activityDescription || !data.hazardsIdentified || !data.affectedGroups) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Missing Information',
+        text: 'Please fill in all required fields (Activity Description, Hazards, and Affected Groups)'
+      });
+      return;
+    }
+    
+    document.getElementById('loadingIndicator').style.display = 'block';
+    document.getElementById('resultDisplay').style.display = 'none';
+    
+    try {
+      const response = await fetch('/ai/generate-risk-assessment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      
+      const result = await response.json();
+      
+      document.getElementById('loadingIndicator').style.display = 'none';
+      
+      if (result.success) {
+        currentDocumentId = result.documentId;
+        currentDocumentType = result.documentType;
+        currentContent = result.content;
+        currentTitle = result.title;
+        
+        document.getElementById('documentTitle').innerHTML = result.title;
+        document.getElementById('generatedContent').innerHTML = formatMarkdownContent(result.content);
+        document.getElementById('resultDisplay').style.display = 'block';
+        
+        // Scroll to result
+        document.getElementById('resultDisplay').scrollIntoView({ behavior: 'smooth' });
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'Assessment Generated!',
+          text: 'Your risk assessment has been created. Review, enhance, or approve it.',
+          timer: 3000,
+          showConfirmButton: false
+        });
+      } else {
+        Swal.fire({ icon: 'error', title: 'Error', text: result.error });
+      }
+    } catch (error) {
+      document.getElementById('loadingIndicator').style.display = 'none';
+      Swal.fire({ icon: 'error', title: 'Error', text: error.message });
+    }
+  }
+  
+  function formatMarkdownContent(content) {
+    // Simple markdown formatting for HTML display
+    let formatted = content
+      .replace(/\n/g, '<br>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/^### (.*?)$/gm, '<h5 class="mt-3 fw-bold">$1</h5>')
+      .replace(/^## (.*?)$/gm, '<h4 class="mt-3 fw-bold">$1</h4>')
+      .replace(/^# (.*?)$/gm, '<h3 class="mt-3 fw-bold">$1</h3>')
+      .replace(/^\- (.*?)$/gm, '<li>$1</li>')
+      .replace(/^\d+\. (.*?)$/gm, '<li class="mt-1">$1</li>');
+    
+    // Wrap lists
+    formatted = formatted.replace(/<li>.*?<\/li>/g, function(match) {
+      return '<ul class="mb-2">' + match + '</ul>';
+    });
+    
+    return formatted;
+  }
+  
+  function editDocument() {
+    // Show editable textarea
+    Swal.fire({
+      title: 'Edit Document',
+      html: '<textarea id="editContent" class="swal2-textarea" style="height: 400px;">' + escapeHtml(currentContent) + '</textarea>',
+      showCancelButton: true,
+      confirmButtonText: 'Save Changes',
+      cancelButtonText: 'Cancel',
+      preConfirm: function() {
+        var newContent = document.getElementById('editContent').value;
+        if (newContent) {
+          currentContent = newContent;
+          document.getElementById('generatedContent').innerHTML = formatMarkdownContent(currentContent);
+          return true;
+        }
+        return false;
+      }
+    });
+  }
+  
+  async function enhanceDocument() {
+    var feedback = document.getElementById('enhanceNotes').value;
+    if (!feedback) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Feedback Required',
+        text: 'Please provide instructions on how to improve the document.'
+      });
+      return;
+    }
+    
+    document.getElementById('loadingIndicator').style.display = 'block';
+    
+    try {
+      var response = await fetch('/ai/enhance-document', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          documentType: currentDocumentType,
+          documentId: currentDocumentId,
+          userInstructions: feedback
+        })
+      });
+      
+      var result = await response.json();
+      
+      document.getElementById('loadingIndicator').style.display = 'none';
+      
+      if (result.success) {
+        currentContent = result.enhancedContent;
+        document.getElementById('generatedContent').innerHTML = formatMarkdownContent(currentContent);
+        document.getElementById('enhanceNotes').value = '';
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'Document Enhanced!',
+          text: 'The document has been improved based on your feedback.',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } else {
+        Swal.fire({ icon: 'error', title: 'Error', text: result.error });
+      }
+    } catch (error) {
+      document.getElementById('loadingIndicator').style.display = 'none';
+      Swal.fire({ icon: 'error', title: 'Error', text: error.message });
+    }
+  }
+  
+  async function approveDocument() {
+    Swal.fire({
+      title: 'Approve Document?',
+      text: 'Once approved, this document will be finalized and added to the safety records. Approved documents can be referenced for future assessments.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Approve',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#28a745'
+    }).then(async function(result) {
+      if (result.isConfirmed) {
+        document.getElementById('loadingIndicator').style.display = 'block';
+        
+        try {
+          var response = await fetch('/ai/approve-document/' + currentDocumentType + '/' + currentDocumentId, {
+            method: 'POST'
+          });
+          
+          var resultData = await response.json();
+          document.getElementById('loadingIndicator').style.display = 'none';
+          
+          if (resultData.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Approved!',
+              text: 'Document has been finalized and saved to records.',
+              timer: 2000,
+              showConfirmButton: false
+            }).then(function() {
+              window.location.href = '/work-areas/<%= workArea._id %>';
+            });
+          } else {
+            Swal.fire({ icon: 'error', title: 'Error', text: resultData.error });
+          }
+        } catch (error) {
+          document.getElementById('loadingIndicator').style.display = 'none';
+          Swal.fire({ icon: 'error', title: 'Error', text: error.message });
+        }
+      }
+    });
+  }
+  
+  async function downloadPDF() {
+    document.getElementById('loadingIndicator').style.display = 'block';
+    
+    try {
+      var response = await fetch('/ai/generate-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          documentType: currentDocumentType,
+          documentId: currentDocumentId,
+          title: currentTitle,
+          content: currentContent
+        })
+      });
+      
+      var blob = await response.blob();
+      var url = window.URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = currentTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.pdf';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+      
+      document.getElementById('loadingIndicator').style.display = 'none';
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'PDF Downloaded!',
+        text: 'Your document has been saved as a PDF.',
+        timer: 1500,
+        showConfirmButton: false
+      });
+    } catch (error) {
+      document.getElementById('loadingIndicator').style.display = 'none';
+      Swal.fire({ icon: 'error', title: 'Error', text: error.message });
+    }
+  }
+  
+  function hideResult() {
+    document.getElementById('resultDisplay').style.display = 'none';
+    document.getElementById('enhanceNotes').value = '';
+  }
+  
+  function escapeHtml(text) {
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+</script>
+
+<style>
+  .form-control:focus, .form-select:focus {
+    border-color: #ff9800;
+    box-shadow: 0 0 0 0.2rem rgba(255, 152, 0, 0.25);
+  }
+  
+  .btn-primary {
+    background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+    border: none;
+  }
+  
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #f57c00 0%, #ff9800 100%);
+    transform: translateY(-2px);
+  }
+</style>
+
+<%- include('../partials/footer') %>

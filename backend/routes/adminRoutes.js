@@ -11,6 +11,18 @@ router.use(ensureAuthenticated, ensureAdmin);
 
 // Safety Officer management
 // IMPORTANT: Specific routes MUST come before /:id routes
+
+// Add these routes to your adminRoutes.js (place them before the /:id routes)
+
+// Work Area assignment routes
+router.post(
+  "/safety-officers/:officerId/assign-work-area",
+  adminController.assignWorkAreaToOfficer,
+);
+router.delete(
+  "/safety-officers/:officerId/work-areas/:workAreaId/remove",
+  adminController.removeWorkAreaFromOfficer,
+);
 router.get(
   "/safety-officers/create",
   adminController.showCreateSafetyOfficerForm,
