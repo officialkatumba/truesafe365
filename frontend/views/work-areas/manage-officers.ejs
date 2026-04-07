@@ -151,7 +151,8 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
 
-    fetch(`/work-areas/${workAreaId}/assign-officer`, {
+    // CHANGED: Use admin route instead of work-area route
+    fetch(`/admin/work-areas/${workAreaId}/assign-officer`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ officerId, shift, isPrimary })

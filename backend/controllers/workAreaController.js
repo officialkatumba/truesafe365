@@ -1,316 +1,11 @@
-// const WorkArea = require("../models/WorkArea");
-// const Worksite = require("../models/Worksite");
-// const SafetyOfficer = require("../models/SafetyOfficer");
-// const Incident = require("../models/Incident");
-// const RiskAssessment = require("../models/RiskAssessment");
-// const SafetyTalk = require("../models/SafetyTalk");
-
-// // Show create work area form
-// exports.showCreateWorkAreaForm = async (req, res) => {
-//   try {
-//     const { worksiteId } = req.query;
-
-//     let worksites = [];
-//     if (worksiteId) {
-//       const worksite = await Worksite.findById(worksiteId);
-//       if (worksite) worksites = [worksite];
-//     } else {
-//       // Get worksites user has access to
-//       worksites = await Worksite.find({
-//         $or: [
-//           { "assignedSafetyOfficers.officer": req.user.safetyOfficer },
-//           { "ownership.owner": req.user.safetyOfficer },
-//         ],
-//       });
-//     }
-
-//     res.render("work-areas/create", {
-//       user: req.user,
-//       worksites,
-//       preselectedWorksite: worksiteId,
-//     });
-//   } catch (error) {
-//     console.error("Error loading create form:", error);
-//     req.flash("error", "Error loading form");
-//     res.redirect("/dashboard");
-//   }
-// };
-
-// // Create new work area
-// exports.createWorkArea = async (req, res) => {
-//   try {
-//     const {
-//       worksiteId,
-//       name,
-//       code,
-//       location,
-//       description,
-//       status,
-//       plannedStart,
-//       plannedEnd,
-//       currentWorkTypes,
-//       shifts,
-//     } = req.body;
-
-//     // Verify user has access to worksite
-//     const worksite = await Worksite.findById(worksiteId);
-//     if (!worksite) {
-//       req.flash("error", "Worksite not found");
-//       return res.redirect("/work-areas/create");
-//     }
-
-//     const hasAccess = await checkWorksiteAccess(req.user, worksite);
-//     if (!hasAccess) {
-//       req.flash("error", "You don't have access to this worksite");
-//       return res.redirect("/work-areas/create");
-//     }
-
-//     // Parse work types
-//     let workTypesArray = [];
-//     if (currentWorkTypes) {
-//       try {
-//         workTypesArray =
-//           typeof currentWorkTypes === "string"
-//             ? JSON.parse(currentWorkTypes)
-//             : currentWorkTypes;
-//       } catch (e) {
-//         workTypesArray = [];
-//       }
-//     }
-
-//     // Parse shifts
-//     let shiftsArray = [];
-//     if (shifts) {
-//       try {
-//         shiftsArray = typeof shifts === "string" ? JSON.parse(shifts) : shifts;
-//       } catch (e) {
-//         shiftsArray = [];
-//       }
-//     }
-
-//     const newWorkArea = new WorkArea({
-//       worksite: worksiteId,
-//       name,
-//       code: code || `${worksite.name}-${Date.now()}`,
-//       location,
-//       description,
-//       status: status || "planned",
-//       plannedStart,
-//       plannedEnd,
-//       currentWorkTypes: workTypesArray.map((wt) => ({
-//         ...wt,
-//         startDate: wt.startDate || new Date(),
-//         isActive: true,
-//       })),
-//       activeShifts: shiftsArray,
-//       assignedSafetyOfficers: [
-//         {
-//           officer: req.user.safetyOfficer,
-//           shift: "all",
-//           isPrimary: true,
-//           assignedFrom: new Date(),
-//           isActive: true,
-//         },
-//       ],
-//       statistics: {
-//         incidents: 0,
-//         nearMisses: 0,
-//         safetyScore: 100,
-//         daysWithoutIncident: 0,
-//       },
-//     });
-
-//     await newWorkArea.save();
-
-//     // Add to worksite's work areas
-//     worksite.workAreas.push(newWorkArea._id);
-//     await worksite.save();
-
-//     req.flash("success", `Work area "${name}" created successfully`);
-//     res.redirect(`/work-areas/${newWorkArea._id}`);
-//   } catch (error) {
-//     console.error("Error creating work area:", error);
-//     req.flash("error", "Error creating work area");
-//     res.redirect("/work-areas/create");
-//   }
-// };
-
-// // View single work area
-// exports.getWorkArea = async (req, res) => {
-//   try {
-//     const workArea = await WorkArea.findById(req.params.id)
-//       .populate("worksite", "name location")
-//       .populate("assignedSafetyOfficers.officer", "name email")
-//       .populate("activePermits");
-
-//     if (!workArea) {
-//       req.flash("error", "Work area not found");
-//       return res.redirect("/dashboard");
-//     }
-
-//     // Get recent incidents
-//     const recentIncidents = await Incident.find({ workArea: workArea._id })
-//       .sort({ createdAt: -1 })
-//       .limit(5);
-
-//     // Get active risk assessments
-//     const activeAssessments = await RiskAssessment.find({
-//       workArea: workArea._id,
-//       status: "active",
-//     }).limit(5);
-
-//     res.render("work-areas/view", {
-//       user: req.user,
-//       workArea,
-//       recentIncidents,
-//       activeAssessments,
-//     });
-//   } catch (error) {
-//     console.error("Error viewing work area:", error);
-//     req.flash("error", "Error loading work area");
-//     res.redirect("/dashboard");
-//   }
-// };
-
-// // Show edit work area form
-// exports.showEditWorkAreaForm = async (req, res) => {
-//   try {
-//     const workArea = await WorkArea.findById(req.params.id).populate(
-//       "worksite",
-//     );
-
-//     if (!workArea) {
-//       req.flash("error", "Work area not found");
-//       return res.redirect("/dashboard");
-//     }
-
-//     res.render("work-areas/edit", {
-//       user: req.user,
-//       workArea,
-//     });
-//   } catch (error) {
-//     console.error("Error loading edit form:", error);
-//     req.flash("error", "Error loading form");
-//     res.redirect("/dashboard");
-//   }
-// };
-
-// // Update work area
-// exports.updateWorkArea = async (req, res) => {
-//   try {
-//     const workArea = await WorkArea.findById(req.params.id);
-
-//     if (!workArea) {
-//       req.flash("error", "Work area not found");
-//       return res.redirect("/dashboard");
-//     }
-
-//     const {
-//       name,
-//       location,
-//       description,
-//       status,
-//       currentWorkTypes,
-//       identifiedHazards,
-//     } = req.body;
-
-//     workArea.name = name || workArea.name;
-//     workArea.location = location || workArea.location;
-//     workArea.description = description || workArea.description;
-//     workArea.status = status || workArea.status;
-
-//     if (currentWorkTypes) {
-//       try {
-//         workArea.currentWorkTypes =
-//           typeof currentWorkTypes === "string"
-//             ? JSON.parse(currentWorkTypes)
-//             : currentWorkTypes;
-//       } catch (e) {}
-//     }
-
-//     if (identifiedHazards) {
-//       try {
-//         workArea.identifiedHazards =
-//           typeof identifiedHazards === "string"
-//             ? JSON.parse(identifiedHazards)
-//             : identifiedHazards;
-//       } catch (e) {}
-//     }
-
-//     await workArea.save();
-
-//     req.flash("success", "Work area updated successfully");
-//     res.redirect(`/work-areas/${workArea._id}`);
-//   } catch (error) {
-//     console.error("Error updating work area:", error);
-//     req.flash("error", "Error updating work area");
-//     res.redirect(`/work-areas/${req.params.id}/edit`);
-//   }
-// };
-
-// // Get incidents for a work area
-// exports.getAreaIncidents = async (req, res) => {
-//   try {
-//     const workArea = await WorkArea.findById(req.params.id);
-//     if (!workArea) {
-//       return res.status(404).json({ error: "Work area not found" });
-//     }
-
-//     const incidents = await Incident.find({ workArea: workArea._id }).sort({
-//       createdAt: -1,
-//     });
-
-//     res.json(incidents);
-//   } catch (error) {
-//     console.error("Error getting area incidents:", error);
-//     res.status(500).json({ error: "Error loading incidents" });
-//   }
-// };
-
-// // Get risk assessments for a work area
-// exports.getAreaRiskAssessments = async (req, res) => {
-//   try {
-//     const workArea = await WorkArea.findById(req.params.id);
-//     if (!workArea) {
-//       return res.status(404).json({ error: "Work area not found" });
-//     }
-
-//     const assessments = await RiskAssessment.find({
-//       workArea: workArea._id,
-//     }).sort({ createdAt: -1 });
-
-//     res.json(assessments);
-//   } catch (error) {
-//     console.error("Error getting risk assessments:", error);
-//     res.status(500).json({ error: "Error loading assessments" });
-//   }
-// };
-
-// // Get safety talks for a work area
-// exports.getAreaSafetyTalks = async (req, res) => {
-//   try {
-//     const workArea = await WorkArea.findById(req.params.id);
-//     if (!workArea) {
-//       return res.status(404).json({ error: "Work area not found" });
-//     }
-
-//     const talks = await SafetyTalk.find({
-//       targetWorkAreas: workArea._id,
-//     }).sort({ date: -1 });
-
-//     res.json(talks);
-//   } catch (error) {
-//     console.error("Error getting safety talks:", error);
-//     res.status(500).json({ error: "Error loading safety talks" });
-//   }
-// };
-
 const WorkArea = require("../models/WorkArea");
 const Worksite = require("../models/Worksite");
 const SafetyOfficer = require("../models/SafetyOfficer");
 const Incident = require("../models/Incident");
 const RiskAssessment = require("../models/RiskAssessment");
 const SafetyTalk = require("../models/SafetyTalk");
+// ADD THIS - Get Safety Observations
+const SafetyObservation = require("../models/SafetyObservation");
 
 // const WorkArea = require("../models/WorkArea");
 // const Worksite = require("../models/Worksite");
@@ -382,6 +77,10 @@ exports.showCreateWorkAreaForm = async (req, res) => {
 //       plannedEnd,
 //       currentWorkTypes,
 //       shifts,
+//       initialContextDesc,
+//       initialConcerns,
+//       initialRiskLevel,
+//       requiredPPEItems,
 //     } = req.body;
 
 //     // Verify user has access to worksite
@@ -401,56 +100,136 @@ exports.showCreateWorkAreaForm = async (req, res) => {
 //     let workTypesArray = [];
 //     if (currentWorkTypes) {
 //       try {
-//         workTypesArray =
-//           typeof currentWorkTypes === "string"
-//             ? JSON.parse(currentWorkTypes)
-//             : currentWorkTypes;
+//         workTypesArray = Array.isArray(currentWorkTypes)
+//           ? currentWorkTypes
+//           : [currentWorkTypes];
 //       } catch (e) {
 //         workTypesArray = [];
 //       }
 //     }
 
-//     // Parse shifts
-//     let shiftsArray = [];
+//     // Parse shifts - FIXED: Convert to proper objects for activeShifts
+//     let activeShiftsArray = [];
 //     if (shifts) {
 //       try {
-//         shiftsArray = typeof shifts === "string" ? JSON.parse(shifts) : shifts;
+//         const shiftValues = Array.isArray(shifts) ? shifts : [shifts];
+//         activeShiftsArray = shiftValues.map((shift) => ({
+//           name: shift,
+//           startTime:
+//             shift === "morning"
+//               ? "06:00"
+//               : shift === "afternoon"
+//                 ? "14:00"
+//                 : "22:00",
+//           endTime:
+//             shift === "morning"
+//               ? "14:00"
+//               : shift === "afternoon"
+//                 ? "22:00"
+//                 : "06:00",
+//         }));
 //       } catch (e) {
-//         shiftsArray = [];
+//         activeShiftsArray = [];
 //       }
 //     }
+
+//     // Parse initial concerns
+//     let concernsArray = [];
+//     if (initialConcerns) {
+//       concernsArray = initialConcerns
+//         .split("\n")
+//         .filter((line) => line.trim() !== "")
+//         .map((line) => ({
+//           concern: line.trim(),
+//           category: "site_conditions",
+//           severity: initialRiskLevel || "medium",
+//         }));
+//     }
+
+//     // Parse required PPE items
+//     let ppeArray = [];
+//     if (requiredPPEItems) {
+//       ppeArray = requiredPPEItems
+//         .split("\n")
+//         .filter((line) => line.trim() !== "")
+//         .map((item) => ({
+//           item: "other",
+//           customItem: item.trim(),
+//           quantity: 0,
+//           condition: "good",
+//         }));
+//     }
+
+//     // Build initial context
+//     const initialContext = {
+//       description: initialContextDesc || "",
+//       submittedBy: req.user.safetyOfficer || null,
+//       submittedAt: new Date(),
+//       initialConcerns: concernsArray,
+//       requiredPPE: ppeArray,
+//       initialRiskLevel: initialRiskLevel || "medium",
+//     };
 
 //     const newWorkArea = new WorkArea({
 //       worksite: worksiteId,
 //       name,
 //       code: code || `${worksite.name}-${Date.now()}`,
-//       location,
+//       location: location ? { zone: location } : {},
 //       description,
 //       status: status || "planned",
 //       plannedStart,
 //       plannedEnd,
 //       currentWorkTypes: workTypesArray.map((wt) => ({
-//         ...wt,
-//         startDate: wt.startDate || new Date(),
+//         workType: wt,
+//         startDate: new Date(),
 //         isActive: true,
 //       })),
-//       activeShifts: shiftsArray,
-//       assignedSafetyOfficers: [
-//         {
-//           officer: req.user.safetyOfficer,
-//           shift: "all",
-//           isPrimary: true,
-//           assignedFrom: new Date(),
-//           isActive: true,
-//         },
-//       ],
+//       // FIXED: activeShifts now uses objects, not strings
+//       activeShifts: activeShiftsArray,
+//       // FIXED: Only add assignedSafetyOfficers if user has a safety officer
+//       ...(req.user.safetyOfficer && {
+//         assignedSafetyOfficers: [
+//           {
+//             officer: req.user.safetyOfficer,
+//             shift: "morning", // Use a valid enum value
+//             isPrimary: true,
+//             assignedFrom: new Date(),
+//             isActive: true,
+//           },
+//         ],
+//       }),
+//       initialContext,
 //       statistics: {
 //         incidents: 0,
 //         nearMisses: 0,
+//         safetyObservations: 0,
+//         openConcerns: concernsArray.length,
+//         resolvedConcerns: 0,
 //         safetyScore: 100,
 //         daysWithoutIncident: 0,
+//         ppeComplianceScore: 100,
 //       },
 //     });
+
+//     // Add initial concerns to concerns register
+//     if (concernsArray.length > 0) {
+//       concernsArray.forEach((concern) => {
+//         newWorkArea.concernsRegister.push({
+//           concern: concern.concern,
+//           source: "initial",
+//           category: "hazard",
+//           riskAssessment: {
+//             severity: concern.severity,
+//             likelihood: "possible",
+//             riskLevel: concern.severity,
+//           },
+//           mitigation: [],
+//           status: "active",
+//           identifiedBy: req.user.safetyOfficer || null,
+//           identifiedAt: new Date(),
+//         });
+//       });
+//     }
 
 //     await newWorkArea.save();
 
@@ -467,7 +246,441 @@ exports.showCreateWorkAreaForm = async (req, res) => {
 //   }
 // };
 
-// Create new work area
+// Update the createWorkArea function to handle the new fields
+
+// exports.createWorkArea = async (req, res) => {
+//   try {
+//     const {
+//       worksiteId,
+//       name,
+//       code,
+//       location,
+//       description,
+//       status,
+//       plannedStart,
+//       plannedEnd,
+//       currentWorkTypes,
+//       shifts,
+//       initialContextDesc,
+//       initialConcerns,
+//       initialRiskLevel,
+//       ppeItems,  // Now receives array of selected PPE items
+//       customPPE, // Custom PPE items from textarea
+//       hazardDescriptions,
+//       hazardRiskLevels,
+//       hazardControls,
+//       specialConsiderations
+//     } = req.body;
+
+//     // Verify user has access to worksite
+//     const worksite = await Worksite.findById(worksiteId);
+//     if (!worksite) {
+//       req.flash("error", "Worksite not found");
+//       return res.redirect("/work-areas/create");
+//     }
+
+//     const hasAccess = await checkWorksiteAccess(req.user, worksite);
+//     if (!hasAccess) {
+//       req.flash("error", "You don't have access to this worksite");
+//       return res.redirect("/work-areas/create");
+//     }
+
+//     // Parse work types
+//     let workTypesArray = [];
+//     if (currentWorkTypes) {
+//       try {
+//         workTypesArray = Array.isArray(currentWorkTypes)
+//           ? currentWorkTypes
+//           : [currentWorkTypes];
+//       } catch (e) {
+//         workTypesArray = [];
+//       }
+//     }
+
+//     // Parse shifts
+//     let activeShiftsArray = [];
+//     if (shifts) {
+//       try {
+//         const shiftValues = Array.isArray(shifts) ? shifts : [shifts];
+//         activeShiftsArray = shiftValues.map((shift) => ({
+//           name: shift,
+//           startTime: shift === "morning" ? "06:00" : shift === "afternoon" ? "14:00" : "22:00",
+//           endTime: shift === "morning" ? "14:00" : shift === "afternoon" ? "22:00" : "06:00",
+//         }));
+//       } catch (e) {
+//         activeShiftsArray = [];
+//       }
+//     }
+
+//     // Parse initial concerns
+//     let concernsArray = [];
+//     if (initialConcerns) {
+//       concernsArray = initialConcerns
+//         .split("\n")
+//         .filter((line) => line.trim() !== "")
+//         .map((line) => ({
+//           concern: line.trim(),
+//           category: "site_conditions",
+//           severity: initialRiskLevel || "medium",
+//         }));
+//     }
+
+//     // Parse PPE items from checkboxes and custom input
+//     let ppeItemsArray = [];
+
+//     // Add selected checkbox items
+//     if (ppeItems) {
+//       const selectedItems = Array.isArray(ppeItems) ? ppeItems : [ppeItems];
+//       selectedItems.forEach(item => {
+//         ppeItemsArray.push({
+//           item: item,
+//           customItem: null,
+//           quantity: 0,
+//           condition: "good"
+//         });
+//       });
+//     }
+
+//     // Add custom PPE items
+//     if (customPPE) {
+//       const customLines = customPPE.split("\n");
+//       customLines.forEach(line => {
+//         if (line.trim()) {
+//           ppeItemsArray.push({
+//             item: "other",
+//             customItem: line.trim(),
+//             quantity: 0,
+//             condition: "good"
+//           });
+//         }
+//       });
+//     }
+
+//     // Parse hazards from the hazard table
+//     let hazardsArray = [];
+//     if (hazardDescriptions && hazardDescriptions.length > 0) {
+//       const hazardCount = Array.isArray(hazardDescriptions) ? hazardDescriptions.length : 1;
+//       const riskLevels = hazardRiskLevels ? (Array.isArray(hazardRiskLevels) ? hazardRiskLevels : [hazardRiskLevels]) : [];
+//       const controls = hazardControls ? (Array.isArray(hazardControls) ? hazardControls : [hazardControls]) : [];
+
+//       for (let i = 0; i < hazardCount; i++) {
+//         const hazardDesc = hazardDescriptions[i];
+//         if (hazardDesc && hazardDesc.trim()) {
+//           hazardsArray.push({
+//             hazardId: new mongoose.Types.ObjectId(),
+//             hazard: hazardDesc.trim(),
+//             riskLevel: riskLevels[i] || "medium",
+//             controls: controls[i] || "",
+//             identifiedDate: new Date(),
+//             status: "active"
+//           });
+//         }
+//       }
+//     }
+
+//     // Build initial context
+//     const initialContext = {
+//       description: initialContextDesc || "",
+//       submittedBy: req.user.safetyOfficer || null,
+//       submittedAt: new Date(),
+//       initialConcerns: concernsArray,
+//       requiredPPE: ppeItemsArray,
+//       initialRiskLevel: initialRiskLevel || "medium",
+//       specialConsiderations: specialConsiderations || ""
+//     };
+
+//     const newWorkArea = new WorkArea({
+//       worksite: worksiteId,
+//       name,
+//       code: code || `${worksite.name}-${Date.now()}`,
+//       location: location ? { zone: location } : {},
+//       description,
+//       status: status || "planned",
+//       plannedStart: plannedStart ? new Date(plannedStart) : null,
+//       plannedEnd: plannedEnd ? new Date(plannedEnd) : null,
+//       currentWorkTypes: workTypesArray.map((wt) => ({
+//         workType: wt,
+//         startDate: new Date(),
+//         isActive: true,
+//       })),
+//       activeShifts: activeShiftsArray,
+//       ...(req.user.safetyOfficer && {
+//         assignedSafetyOfficers: [
+//           {
+//             officer: req.user.safetyOfficer,
+//             shift: "morning",
+//             isPrimary: true,
+//             assignedFrom: new Date(),
+//             isActive: true,
+//           },
+//         ],
+//       }),
+//       initialContext,
+//       identifiedHazards: hazardsArray,
+//       statistics: {
+//         incidents: 0,
+//         nearMisses: 0,
+//         safetyObservations: 0,
+//         openConcerns: concernsArray.length,
+//         resolvedConcerns: 0,
+//         safetyScore: 100,
+//         daysWithoutIncident: 0,
+//         ppeComplianceScore: 100,
+//       },
+//     });
+
+//     // Add initial concerns to concerns register
+//     if (concernsArray.length > 0) {
+//       concernsArray.forEach((concern) => {
+//         newWorkArea.concernsRegister.push({
+//           concern: concern.concern,
+//           source: "initial",
+//           category: "hazard",
+//           riskAssessment: {
+//             severity: concern.severity,
+//             likelihood: "possible",
+//             riskLevel: concern.severity,
+//           },
+//           mitigation: [],
+//           status: "active",
+//           identifiedBy: req.user.safetyOfficer || null,
+//           identifiedAt: new Date(),
+//         });
+//       });
+//     }
+
+//     await newWorkArea.save();
+
+//     // Add to worksite's work areas
+//     worksite.workAreas.push(newWorkArea._id);
+//     await worksite.save();
+
+//     req.flash("success", `Work area "${name}" created successfully with ${hazardsArray.length} hazards identified and ${ppeItemsArray.length} PPE items specified.`);
+//     res.redirect(`/work-areas/${newWorkArea._id}`);
+//   } catch (error) {
+//     console.error("Error creating work area:", error);
+//     req.flash("error", `Error creating work area: ${error.message}`);
+//     res.redirect("/work-areas/create");
+//   }
+// };
+
+// Update your createWorkArea function to handle the new form fields
+
+// exports.createWorkArea = async (req, res) => {
+//   try {
+//     const {
+//       worksiteId,
+//       name,
+//       code,
+//       location,
+//       description,
+//       status,
+//       plannedStart,
+//       plannedEnd,
+//       currentWorkTypes,
+//       shifts,
+//       initialContextDesc,
+//       initialConcerns,
+//       initialRiskLevel,
+//       ppeItems,           // From checkboxes
+//       customPPE,          // From textarea
+//       hazardDescriptions, // From hazard table
+//       hazardRiskLevels,   // From hazard table
+//       hazardControls,     // From hazard table
+//       specialConsiderations
+//     } = req.body;
+
+//     // Verify user has access to worksite
+//     const worksite = await Worksite.findById(worksiteId);
+//     if (!worksite) {
+//       req.flash("error", "Worksite not found");
+//       return res.redirect("/work-areas/create");
+//     }
+
+//     const hasAccess = await checkWorksiteAccess(req.user, worksite);
+//     if (!hasAccess) {
+//       req.flash("error", "You don't have access to this worksite");
+//       return res.redirect("/work-areas/create");
+//     }
+
+//     // Parse work types
+//     let workTypesArray = [];
+//     if (currentWorkTypes) {
+//       workTypesArray = Array.isArray(currentWorkTypes) ? currentWorkTypes : [currentWorkTypes];
+//     }
+
+//     // Parse shifts
+//     let activeShiftsArray = [];
+//     if (shifts) {
+//       const shiftValues = Array.isArray(shifts) ? shifts : [shifts];
+//       activeShiftsArray = shiftValues.map((shift) => ({
+//         name: shift,
+//         startTime: shift === "morning" ? "06:00" : shift === "afternoon" ? "14:00" : "22:00",
+//         endTime: shift === "morning" ? "14:00" : shift === "afternoon" ? "22:00" : "06:00",
+//       }));
+//     }
+
+//     // Parse initial concerns
+//     let concernsArray = [];
+//     if (initialConcerns) {
+//       concernsArray = initialConcerns
+//         .split("\n")
+//         .filter((line) => line.trim() !== "")
+//         .map((line) => ({
+//           concern: line.trim(),
+//           category: "site_conditions",
+//           severity: initialRiskLevel || "medium",
+//           notes: ""
+//         }));
+//     }
+
+//     // Parse PPE items
+//     let ppeItemsArray = [];
+
+//     // Add selected checkbox items
+//     if (ppeItems) {
+//       const selectedItems = Array.isArray(ppeItems) ? ppeItems : [ppeItems];
+//       selectedItems.forEach(item => {
+//         ppeItemsArray.push({
+//           item: item,
+//           customItem: null,
+//           quantity: 0,
+//           condition: "good"
+//         });
+//       });
+//     }
+
+//     // Add custom PPE items
+//     if (customPPE) {
+//       const customLines = customPPE.split("\n");
+//       customLines.forEach(line => {
+//         if (line.trim()) {
+//           ppeItemsArray.push({
+//             item: "other",
+//             customItem: line.trim(),
+//             quantity: 0,
+//             condition: "good"
+//           });
+//         }
+//       });
+//     }
+
+//     // Parse hazards
+//     let hazardsArray = [];
+//     if (hazardDescriptions && hazardDescriptions.length > 0) {
+//       const hazardCount = Array.isArray(hazardDescriptions) ? hazardDescriptions.length : 1;
+//       const riskLevels = hazardRiskLevels ? (Array.isArray(hazardRiskLevels) ? hazardRiskLevels : [hazardRiskLevels]) : [];
+//       const controls = hazardControls ? (Array.isArray(hazardControls) ? hazardControls : [hazardControls]) : [];
+
+//       for (let i = 0; i < hazardCount; i++) {
+//         const hazardDesc = hazardDescriptions[i];
+//         if (hazardDesc && hazardDesc.trim()) {
+//           hazardsArray.push({
+//             hazard: hazardDesc.trim(),
+//             riskLevel: riskLevels[i] || "medium",
+//             controls: controls[i] || "",
+//             identifiedDate: new Date(),
+//             status: "active"
+//           });
+//         }
+//       }
+//     }
+
+//     // Build initial context - this matches your schema perfectly
+//     const initialContext = {
+//       description: initialContextDesc || "",
+//       submittedBy: req.user.safetyOfficer || null,
+//       submittedAt: new Date(),
+//       initialConcerns: concernsArray,
+//       requiredPPE: ppeItemsArray,
+//       initialRiskLevel: initialRiskLevel || "medium",
+//     };
+
+//     // Add special considerations to initial context if needed
+//     if (specialConsiderations) {
+//       initialContext.specialConsiderations = specialConsiderations;
+//     }
+
+//     const newWorkArea = new WorkArea({
+//       worksite: worksiteId,
+//       name,
+//       code: code || `${worksite.name}-${Date.now()}`,
+//       location: location ? { zone: location } : {},
+//       description: description || "",
+//       status: status || "planned",
+//       plannedStart: plannedStart ? new Date(plannedStart) : null,
+//       plannedEnd: plannedEnd ? new Date(plannedEnd) : null,
+//       currentWorkTypes: workTypesArray.map((wt) => ({
+//         workType: wt,
+//         startDate: new Date(),
+//         isActive: true,
+//       })),
+//       activeShifts: activeShiftsArray,
+//       ...(req.user.safetyOfficer && {
+//         assignedSafetyOfficers: [
+//           {
+//             officer: req.user.safetyOfficer,
+//             shift: "morning",
+//             isPrimary: true,
+//             assignedFrom: new Date(),
+//             isActive: true,
+//           },
+//         ],
+//       }),
+//       initialContext,  // Your schema already has this!
+//       identifiedHazards: hazardsArray,  // Your schema already has this!
+//       statistics: {
+//         incidents: 0,
+//         nearMisses: 0,
+//         safetyObservations: 0,
+//         openConcerns: concernsArray.length,
+//         resolvedConcerns: 0,
+//         safetyScore: 100,
+//         daysWithoutIncident: 0,
+//         ppeComplianceScore: 100,
+//       },
+//     });
+
+//     // Add initial concerns to concerns register
+//     if (concernsArray.length > 0) {
+//       concernsArray.forEach((concern) => {
+//         newWorkArea.concernsRegister.push({
+//           concern: concern.concern,
+//           source: "initial",
+//           category: "hazard",
+//           riskAssessment: {
+//             severity: concern.severity,
+//             likelihood: "possible",
+//             riskLevel: concern.severity,
+//           },
+//           mitigation: [],
+//           status: "active",
+//           identifiedBy: req.user.safetyOfficer || null,
+//           identifiedAt: new Date(),
+//         });
+//       });
+//     }
+
+//     await newWorkArea.save();
+
+//     // Add to worksite's work areas
+//     worksite.workAreas.push(newWorkArea._id);
+//     await worksite.save();
+
+//     req.flash("success", `Work area "${name}" created successfully!
+//       ${hazardsArray.length} hazards identified,
+//       ${ppeItemsArray.length} PPE items specified,
+//       ${concernsArray.length} concerns logged.`);
+//     res.redirect(`/work-areas/${newWorkArea._id}`);
+//   } catch (error) {
+//     console.error("Error creating work area:", error);
+//     req.flash("error", `Error creating work area: ${error.message}`);
+//     res.redirect("/work-areas/create");
+//   }
+// };
+
+// Update your createWorkArea function in workAreaController.js
+
 exports.createWorkArea = async (req, res) => {
   try {
     const {
@@ -484,7 +697,12 @@ exports.createWorkArea = async (req, res) => {
       initialContextDesc,
       initialConcerns,
       initialRiskLevel,
-      requiredPPEItems,
+      ppeItems, // From checkboxes
+      customPPE, // From textarea (custom items)
+      hazardDescriptions,
+      hazardRiskLevels,
+      hazardControls,
+      specialConsiderations,
     } = req.body;
 
     // Verify user has access to worksite
@@ -503,38 +721,30 @@ exports.createWorkArea = async (req, res) => {
     // Parse work types
     let workTypesArray = [];
     if (currentWorkTypes) {
-      try {
-        workTypesArray = Array.isArray(currentWorkTypes)
-          ? currentWorkTypes
-          : [currentWorkTypes];
-      } catch (e) {
-        workTypesArray = [];
-      }
+      workTypesArray = Array.isArray(currentWorkTypes)
+        ? currentWorkTypes
+        : [currentWorkTypes];
     }
 
-    // Parse shifts - FIXED: Convert to proper objects for activeShifts
+    // Parse shifts
     let activeShiftsArray = [];
     if (shifts) {
-      try {
-        const shiftValues = Array.isArray(shifts) ? shifts : [shifts];
-        activeShiftsArray = shiftValues.map((shift) => ({
-          name: shift,
-          startTime:
-            shift === "morning"
-              ? "06:00"
-              : shift === "afternoon"
-                ? "14:00"
-                : "22:00",
-          endTime:
-            shift === "morning"
+      const shiftValues = Array.isArray(shifts) ? shifts : [shifts];
+      activeShiftsArray = shiftValues.map((shift) => ({
+        name: shift,
+        startTime:
+          shift === "morning"
+            ? "06:00"
+            : shift === "afternoon"
               ? "14:00"
-              : shift === "afternoon"
-                ? "22:00"
-                : "06:00",
-        }));
-      } catch (e) {
-        activeShiftsArray = [];
-      }
+              : "22:00",
+        endTime:
+          shift === "morning"
+            ? "14:00"
+            : shift === "afternoon"
+              ? "22:00"
+              : "06:00",
+      }));
     }
 
     // Parse initial concerns
@@ -547,21 +757,124 @@ exports.createWorkArea = async (req, res) => {
           concern: line.trim(),
           category: "site_conditions",
           severity: initialRiskLevel || "medium",
+          notes: "",
         }));
     }
 
-    // Parse required PPE items
-    let ppeArray = [];
-    if (requiredPPEItems) {
-      ppeArray = requiredPPEItems
-        .split("\n")
-        .filter((line) => line.trim() !== "")
-        .map((item) => ({
-          item: "other",
-          customItem: item.trim(),
-          quantity: 0,
-          condition: "good",
-        }));
+    // ========== FIXED: Parse PPE items correctly ==========
+    let ppeItemsArray = [];
+
+    // Valid enum values from your schema
+    const validPPEItems = [
+      "hard_hat",
+      "safety_glasses",
+      "ear_plugs",
+      "ear_muffs",
+      "high_vis_vest",
+      "steel_toe_boots",
+      "gloves",
+      "respirator",
+      "harness",
+      "face_shield",
+      "welding_helmet",
+      "chemical_suit",
+      "knee_pads",
+      "fall_arrest",
+      "other",
+    ];
+
+    // Map display names to enum values
+    const ppeMapping = {
+      hard_hat: "hard_hat",
+      safety_glasses: "safety_glasses",
+      ear_plugs: "ear_plugs",
+      ear_muffs: "ear_muffs",
+      ear_protection: "ear_muffs", // Map ear_protection to ear_muffs
+      high_vis_vest: "high_vis_vest",
+      "high-visibility vest": "high_vis_vest",
+      steel_toe_boots: "steel_toe_boots",
+      "steel-toed boots": "steel_toe_boots",
+      gloves: "gloves",
+      respirator: "respirator",
+      harness: "harness",
+      "fall protection harness": "harness",
+      face_shield: "face_shield",
+      welding_helmet: "welding_helmet",
+      chemical_suit: "chemical_suit",
+      knee_pads: "knee_pads",
+      fall_arrest: "fall_arrest",
+    };
+
+    // Add selected checkbox items (these should already be valid enum values)
+    if (ppeItems) {
+      const selectedItems = Array.isArray(ppeItems) ? ppeItems : [ppeItems];
+      selectedItems.forEach((item) => {
+        // Map the item to valid enum value
+        const mappedItem = ppeMapping[item] || item;
+
+        if (validPPEItems.includes(mappedItem)) {
+          ppeItemsArray.push({
+            item: mappedItem,
+            customItem: null,
+            quantity: 0,
+            condition: "good",
+          });
+        } else {
+          // If not in valid enum, treat as "other"
+          ppeItemsArray.push({
+            item: "other",
+            customItem: item,
+            quantity: 0,
+            condition: "good",
+          });
+        }
+      });
+    }
+
+    // Add custom PPE items from textarea - ALWAYS use "other" with customItem
+    if (customPPE) {
+      const customLines = customPPE.split("\n");
+      customLines.forEach((line) => {
+        if (line.trim()) {
+          ppeItemsArray.push({
+            item: "other", // Always "other" for custom items
+            customItem: line.trim(),
+            quantity: 0,
+            condition: "good",
+          });
+        }
+      });
+    }
+
+    // Parse hazards
+    let hazardsArray = [];
+    if (hazardDescriptions && hazardDescriptions.length > 0) {
+      const hazardCount = Array.isArray(hazardDescriptions)
+        ? hazardDescriptions.length
+        : 1;
+      const riskLevels = hazardRiskLevels
+        ? Array.isArray(hazardRiskLevels)
+          ? hazardRiskLevels
+          : [hazardRiskLevels]
+        : [];
+      const controls = hazardControls
+        ? Array.isArray(hazardControls)
+          ? hazardControls
+          : [hazardControls]
+        : [];
+
+      for (let i = 0; i < hazardCount; i++) {
+        const hazardDesc = hazardDescriptions[i];
+        if (hazardDesc && hazardDesc.trim()) {
+          hazardsArray.push({
+            hazard: hazardDesc.trim(),
+            riskLevel: riskLevels[i] || "medium",
+            controls: controls[i] || "",
+            identifiedDate: new Date(),
+            status: "active",
+          });
+        }
+      }
     }
 
     // Build initial context
@@ -570,32 +883,35 @@ exports.createWorkArea = async (req, res) => {
       submittedBy: req.user.safetyOfficer || null,
       submittedAt: new Date(),
       initialConcerns: concernsArray,
-      requiredPPE: ppeArray,
+      requiredPPE: ppeItemsArray,
       initialRiskLevel: initialRiskLevel || "medium",
     };
+
+    // Add special considerations to initial context if needed
+    if (specialConsiderations) {
+      initialContext.specialConsiderations = specialConsiderations;
+    }
 
     const newWorkArea = new WorkArea({
       worksite: worksiteId,
       name,
       code: code || `${worksite.name}-${Date.now()}`,
       location: location ? { zone: location } : {},
-      description,
+      description: description || "",
       status: status || "planned",
-      plannedStart,
-      plannedEnd,
+      plannedStart: plannedStart ? new Date(plannedStart) : null,
+      plannedEnd: plannedEnd ? new Date(plannedEnd) : null,
       currentWorkTypes: workTypesArray.map((wt) => ({
         workType: wt,
         startDate: new Date(),
         isActive: true,
       })),
-      // FIXED: activeShifts now uses objects, not strings
       activeShifts: activeShiftsArray,
-      // FIXED: Only add assignedSafetyOfficers if user has a safety officer
       ...(req.user.safetyOfficer && {
         assignedSafetyOfficers: [
           {
             officer: req.user.safetyOfficer,
-            shift: "morning", // Use a valid enum value
+            shift: "morning",
             isPrimary: true,
             assignedFrom: new Date(),
             isActive: true,
@@ -603,6 +919,7 @@ exports.createWorkArea = async (req, res) => {
         ],
       }),
       initialContext,
+      identifiedHazards: hazardsArray,
       statistics: {
         incidents: 0,
         nearMisses: 0,
@@ -641,11 +958,17 @@ exports.createWorkArea = async (req, res) => {
     worksite.workAreas.push(newWorkArea._id);
     await worksite.save();
 
-    req.flash("success", `Work area "${name}" created successfully`);
+    req.flash(
+      "success",
+      `Work area "${name}" created successfully! 
+      ${hazardsArray.length} hazards identified, 
+      ${ppeItemsArray.length} PPE items specified, 
+      ${concernsArray.length} concerns logged.`,
+    );
     res.redirect(`/work-areas/${newWorkArea._id}`);
   } catch (error) {
     console.error("Error creating work area:", error);
-    req.flash("error", "Error creating work area");
+    req.flash("error", `Error creating work area: ${error.message}`);
     res.redirect("/work-areas/create");
   }
 };
@@ -680,6 +1003,86 @@ exports.createWorkArea = async (req, res) => {
 //       workArea,
 //       recentIncidents,
 //       activeAssessments,
+//     });
+//   } catch (error) {
+//     console.error("Error viewing work area:", error);
+//     req.flash("error", "Error loading work area");
+//     res.redirect("/dashboard");
+//   }
+// };
+
+// exports.getWorkArea = async (req, res) => {
+//   try {
+//     const workArea = await WorkArea.findById(req.params.id)
+//       .populate("worksite", "name location")
+//       .populate("assignedSafetyOfficers.officer", "name email")
+//       .populate("activePermits");
+
+//     if (!workArea) {
+//       req.flash("error", "Work area not found");
+//       return res.redirect("/dashboard");
+//     }
+
+//     // Get recent incidents
+//     const recentIncidents = await Incident.find({ workArea: workArea._id })
+//       .sort({ createdAt: -1 })
+//       .limit(5);
+
+//     // Get active risk assessments
+//     const activeAssessments = await RiskAssessment.find({
+//       workArea: workArea._id,
+//       status: "active",
+//     }).limit(5);
+
+//     // ADD THESE VARIABLES FOR THE TABS
+//     // Get all risk assessments (for the Risk Assessments tab)
+//     const riskAssessments = await RiskAssessment.find({
+//       workArea: workArea._id,
+//     })
+//       .sort({ createdAt: -1 })
+//       .limit(10);
+
+//     // Get safety talks
+//     const safetyTalks = await SafetyTalk.find({
+//       targetWorkAreas: workArea._id,
+//     })
+//       .sort({ date: -1 })
+//       .limit(10);
+
+//     // Get permits
+//     const permits = await Permit.find({
+//       workArea: workArea._id,
+//     })
+//       .sort({ createdAt: -1 })
+//       .limit(10);
+
+//     // Get JSA (Job Safety Analysis)
+//     const JSA = require("../models/JSA");
+//     const jsa = await JSA.find({
+//       workArea: workArea._id,
+//     })
+//       .sort({ createdAt: -1 })
+//       .limit(10);
+
+//     // Get PPE Checklists
+//     const PPEChecklist = require("../models/PPEChecklist");
+//     const ppeChecklists = await PPEChecklist.find({
+//       workArea: workArea._id,
+//     })
+//       .sort({ createdAt: -1 })
+//       .limit(10);
+
+//     res.render("work-areas/view", {
+//       user: req.user,
+//       workArea,
+//       recentIncidents,
+//       activeAssessments,
+//       // New variables for tabs
+//       riskAssessments,
+//       safetyTalks,
+//       permits,
+//       jsa,
+//       ppeChecklists,
 //     });
 //   } catch (error) {
 //     console.error("Error viewing work area:", error);
@@ -749,6 +1152,12 @@ exports.getWorkArea = async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(10);
 
+    const safetyObservations = await SafetyObservation.find({
+      workArea: workArea._id,
+    })
+      .sort({ createdAt: -1 })
+      .limit(10);
+
     res.render("work-areas/view", {
       user: req.user,
       workArea,
@@ -760,6 +1169,7 @@ exports.getWorkArea = async (req, res) => {
       permits,
       jsa,
       ppeChecklists,
+      safetyObservations, // ADD THIS LINE
     });
   } catch (error) {
     console.error("Error viewing work area:", error);

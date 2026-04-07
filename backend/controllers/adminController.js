@@ -594,11 +594,117 @@ exports.viewWorksite = async (req, res) => {
 };
 
 // Assign safety officer to worksite
+// exports.assignOfficerToWorksite = async (req, res) => {
+//   try {
+//     const { worksiteId } = req.params;
+//     const { officerId, role } = req.body;
+
+//     const worksite = await Worksite.findById(worksiteId);
+//     if (!worksite) {
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "Worksite not found" });
+//     }
+
+//     // Check if already assigned
+//     const alreadyAssigned = worksite.assignedSafetyOfficers.some(
+//       (a) => a.officer.toString() === officerId && a.isActive,
+//     );
+
+//     if (alreadyAssigned) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Officer already assigned to this worksite",
+//       });
+//     }
+
+//     worksite.assignedSafetyOfficers.push({
+//       officer: officerId,
+//       role: role || "assistant",
+//       assignedDate: new Date(),
+//       isActive: true,
+//     });
+
+//     await worksite.save();
+
+//     // Update safety officer's worksites list
+//     await SafetyOfficer.findByIdAndUpdate(officerId, {
+//       $addToSet: { worksites: worksiteId },
+//     });
+
+//     res.json({ success: true, message: "Officer assigned successfully" });
+//   } catch (error) {
+//     console.error("Error assigning officer:", error);
+//     res
+//       .status(500)
+//       .json({ success: false, message: "Error assigning officer" });
+//   }
+// };
+
+// // Assign safety officer to work area
+// exports.assignOfficerToWorkArea = async (req, res) => {
+//   try {
+//     const { workAreaId } = req.params;
+//     const { officerId, shift, isPrimary } = req.body;
+
+//     const workArea = await WorkArea.findById(workAreaId);
+//     if (!workArea) {
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "Work area not found" });
+//     }
+
+//     // Check if already assigned to this shift
+//     const alreadyAssigned = workArea.assignedSafetyOfficers.some(
+//       (a) =>
+//         a.officer.toString() === officerId && a.shift === shift && a.isActive,
+//     );
+
+//     if (alreadyAssigned) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Officer already assigned to this shift",
+//       });
+//     }
+
+//     // If setting as primary, unset other primaries for this shift
+//     if (isPrimary) {
+//       workArea.assignedSafetyOfficers.forEach((a) => {
+//         if (a.shift === shift) {
+//           a.isPrimary = false;
+//         }
+//       });
+//     }
+
+//     workArea.assignedSafetyOfficers.push({
+//       officer: officerId,
+//       shift,
+//       isPrimary: isPrimary || false,
+//       assignedFrom: new Date(),
+//       isActive: true,
+//     });
+
+//     await workArea.save();
+
+//     res.json({
+//       success: true,
+//       message: "Officer assigned to work area successfully",
+//     });
+//   } catch (error) {
+//     console.error("Error assigning officer to work area:", error);
+//     res
+//       .status(500)
+//       .json({ success: false, message: "Error assigning officer" });
+//   }
+// };
+
+// Assign safety officer to worksite - FIXED
 exports.assignOfficerToWorksite = async (req, res) => {
   try {
     const { worksiteId } = req.params;
     const { officerId, role } = req.body;
 
+    // Find worksite
     const worksite = await Worksite.findById(worksiteId);
     if (!worksite) {
       return res
@@ -606,7 +712,15 @@ exports.assignOfficerToWorksite = async (req, res) => {
         .json({ success: false, message: "Worksite not found" });
     }
 
-    // Check if already assigned
+    // Find safety officer
+    const officer = await SafetyOfficer.findById(officerId);
+    if (!officer) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Safety officer not found" });
+    }
+
+    // Check if already assigned to worksite
     const alreadyAssigned = worksite.assignedSafetyOfficers.some(
       (a) => a.officer.toString() === officerId && a.isActive,
     );
@@ -618,21 +732,43 @@ exports.assignOfficerToWorksite = async (req, res) => {
       });
     }
 
+    // Check if officer already has this worksite in their array
+    if (officer.worksites && officer.worksites.includes(worksiteId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Officer already has this worksite in their profile",
+      });
+    }
+
+    // 1. Add officer to worksite's assignedSafetyOfficers
     worksite.assignedSafetyOfficers.push({
       officer: officerId,
       role: role || "assistant",
       assignedDate: new Date(),
       isActive: true,
     });
-
     await worksite.save();
 
-    // Update safety officer's worksites list
+    // 2. Add worksite to safety officer's worksites array
+    await SafetyOfficer.findByIdAndUpdate(
+      officerId,
+      { $addToSet: { worksites: worksiteId } },
+      { new: true },
+    );
+
+    // 3. Increment worksitesManaged count
     await SafetyOfficer.findByIdAndUpdate(officerId, {
-      $addToSet: { worksites: worksiteId },
+      $inc: { worksitesManaged: 1 },
     });
 
-    res.json({ success: true, message: "Officer assigned successfully" });
+    res.json({
+      success: true,
+      message: "Officer assigned to worksite successfully",
+      data: {
+        worksite: worksite.name,
+        officer: officer.name,
+      },
+    });
   } catch (error) {
     console.error("Error assigning officer:", error);
     res
@@ -641,17 +777,26 @@ exports.assignOfficerToWorksite = async (req, res) => {
   }
 };
 
-// Assign safety officer to work area
+// Assign safety officer to work area - FIXED
 exports.assignOfficerToWorkArea = async (req, res) => {
   try {
     const { workAreaId } = req.params;
     const { officerId, shift, isPrimary } = req.body;
 
+    // Find work area
     const workArea = await WorkArea.findById(workAreaId);
     if (!workArea) {
       return res
         .status(404)
         .json({ success: false, message: "Work area not found" });
+    }
+
+    // Find safety officer
+    const officer = await SafetyOfficer.findById(officerId);
+    if (!officer) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Safety officer not found" });
     }
 
     // Check if already assigned to this shift
@@ -667,6 +812,14 @@ exports.assignOfficerToWorkArea = async (req, res) => {
       });
     }
 
+    // Check if officer already has this work area in their array
+    if (officer.workAreas && officer.workAreas.includes(workAreaId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Officer already has this work area in their profile",
+      });
+    }
+
     // If setting as primary, unset other primaries for this shift
     if (isPrimary) {
       workArea.assignedSafetyOfficers.forEach((a) => {
@@ -676,25 +829,100 @@ exports.assignOfficerToWorkArea = async (req, res) => {
       });
     }
 
+    // 1. Add officer to work area's assignedSafetyOfficers
     workArea.assignedSafetyOfficers.push({
       officer: officerId,
-      shift,
+      shift: shift || "morning",
       isPrimary: isPrimary || false,
       assignedFrom: new Date(),
       isActive: true,
     });
-
     await workArea.save();
+
+    // 2. Add work area to safety officer's workAreas array
+    await SafetyOfficer.findByIdAndUpdate(
+      officerId,
+      { $addToSet: { workAreas: workAreaId } },
+      { new: true },
+    );
+
+    // Also ensure worksite is added if not already
+    if (workArea.worksite) {
+      await SafetyOfficer.findByIdAndUpdate(officerId, {
+        $addToSet: { worksites: workArea.worksite },
+      });
+    }
 
     res.json({
       success: true,
       message: "Officer assigned to work area successfully",
+      data: {
+        workArea: workArea.name,
+        officer: officer.name,
+        shift: shift || "morning",
+      },
     });
   } catch (error) {
     console.error("Error assigning officer to work area:", error);
     res
       .status(500)
       .json({ success: false, message: "Error assigning officer" });
+  }
+};
+
+// Get all available work areas for a safety officer (for assignment dropdown)
+exports.getAvailableWorkAreasForOfficer = async (req, res) => {
+  try {
+    const { officerId } = req.params;
+
+    const officer = await SafetyOfficer.findById(officerId);
+    if (!officer) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Officer not found" });
+    }
+
+    // Get all work areas not already assigned to this officer
+    const availableWorkAreas = await WorkArea.find({
+      _id: { $nin: officer.workAreas || [] },
+      status: "active",
+    }).populate("worksite", "name location");
+
+    res.json({
+      success: true,
+      data: availableWorkAreas,
+    });
+  } catch (error) {
+    console.error("Error getting available work areas:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// Get all available worksites for a safety officer (for assignment dropdown)
+exports.getAvailableWorksitesForOfficer = async (req, res) => {
+  try {
+    const { officerId } = req.params;
+
+    const officer = await SafetyOfficer.findById(officerId);
+    if (!officer) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Officer not found" });
+    }
+
+    // Get all worksites not already assigned to this officer
+    const availableWorksites = await Worksite.find({
+      _id: { $nin: officer.worksites || [] },
+      status: "active",
+    }).select("name location");
+
+    res.json({
+      success: true,
+      data: availableWorksites,
+    });
+  } catch (error) {
+    console.error("Error getting available worksites:", error);
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
@@ -1106,14 +1334,98 @@ exports.adminCreateSafetyOfficer = async (req, res) => {
 // ==================== WORK AREA ASSIGNMENT FUNCTIONS ====================
 
 // Assign work area to safety officer
+// exports.assignWorkAreaToOfficer = async (req, res) => {
+//   try {
+//     const { officerId } = req.params;
+//     const { workAreaId, shift, isPrimary } = req.body;
+
+//     // Find officer
+//     const officer = await SafetyOfficer.findById(officerId);
+//     if (!officer) {
+//       req.flash("error", "Safety officer not found");
+//       return res.redirect(`/admin/safety-officers/${officerId}`);
+//     }
+
+//     // Find work area
+//     const workArea = await WorkArea.findById(workAreaId);
+//     if (!workArea) {
+//       req.flash("error", "Work area not found");
+//       return res.redirect(`/admin/safety-officers/${officerId}`);
+//     }
+
+//     // Check if already assigned
+//     const alreadyAssigned =
+//       officer.workAreas && officer.workAreas.includes(workAreaId);
+//     if (alreadyAssigned) {
+//       req.flash("error", "Officer already assigned to this work area");
+//       return res.redirect(`/admin/safety-officers/${officerId}`);
+//     }
+
+//     // Add work area to officer
+//     if (!officer.workAreas) officer.workAreas = [];
+//     officer.workAreas.push(workAreaId);
+//     await officer.save();
+
+//     // Add officer to work area's assigned safety officers
+//     workArea.assignedSafetyOfficers.push({
+//       officer: officerId,
+//       shift: shift || "morning",
+//       isPrimary: isPrimary === "true" || isPrimary === true,
+//       assignedFrom: new Date(),
+//       isActive: true,
+//     });
+//     await workArea.save();
+
+//     req.flash("success", `Work area "${workArea.name}" assigned successfully`);
+//     res.redirect(`/admin/safety-officers/${officerId}`);
+//   } catch (error) {
+//     console.error("Error assigning work area:", error);
+//     req.flash("error", "Error assigning work area");
+//     res.redirect(`/admin/safety-officers/${req.params.officerId}`);
+//   }
+// };
+
+// In adminController.js - Updated to handle both scenarios
 exports.assignWorkAreaToOfficer = async (req, res) => {
+  console.log("=== ASSIGN WORK AREA CALLED ===");
+  console.log("Params:", req.params);
+  console.log("Body:", req.body);
+
   try {
-    const { officerId } = req.params;
-    const { workAreaId, shift, isPrimary } = req.body;
+    // Handle both scenarios:
+    // Scenario 1: From safety officer view - URL has officerId
+    // Scenario 2: From manage officers page - URL has workAreaId
+    let officerId, workAreaId, shift, isPrimary;
+
+    if (req.params.officerId) {
+      // Coming from /admin/safety-officers/:officerId/assign-work-area
+      officerId = req.params.officerId;
+      workAreaId = req.body.workAreaId;
+      shift = req.body.shift;
+      isPrimary = req.body.isPrimary;
+    } else if (req.params.workAreaId) {
+      // Coming from /admin/work-areas/:workAreaId/assign-officer
+      workAreaId = req.params.workAreaId;
+      officerId = req.body.officerId;
+      shift = req.body.shift;
+      isPrimary = req.body.isPrimary;
+    } else {
+      throw new Error("Invalid request: missing officerId or workAreaId");
+    }
+
+    console.log("Officer ID:", officerId);
+    console.log("Work Area ID:", workAreaId);
+    console.log("Shift:", shift);
+    console.log("Is Primary:", isPrimary);
 
     // Find officer
     const officer = await SafetyOfficer.findById(officerId);
     if (!officer) {
+      if (req.xhr || req.headers.accept === "application/json") {
+        return res
+          .status(404)
+          .json({ success: false, message: "Safety officer not found" });
+      }
       req.flash("error", "Safety officer not found");
       return res.redirect(`/admin/safety-officers/${officerId}`);
     }
@@ -1121,42 +1433,105 @@ exports.assignWorkAreaToOfficer = async (req, res) => {
     // Find work area
     const workArea = await WorkArea.findById(workAreaId);
     if (!workArea) {
+      if (req.xhr || req.headers.accept === "application/json") {
+        return res
+          .status(404)
+          .json({ success: false, message: "Work area not found" });
+      }
       req.flash("error", "Work area not found");
       return res.redirect(`/admin/safety-officers/${officerId}`);
     }
 
-    // Check if already assigned
+    // Check if already assigned to work area
     const alreadyAssigned =
       officer.workAreas && officer.workAreas.includes(workAreaId);
     if (alreadyAssigned) {
-      req.flash("error", "Officer already assigned to this work area");
+      const message = "Officer already assigned to this work area";
+      if (req.xhr || req.headers.accept === "application/json") {
+        return res.status(400).json({ success: false, message });
+      }
+      req.flash("error", message);
       return res.redirect(`/admin/safety-officers/${officerId}`);
     }
 
     // Add work area to officer
     if (!officer.workAreas) officer.workAreas = [];
     officer.workAreas.push(workAreaId);
+
+    // ALSO add the parent worksite to officer's worksites array
+    const worksiteId = workArea.worksite;
+    if (worksiteId) {
+      if (!officer.worksites) officer.worksites = [];
+      if (!officer.worksites.includes(worksiteId)) {
+        officer.worksites.push(worksiteId);
+        officer.worksitesManaged = (officer.worksitesManaged || 0) + 1;
+      }
+    }
+
     await officer.save();
 
-    // Add officer to work area's assigned safety officers
-    workArea.assignedSafetyOfficers.push({
-      officer: officerId,
-      shift: shift || "morning",
-      isPrimary: isPrimary === "true" || isPrimary === true,
-      assignedFrom: new Date(),
-      isActive: true,
-    });
-    await workArea.save();
+    // Check if officer already in work area's assignedSafetyOfficers
+    const alreadyInWorkArea = workArea.assignedSafetyOfficers.some(
+      (a) => a.officer && a.officer.toString() === officerId && a.isActive,
+    );
 
-    req.flash("success", `Work area "${workArea.name}" assigned successfully`);
+    if (!alreadyInWorkArea) {
+      // Add officer to work area's assigned safety officers
+      workArea.assignedSafetyOfficers.push({
+        officer: officerId,
+        shift: shift || "morning",
+        isPrimary: isPrimary === "true" || isPrimary === true,
+        assignedFrom: new Date(),
+        isActive: true,
+      });
+      await workArea.save();
+    }
+
+    // Also add officer to the parent worksite if not already
+    if (worksiteId) {
+      const worksite = await Worksite.findById(worksiteId);
+      if (worksite) {
+        const alreadyInWorksite = worksite.assignedSafetyOfficers.some(
+          (a) => a.officer && a.officer.toString() === officerId && a.isActive,
+        );
+        if (!alreadyInWorksite) {
+          worksite.assignedSafetyOfficers.push({
+            officer: officerId,
+            role: "assistant",
+            assignedDate: new Date(),
+            isActive: true,
+          });
+          await worksite.save();
+        }
+      }
+    }
+
+    const successMessage = `Work area "${workArea.name}" assigned successfully`;
+
+    // Check if AJAX request (from manage officers page)
+    if (req.xhr || req.headers.accept === "application/json") {
+      return res.json({
+        success: true,
+        message: successMessage,
+        data: { officer: officer.name, workArea: workArea.name },
+      });
+    }
+
+    req.flash("success", successMessage);
     res.redirect(`/admin/safety-officers/${officerId}`);
   } catch (error) {
     console.error("Error assigning work area:", error);
-    req.flash("error", "Error assigning work area");
-    res.redirect(`/admin/safety-officers/${req.params.officerId}`);
+
+    if (req.xhr || req.headers.accept === "application/json") {
+      return res.status(500).json({ success: false, message: error.message });
+    }
+
+    req.flash("error", `Error assigning work area: ${error.message}`);
+    res.redirect(
+      `/admin/safety-officers/${req.params.officerId || req.params.workAreaId}`,
+    );
   }
 };
-
 // Remove work area from safety officer
 exports.removeWorkAreaFromOfficer = async (req, res) => {
   try {

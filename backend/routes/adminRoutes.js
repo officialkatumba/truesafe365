@@ -60,4 +60,10 @@ router.post(
 // Analytics
 router.get("/analytics", adminController.getAnalytics);
 
+// Add this route to adminRoutes.js (before the /:id routes)
+router.post(
+  "/work-areas/:workAreaId/assign-officer",
+  adminController.assignWorkAreaToOfficer,
+);
+
 module.exports = router;

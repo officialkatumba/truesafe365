@@ -66,8 +66,6 @@ const riskAssessmentSchema = new mongoose.Schema(
             "mechanical",
           ],
         },
-
-        // Initial risk (before controls)
         initialRisk: {
           likelihood: {
             type: String,
@@ -90,8 +88,6 @@ const riskAssessmentSchema = new mongoose.Schema(
           riskScore: Number,
           justification: String,
         },
-
-        // Controls implemented
         controls: [
           {
             measure: { type: String, required: true },
@@ -124,8 +120,6 @@ const riskAssessmentSchema = new mongoose.Schema(
             verifiedAt: Date,
           },
         ],
-
-        // Residual risk (after controls)
         residualRisk: {
           likelihood: {
             type: String,
@@ -149,8 +143,6 @@ const riskAssessmentSchema = new mongoose.Schema(
           acceptable: { type: Boolean, default: false },
           justification: String,
         },
-
-        // Who is at risk
         affectedGroups: [
           {
             group: {
@@ -167,8 +159,6 @@ const riskAssessmentSchema = new mongoose.Schema(
             details: String,
           },
         ],
-
-        // Status
         status: {
           type: String,
           enum: ["active", "mitigated", "monitoring", "closed"],
@@ -176,8 +166,6 @@ const riskAssessmentSchema = new mongoose.Schema(
         },
         reviewRequired: { type: Boolean, default: false },
         nextReviewDate: Date,
-
-        // Notes
         additionalNotes: String,
         references: [String],
       },
@@ -260,7 +248,142 @@ const riskAssessmentSchema = new mongoose.Schema(
       },
     ],
 
-    // AI assistance
+    // ========== NEW: HUMAN WRITTEN SECTIONS (from guided form) ==========
+    humanSections: {
+      type: {
+        ExecutiveSummary: { type: String, default: "" },
+        ScopeMethodology: { type: String, default: "" },
+        DetailedHazardAnalysis: { type: String, default: "" },
+        RiskMatrixSummary: { type: String, default: "" },
+        ControlMeasuresSummary: { type: String, default: "" },
+        EmergencyProcedures: { type: String, default: "" },
+        MonitoringReview: { type: String, default: "" },
+        ActionPlan: { type: String, default: "" },
+        Approvals: { type: String, default: "" },
+      },
+      default: {},
+    },
+
+    // ========== NEW: AI ENHANCED SECTIONS ==========
+    aiSections: {
+      type: {
+        ExecutiveSummary: {
+          content: { type: String, default: "" },
+          confirmed: { type: Boolean, default: false },
+        },
+        ScopeMethodology: {
+          content: { type: String, default: "" },
+          confirmed: { type: Boolean, default: false },
+        },
+        DetailedHazardAnalysis: {
+          content: { type: String, default: "" },
+          confirmed: { type: Boolean, default: false },
+        },
+        RiskMatrixSummary: {
+          content: { type: String, default: "" },
+          confirmed: { type: Boolean, default: false },
+        },
+        ControlMeasuresSummary: {
+          content: { type: String, default: "" },
+          confirmed: { type: Boolean, default: false },
+        },
+        EmergencyProcedures: {
+          content: { type: String, default: "" },
+          confirmed: { type: Boolean, default: false },
+        },
+        MonitoringReview: {
+          content: { type: String, default: "" },
+          confirmed: { type: Boolean, default: false },
+        },
+        ActionPlan: {
+          content: { type: String, default: "" },
+          confirmed: { type: Boolean, default: false },
+        },
+        Approvals: {
+          content: { type: String, default: "" },
+          confirmed: { type: Boolean, default: false },
+        },
+      },
+      default: {},
+    },
+
+    // ========== NEW: Which version is active for each section ==========
+    activeVersion: {
+      type: {
+        ExecutiveSummary: {
+          type: String,
+          enum: ["human", "ai"],
+          default: "human",
+        },
+        ScopeMethodology: {
+          type: String,
+          enum: ["human", "ai"],
+          default: "human",
+        },
+        DetailedHazardAnalysis: {
+          type: String,
+          enum: ["human", "ai"],
+          default: "human",
+        },
+        RiskMatrixSummary: {
+          type: String,
+          enum: ["human", "ai"],
+          default: "human",
+        },
+        ControlMeasuresSummary: {
+          type: String,
+          enum: ["human", "ai"],
+          default: "human",
+        },
+        EmergencyProcedures: {
+          type: String,
+          enum: ["human", "ai"],
+          default: "human",
+        },
+        MonitoringReview: {
+          type: String,
+          enum: ["human", "ai"],
+          default: "human",
+        },
+        ActionPlan: { type: String, enum: ["human", "ai"], default: "human" },
+        Approvals: { type: String, enum: ["human", "ai"], default: "human" },
+      },
+      default: {},
+    },
+
+    // ========== NEW: Section confirmation status ==========
+    sectionConfirmed: {
+      type: {
+        ExecutiveSummary: { type: Boolean, default: false },
+        ScopeMethodology: { type: Boolean, default: false },
+        DetailedHazardAnalysis: { type: Boolean, default: false },
+        RiskMatrixSummary: { type: Boolean, default: false },
+        ControlMeasuresSummary: { type: Boolean, default: false },
+        EmergencyProcedures: { type: Boolean, default: false },
+        MonitoringReview: { type: Boolean, default: false },
+        ActionPlan: { type: Boolean, default: false },
+        Approvals: { type: Boolean, default: false },
+      },
+      default: {},
+    },
+
+    // ========== NEW: Consolidated Assessment ==========
+    consolidatedAssessment: {
+      content: { type: String, default: "" },
+      pdfUrl: { type: String, default: "" },
+      pdfUploaded: { type: Boolean, default: false },
+      generatedAt: Date,
+    },
+
+    // ========== NEW: Overall Status ==========
+    overallStatus: {
+      allSectionsConfirmed: { type: Boolean, default: false },
+      consolidatedGenerated: { type: Boolean, default: false },
+    },
+
+    // ========== END NEW FIELDS ==========
+
+    // AI assistance (legacy)
     aiGenerated: { type: Boolean, default: false },
     aiModel: String,
     aiContextUsed: {
@@ -290,7 +413,14 @@ const riskAssessmentSchema = new mongoose.Schema(
     // Status
     status: {
       type: String,
-      enum: ["draft", "under_review", "approved", "active", "archived"],
+      enum: [
+        "draft",
+        "under_review",
+        "approved",
+        "active",
+        "archived",
+        "completed",
+      ],
       default: "draft",
     },
 

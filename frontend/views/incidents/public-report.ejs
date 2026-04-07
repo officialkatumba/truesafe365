@@ -1,0 +1,940 @@
+<%- include('../partials/header') %>
+
+<div class="container py-4">
+  <div
+    class="card shadow-lg border-0"
+    style="border-radius: 20px; overflow: hidden"
+  >
+    <div
+      class="card-header"
+      style="background: linear-gradient(135deg, #e74c3c, #c0392b)"
+    >
+      <h4 class="mb-0 text-white">
+        <i class="fas fa-exclamation-triangle me-2"></i>Report an Incident
+      </h4>
+      <p class="mb-0 small text-white-50">
+        Work Area: <%= workArea.name %> | <%= workArea.worksite?.name %>
+      </p>
+    </div>
+
+    <div class="card-body p-4">
+      <!-- Step Indicator -->
+      <div class="mb-4">
+        <div
+          class="d-flex justify-content-between align-items-center flex-wrap gap-2"
+        >
+          <div class="step-indicator" id="step1Indicator">
+            <span class="step-circle active" id="step1Circle">1</span>
+            <span class="step-label">What & Where</span>
+          </div>
+          <div class="step-line"></div>
+          <div class="step-indicator" id="step2Indicator">
+            <span class="step-circle" id="step2Circle">2</span>
+            <span class="step-label">What Happened</span>
+          </div>
+          <div class="step-line"></div>
+          <div class="step-indicator" id="step3Indicator">
+            <span class="step-circle" id="step3Circle">3</span>
+            <span class="step-label">Injuries</span>
+          </div>
+          <div class="step-line"></div>
+          <div class="step-indicator" id="step4Indicator">
+            <span class="step-circle" id="step4Circle">4</span>
+            <span class="step-label">Equipment</span>
+          </div>
+          <div class="step-line"></div>
+          <div class="step-indicator" id="step5Indicator">
+            <span class="step-circle" id="step5Circle">5</span>
+            <span class="step-label">Environment</span>
+          </div>
+          <div class="step-line"></div>
+          <div class="step-indicator" id="step6Indicator">
+            <span class="step-circle" id="step6Circle">6</span>
+            <span class="step-label">About You</span>
+          </div>
+        </div>
+      </div>
+
+      <form id="incidentForm" method="POST">
+        <!-- ========== STEP 1: BASIC INFORMATION ========== -->
+        <div id="step1" class="form-step active">
+          <div class="alert alert-info mb-4">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Why report?</strong> Reporting incidents helps prevent
+            future accidents and keeps everyone safe. You can report
+            anonymously.
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label fw-bold"
+              >Type of Report <span class="text-danger">*</span></label
+            >
+            <div class="row">
+              <div class="col-md-4 mb-2">
+                <div class="card border h-100 type-card" data-type="incident">
+                  <div class="card-body text-center">
+                    <i class="fas fa-ambulance fa-3x text-danger mb-2"></i>
+                    <h6>Incident</h6>
+                    <p class="small text-muted">
+                      Someone got hurt or was exposed to harm
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4 mb-2">
+                <div class="card border h-100 type-card" data-type="near_miss">
+                  <div class="card-body text-center">
+                    <i
+                      class="fas fa-exclamation-triangle fa-3x text-warning mb-2"
+                    ></i>
+                    <h6>Near Miss</h6>
+                    <p class="small text-muted">
+                      Could have caused harm but didn't
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4 mb-2">
+                <div
+                  class="card border h-100 type-card"
+                  data-type="hazard_observation"
+                >
+                  <div class="card-body text-center">
+                    <i class="fas fa-eye fa-3x text-info mb-2"></i>
+                    <h6>Hazard Observation</h6>
+                    <p class="small text-muted">Unsafe condition or practice</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <input type="hidden" name="type" id="reportType" required />
+          </div>
+
+          <div class="mb-4" id="severitySection" style="display: none">
+            <label class="form-label fw-bold"
+              >How serious was this? <span class="text-danger">*</span></label
+            >
+            <div class="row">
+              <div class="col-md-3 mb-2">
+                <div
+                  class="card border h-100 severity-card"
+                  data-severity="low"
+                >
+                  <div class="card-body text-center">
+                    <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                    <h6>Low</h6>
+                    <p class="small">First aid only</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3 mb-2">
+                <div
+                  class="card border h-100 severity-card"
+                  data-severity="medium"
+                >
+                  <div class="card-body text-center">
+                    <i class="fas fa-chart-line fa-2x text-warning mb-2"></i>
+                    <h6>Medium</h6>
+                    <p class="small">Medical treatment needed</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3 mb-2">
+                <div
+                  class="card border h-100 severity-card"
+                  data-severity="high"
+                >
+                  <div class="card-body text-center">
+                    <i
+                      class="fas fa-skull-crossbones fa-2x text-orange mb-2"
+                    ></i>
+                    <h6>High</h6>
+                    <p class="small">Serious injury, hospitalization</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3 mb-2">
+                <div
+                  class="card border h-100 severity-card"
+                  data-severity="critical"
+                >
+                  <div class="card-body text-center">
+                    <i class="fas fa-heartbeat fa-2x text-danger mb-2"></i>
+                    <h6>Critical</h6>
+                    <p class="small">Life-threatening, fatality</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <input type="hidden" name="severity" id="reportSeverity" />
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold"
+                >When did it happen? <span class="text-danger">*</span></label
+              >
+              <input
+                type="datetime-local"
+                name="dateTime"
+                class="form-control"
+                required
+              />
+              <div class="form-text">
+                Approximate time is fine if you're not sure
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">Shift</label>
+              <select name="shift" class="form-select">
+                <option value="morning">Morning (6am - 2pm)</option>
+                <option value="afternoon">Afternoon (2pm - 10pm)</option>
+                <option value="night">Night (10pm - 6am)</option>
+                <option value="unknown">Not sure</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold"
+              >Where did it happen? <span class="text-danger">*</span></label
+            >
+            <input
+              type="text"
+              name="location"
+              class="form-control"
+              value="<%= workArea.name %>"
+              required
+            />
+            <div class="form-text">
+              Be specific: e.g., "North Shaft Level 3, near the sump pump
+              station"
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold">Specific Location Details</label>
+            <textarea
+              name="locationDetails"
+              class="form-control"
+              rows="2"
+              placeholder="e.g., 50m from the face, on the left side of the haulage way..."
+            ></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold">What work was being done?</label>
+            <select name="workTypeAtTime" class="form-select">
+              <option value="">Select work type...</option>
+              <option value="excavation">Excavation / Digging</option>
+              <option value="structural">Structural Work</option>
+              <option value="electrical">Electrical Work</option>
+              <option value="welding">Welding / Cutting</option>
+              <option value="scaffolding">Scaffolding</option>
+              <option value="general">General / Other</option>
+            </select>
+          </div>
+
+          <div class="d-flex justify-content-end mt-4">
+            <button type="button" class="btn btn-primary" onclick="nextStep(2)">
+              Next: What Happened <i class="fas fa-arrow-right ms-2"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- ========== STEP 2: DESCRIPTION ========== -->
+        <div id="step2" class="form-step">
+          <div class="alert alert-info mb-4">
+            <i class="fas fa-lightbulb me-2"></i>
+            <strong>Be as detailed as possible.</strong> Describe exactly what
+            happened, what led to it, and what was done immediately.
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold"
+              >What happened? <span class="text-danger">*</span></label
+            >
+            <textarea
+              name="description"
+              class="form-control"
+              rows="5"
+              required
+              placeholder="Example: While drilling at the face, a rock approximately 50cm x 30cm fell from the freshly blasted heading. The rock struck the drill rig's canopy but narrowly missed the operator who had just stepped back to inspect the drill bit..."
+            ></textarea>
+            <div class="form-text">
+              Include: What happened? Who was involved? What caused it?
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold">What was done immediately?</label>
+            <textarea
+              name="immediateAction"
+              class="form-control"
+              rows="3"
+              placeholder="Example: The area was evacuated immediately. First aid was provided. The shift supervisor was notified. The area was barricaded..."
+            ></textarea>
+          </div>
+
+          <div class="d-flex justify-content-between mt-4">
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              onclick="prevStep(1)"
+            >
+              <i class="fas fa-arrow-left me-2"></i> Back
+            </button>
+            <button type="button" class="btn btn-primary" onclick="nextStep(3)">
+              Next: Injuries <i class="fas fa-arrow-right ms-2"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- ========== STEP 3: INJURIES (conditional) ========== -->
+        <div id="step3" class="form-step">
+          <div class="alert alert-warning mb-4">
+            <i class="fas fa-heartbeat me-2"></i>
+            <strong>Injury Information</strong> - This helps us ensure proper
+            care and follow-up.
+          </div>
+
+          <div class="mb-3" id="injuriesSection">
+            <label class="form-label fw-bold">Were there any injuries?</label>
+            <div class="btn-group w-100 mb-3" role="group">
+              <input
+                type="radio"
+                class="btn-check"
+                name="injuriesOccurred"
+                id="injuriesYes"
+                value="yes"
+                autocomplete="off"
+              />
+              <label class="btn btn-outline-danger" for="injuriesYes"
+                >Yes, someone was injured</label
+              >
+              <input
+                type="radio"
+                class="btn-check"
+                name="injuriesOccurred"
+                id="injuriesNo"
+                value="no"
+                autocomplete="off"
+                checked
+              />
+              <label class="btn btn-outline-secondary" for="injuriesNo"
+                >No injuries</label
+              >
+            </div>
+          </div>
+
+          <div id="injuryDetails" style="display: none">
+            <div class="card bg-light mb-3">
+              <div class="card-body">
+                <h6 class="fw-bold">Injury Details</h6>
+                <div class="row">
+                  <div class="col-md-6 mb-2">
+                    <label>Injured Person's Name (optional)</label>
+                    <input
+                      type="text"
+                      name="injuredPersonName"
+                      class="form-control"
+                      placeholder="Anonymous if preferred"
+                    />
+                  </div>
+                  <div class="col-md-6 mb-2">
+                    <label>Type of Injury</label>
+                    <select name="injuryType" class="form-select">
+                      <option value="">Select...</option>
+                      <option value="cut">Cut / Laceration</option>
+                      <option value="bruise">Bruise / Contusion</option>
+                      <option value="fracture">Fracture / Broken bone</option>
+                      <option value="burn">Burn</option>
+                      <option value="strain">Strain / Sprain</option>
+                      <option value="concussion">
+                        Concussion / Head injury
+                      </option>
+                      <option value="respiratory">Respiratory issue</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <div class="col-md-6 mb-2">
+                    <label>Body Part Affected</label>
+                    <input
+                      type="text"
+                      name="bodyPart"
+                      class="form-control"
+                      placeholder="e.g., Right hand, Lower back, Head"
+                    />
+                  </div>
+                  <div class="col-md-6 mb-2">
+                    <label>Treatment Required</label>
+                    <input
+                      type="text"
+                      name="treatmentRequired"
+                      class="form-control"
+                      placeholder="e.g., Bandage, Stitches, Medication"
+                    />
+                  </div>
+                  <div class="col-md-6 mb-2">
+                    <div class="form-check">
+                      <input
+                        type="checkbox"
+                        name="hospitalVisit"
+                        value="yes"
+                        class="form-check-input"
+                        id="hospitalVisit"
+                      />
+                      <label class="form-check-label" for="hospitalVisit"
+                        >Hospital visit required</label
+                      >
+                    </div>
+                  </div>
+                  <div class="col-md-6 mb-2">
+                    <div class="form-check">
+                      <input
+                        type="checkbox"
+                        name="timeOffWork"
+                        value="yes"
+                        class="form-check-input"
+                        id="timeOffWork"
+                      />
+                      <label class="form-check-label" for="timeOffWork"
+                        >Time off work needed</label
+                      >
+                    </div>
+                  </div>
+                  <div
+                    class="col-md-6 mb-2"
+                    id="daysOffSection"
+                    style="display: none"
+                  >
+                    <label>Days off work</label>
+                    <input
+                      type="number"
+                      name="daysOff"
+                      class="form-control"
+                      min="0"
+                    />
+                  </div>
+                </div>
+                <div class="row mt-2">
+                  <div class="col-md-6">
+                    <div class="form-check">
+                      <input
+                        type="checkbox"
+                        name="firstAidProvided"
+                        value="yes"
+                        class="form-check-input"
+                        id="firstAid"
+                      />
+                      <label class="form-check-label" for="firstAid"
+                        >First aid was provided on site</label
+                      >
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-check">
+                      <input
+                        type="checkbox"
+                        name="ambulanceCalled"
+                        value="yes"
+                        class="form-check-input"
+                        id="ambulanceCalled"
+                      />
+                      <label class="form-check-label" for="ambulanceCalled"
+                        >Ambulance was called</label
+                      >
+                    </div>
+                  </div>
+                </div>
+                <div class="mt-2">
+                  <label>Describe the injury in detail</label>
+                  <textarea
+                    name="injuryDescription"
+                    class="form-control"
+                    rows="2"
+                    placeholder="e.g., Worker sustained a deep cut on right forearm from sharp metal edge. Bleeding was controlled with direct pressure. Worker was taken to clinic for stitches."
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Near Miss Section -->
+          <div id="nearMissSection" style="display: none">
+            <div class="card bg-light mb-3">
+              <div class="card-body">
+                <h6 class="fw-bold">Near Miss Information</h6>
+                <div class="mb-2">
+                  <label>What could have happened?</label>
+                  <textarea
+                    name="potentialConsequences"
+                    class="form-control"
+                    rows="2"
+                    placeholder="e.g., The rock could have struck the operator, causing serious head injury or fatality."
+                  ></textarea>
+                </div>
+                <div class="mb-2">
+                  <label>Why didn't it cause harm?</label>
+                  <textarea
+                    name="whyDidNotHappen"
+                    class="form-control"
+                    rows="2"
+                    placeholder="e.g., The operator had just stepped back to inspect the drill bit. The drill rig's canopy deflected the rock."
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between mt-4">
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              onclick="prevStep(2)"
+            >
+              <i class="fas fa-arrow-left me-2"></i> Back
+            </button>
+            <button type="button" class="btn btn-primary" onclick="nextStep(4)">
+              Next: Equipment <i class="fas fa-arrow-right ms-2"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- ========== STEP 4: EQUIPMENT INVOLVED ========== -->
+        <div id="step4" class="form-step">
+          <div class="alert alert-info mb-4">
+            <i class="fas fa-tools me-2"></i>
+            <strong>Equipment Information</strong> - If equipment was involved,
+            please tell us about it.
+          </div>
+
+          <div class="mb-3">
+            <label>Equipment / Tool / Machinery involved</label>
+            <input
+              type="text"
+              name="equipmentName"
+              class="form-control"
+              placeholder="e.g., Atlas Copco drill rig, Toyota forklift, Hand grinder"
+            />
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label>Condition of equipment</label>
+              <select name="equipmentCondition" class="form-select">
+                <option value="">Select...</option>
+                <option value="good">Good working condition</option>
+                <option value="faulty">Had known faults</option>
+                <option value="damaged">Was damaged during incident</option>
+                <option value="unknown">Unknown</option>
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label>Was it inspected recently?</label>
+              <select name="equipmentInspected" class="form-select">
+                <option value="">Select...</option>
+                <option value="yes">Yes, inspected recently</option>
+                <option value="no">No, not inspected</option>
+                <option value="unknown">Unknown</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between mt-4">
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              onclick="prevStep(3)"
+            >
+              <i class="fas fa-arrow-left me-2"></i> Back
+            </button>
+            <button type="button" class="btn btn-primary" onclick="nextStep(5)">
+              Next: Environment <i class="fas fa-arrow-right ms-2"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- ========== STEP 5: ENVIRONMENTAL FACTORS ========== -->
+        <div id="step5" class="form-step">
+          <div class="alert alert-info mb-4">
+            <i class="fas fa-cloud-sun me-2"></i>
+            <strong>Work Environment</strong> - These details help identify
+            contributing factors.
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label>Weather / Environmental conditions</label>
+              <select name="weatherConditions" class="form-select">
+                <option value="">Select...</option>
+                <option value="clear">Clear / Normal</option>
+                <option value="rain">Raining</option>
+                <option value="hot">Hot / High temperature</option>
+                <option value="cold">Cold</option>
+                <option value="windy">Windy</option>
+                <option value="dusty">Dusty / Poor visibility</option>
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label>Lighting conditions</label>
+              <select name="lighting" class="form-select">
+                <option value="">Select...</option>
+                <option value="adequate">Adequate / Good</option>
+                <option value="poor">Poor / Dim</option>
+                <option value="glare">Glare / Bright spots</option>
+                <option value="shadows">Shadows / Dark areas</option>
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label>Noise level</label>
+              <select name="noise" class="form-select">
+                <option value="">Select...</option>
+                <option value="low">Low / Quiet</option>
+                <option value="medium">Medium / Normal</option>
+                <option value="high">High / Loud machinery</option>
+                <option value="very_high">
+                  Very High / Couldn't hear warnings
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label>What factors contributed to this incident?</label>
+            <textarea
+              name="contributingFactors"
+              class="form-control"
+              rows="3"
+              placeholder="e.g., Poor lighting, wet floor, equipment failure, lack of training, time pressure, fatigue..."
+            ></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label>Any witnesses? What did they observe?</label>
+            <textarea
+              name="witnessObservations"
+              class="form-control"
+              rows="3"
+              placeholder="Include names if known and willing to share"
+            ></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label>Additional comments from reporter</label>
+            <textarea
+              name="reporterComments"
+              class="form-control"
+              rows="3"
+              placeholder="Anything else you want to share?"
+            ></textarea>
+          </div>
+
+          <div class="d-flex justify-content-between mt-4">
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              onclick="prevStep(4)"
+            >
+              <i class="fas fa-arrow-left me-2"></i> Back
+            </button>
+            <button type="button" class="btn btn-primary" onclick="nextStep(6)">
+              Next: About You <i class="fas fa-arrow-right ms-2"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- ========== STEP 6: REPORTER INFORMATION ========== -->
+        <div id="step6" class="form-step">
+          <div class="alert alert-warning mb-4">
+            <i class="fas fa-user-secret me-2"></i>
+            <strong>Your Information</strong> - You can report anonymously.
+            Providing your name helps us follow up if needed.
+          </div>
+
+          <div class="mb-3">
+            <div class="btn-group w-100 mb-3" role="group">
+              <input
+                type="radio"
+                class="btn-check"
+                name="anonymous"
+                id="anonymousYes"
+                value="true"
+                autocomplete="off"
+                checked
+              />
+              <label class="btn btn-outline-secondary" for="anonymousYes"
+                >Report Anonymously</label
+              >
+              <input
+                type="radio"
+                class="btn-check"
+                name="anonymous"
+                id="anonymousNo"
+                value="false"
+                autocomplete="off"
+              />
+              <label class="btn btn-outline-primary" for="anonymousNo"
+                >Provide My Information</label
+              >
+            </div>
+          </div>
+
+          <div id="reporterInfo" style="display: none">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label>Your Name</label>
+                <input
+                  type="text"
+                  name="reporterName"
+                  class="form-control"
+                  placeholder="e.g., John Smith"
+                />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label>Contact (email or phone)</label>
+                <input
+                  type="text"
+                  name="reporterContact"
+                  class="form-control"
+                  placeholder="e.g., john@example.com or 0977 123456"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="alert alert-success mt-3">
+            <div class="form-check">
+              <input
+                type="checkbox"
+                name="confirmedAccuracy"
+                value="yes"
+                class="form-check-input"
+                id="confirmAccuracy"
+                required
+              />
+              <label class="form-check-label" for="confirmAccuracy">
+                <strong
+                  >I confirm that the information provided is accurate and true
+                  to the best of my knowledge.</strong
+                >
+              </label>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between mt-4">
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              onclick="prevStep(5)"
+            >
+              <i class="fas fa-arrow-left me-2"></i> Back
+            </button>
+            <button type="submit" class="btn btn-success btn-lg">
+              <i class="fas fa-paper-plane me-2"></i> Submit Report
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentStep = 1;
+  let selectedType = null;
+
+  // Type selection
+  document.querySelectorAll(".type-card").forEach((card) => {
+    card.addEventListener("click", function () {
+      document
+        .querySelectorAll(".type-card")
+        .forEach((c) => c.classList.remove("border-primary", "bg-light"));
+      this.classList.add("border-primary", "bg-light");
+      selectedType = this.dataset.type;
+      document.getElementById("reportType").value = selectedType;
+
+      // Show severity section for incidents
+      if (selectedType === "incident") {
+        document.getElementById("severitySection").style.display = "block";
+      } else {
+        document.getElementById("severitySection").style.display = "none";
+      }
+
+      // Show/hide near miss section
+      if (selectedType === "near_miss") {
+        document.getElementById("nearMissSection").style.display = "block";
+      } else {
+        document.getElementById("nearMissSection").style.display = "none";
+      }
+    });
+  });
+
+  // Severity selection
+  document.querySelectorAll(".severity-card").forEach((card) => {
+    card.addEventListener("click", function () {
+      document
+        .querySelectorAll(".severity-card")
+        .forEach((c) => c.classList.remove("border-primary", "bg-light"));
+      this.classList.add("border-primary", "bg-light");
+      document.getElementById("reportSeverity").value = this.dataset.severity;
+    });
+  });
+
+  // Injuries toggle
+  document
+    .querySelectorAll('input[name="injuriesOccurred"]')
+    .forEach((radio) => {
+      radio.addEventListener("change", function () {
+        if (this.value === "yes") {
+          document.getElementById("injuryDetails").style.display = "block";
+        } else {
+          document.getElementById("injuryDetails").style.display = "none";
+        }
+      });
+    });
+
+  // Days off work toggle
+  document
+    .getElementById("timeOffWork")
+    ?.addEventListener("change", function () {
+      document.getElementById("daysOffSection").style.display = this.checked
+        ? "block"
+        : "none";
+    });
+
+  // Anonymous toggle
+  document.querySelectorAll('input[name="anonymous"]').forEach((radio) => {
+    radio.addEventListener("change", function () {
+      document.getElementById("reporterInfo").style.display =
+        this.value === "false" ? "block" : "none";
+    });
+  });
+
+  // Step navigation
+  function showStep(step) {
+    document.querySelectorAll(".form-step").forEach((el, idx) => {
+      el.classList.remove("active");
+      if (idx + 1 === step) el.classList.add("active");
+    });
+
+    for (let i = 1; i <= 6; i++) {
+      const circle = document.getElementById(`step${i}Circle`);
+      if (circle) {
+        circle.classList.remove("active", "completed");
+        if (i < step) circle.classList.add("completed");
+        else if (i === step) circle.classList.add("active");
+      }
+    }
+    currentStep = step;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function nextStep(step) {
+    // Validate current step
+    if (currentStep === 1 && !selectedType) {
+      Swal.fire("Please select a report type", "", "warning");
+      return;
+    }
+    if (
+      currentStep === 1 &&
+      selectedType === "incident" &&
+      !document.getElementById("reportSeverity").value
+    ) {
+      Swal.fire("Please select severity level", "", "warning");
+      return;
+    }
+    if (currentStep === 2) {
+      const desc = document.querySelector('textarea[name="description"]');
+      if (!desc.value.trim()) {
+        Swal.fire("Please describe what happened", "", "warning");
+        return;
+      }
+    }
+    showStep(step);
+  }
+
+  function prevStep(step) {
+    showStep(step);
+  }
+
+  // Form submission
+  document
+    .getElementById("incidentForm")
+    .addEventListener("submit", function (e) {
+      if (!document.getElementById("confirmAccuracy").checked) {
+        e.preventDefault();
+        Swal.fire("Please confirm the accuracy of your report", "", "warning");
+      }
+    });
+</script>
+
+<style>
+  .form-step {
+    display: none;
+  }
+  .form-step.active {
+    display: block;
+  }
+
+  .step-indicator {
+    text-align: center;
+    flex: 1;
+  }
+  .step-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e9ecef;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #6c757d;
+    transition: all 0.3s;
+  }
+  .step-circle.active {
+    background: #e74c3c;
+    color: white;
+  }
+  .step-circle.completed {
+    background: #28a745;
+    color: white;
+  }
+  .step-label {
+    display: block;
+    font-size: 12px;
+    margin-top: 5px;
+    color: #6c757d;
+  }
+  .step-line {
+    flex: 1;
+    height: 2px;
+    background: #e9ecef;
+    margin: 0 5px;
+    margin-top: 20px;
+  }
+
+  .type-card,
+  .severity-card {
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .type-card:hover,
+  .severity-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  @media (max-width: 768px) {
+    .step-label {
+      display: none;
+    }
+    .step-circle {
+      width: 30px;
+      height: 30px;
+      font-size: 12px;
+    }
+  }
+</style>
+
+<%- include('../partials/footer') %>

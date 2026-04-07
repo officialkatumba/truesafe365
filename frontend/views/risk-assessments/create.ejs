@@ -1,0 +1,1031 @@
+<%- include('../partials/header') %> <%- include('../partials/navbar') %>
+
+<div class="container py-4">
+  <div
+    class="card shadow-lg border-0"
+    style="border-radius: 20px; overflow: hidden"
+  >
+    <div class="card-header bg-primary text-white py-3">
+      <h4 class="mb-0">
+        <i class="fas fa-chart-pie me-2"></i>Create Risk Assessment
+      </h4>
+      <p class="mb-0 small opacity-75">
+        Work Area: <%= workArea.name %> | <%= workArea.worksite?.name %>
+      </p>
+    </div>
+
+    <div class="card-body p-4">
+      <!-- Step Indicator -->
+      <div class="mb-4">
+        <div
+          class="d-flex justify-content-between align-items-center flex-wrap gap-2"
+        >
+          <div class="step-indicator" id="step1Indicator">
+            <span class="step-circle active" id="step1Circle">1</span>
+            <span class="step-label">Basic Info</span>
+          </div>
+          <div class="step-line"></div>
+          <div class="step-indicator" id="step2Indicator">
+            <span class="step-circle" id="step2Circle">2</span>
+            <span class="step-label">Hazards & Controls</span>
+          </div>
+          <div class="step-line"></div>
+          <div class="step-indicator" id="step3Indicator">
+            <span class="step-circle" id="step3Circle">3</span>
+            <span class="step-label">Sections (1-3)</span>
+          </div>
+          <div class="step-line"></div>
+          <div class="step-indicator" id="step4Indicator">
+            <span class="step-circle" id="step4Circle">4</span>
+            <span class="step-label">Sections (4-6)</span>
+          </div>
+          <div class="step-line"></div>
+          <div class="step-indicator" id="step5Indicator">
+            <span class="step-circle" id="step5Circle">5</span>
+            <span class="step-label">Sections (7-9)</span>
+          </div>
+          <div class="step-line"></div>
+          <div class="step-indicator" id="step6Indicator">
+            <span class="step-circle" id="step6Circle">6</span>
+            <span class="step-label">Review & Submit</span>
+          </div>
+        </div>
+      </div>
+
+      <form id="riskAssessmentForm" method="POST">
+        <!-- ========== STEP 1: BASIC INFORMATION ========== -->
+        <div id="step1" class="form-step active">
+          <div class="card mb-4 border">
+            <div class="card-header bg-light">
+              <h5 class="mb-0">
+                <i class="fas fa-info-circle me-2 text-primary"></i>Basic
+                Information
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <label class="form-label fw-bold"
+                  >Assessment Title <span class="text-danger">*</span></label
+                >
+                <input
+                  type="text"
+                  name="title"
+                  class="form-control"
+                  required
+                  placeholder="e.g., Risk Assessment - North Shaft Underground Development - April 2026"
+                />
+                <div class="form-text">
+                  Give your assessment a clear, descriptive title.
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold">Brief Description</label>
+                <textarea
+                  name="description"
+                  class="form-control"
+                  rows="3"
+                  placeholder="Briefly describe the scope and purpose of this risk assessment..."
+                ></textarea>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <label class="form-label fw-bold"
+                    >Number of Workers Exposed</label
+                  >
+                  <input
+                    type="number"
+                    name="personnelCount"
+                    class="form-control"
+                    value="<%= workArea.workerCount || 0 %>"
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Experience Level</label>
+                  <select name="experienceLevel" class="form-select">
+                    <option value="mixed">Mixed (Experienced & New)</option>
+                    <option value="experienced">All Experienced</option>
+                    <option value="new">Mostly New Workers</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end">
+            <button type="button" class="btn btn-primary" onclick="nextStep(2)">
+              Next: Hazards & Controls <i class="fas fa-arrow-right ms-2"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- ========== STEP 2: HAZARDS AND CONTROLS (Structured Data) ========== -->
+        <div id="step2" class="form-step">
+          <div class="card mb-4 border">
+            <div class="card-header bg-light">
+              <h5 class="mb-0">
+                <i class="fas fa-exclamation-triangle me-2 text-danger"></i
+                >Hazards & Existing Controls
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>What to do:</strong> List ALL hazards you have
+                identified in this work area. For each hazard, describe the
+                existing controls already in place.
+              </div>
+
+              <div id="hazards-container">
+                <div class="hazard-item card mb-3 p-3 border">
+                  <div class="row">
+                    <div class="col-12 mb-3">
+                      <label class="form-label fw-bold"
+                        >Hazard Description
+                        <span class="text-danger">*</span></label
+                      >
+                      <input
+                        type="text"
+                        name="hazards[0][description]"
+                        class="form-control"
+                        placeholder="e.g., Rock falls from freshly blasted face"
+                      />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label fw-bold">Category</label>
+                      <select name="hazards[0][category]" class="form-select">
+                        <option value="physical">Physical</option>
+                        <option value="chemical">Chemical</option>
+                        <option value="biological">Biological</option>
+                        <option value="ergonomic">Ergonomic</option>
+                        <option value="psychosocial">Psychosocial</option>
+                        <option value="electrical">Electrical</option>
+                        <option value="mechanical">Mechanical</option>
+                      </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label fw-bold"
+                        >Initial Risk Level</label
+                      >
+                      <select
+                        name="hazards[0][initialRiskLevel]"
+                        class="form-select"
+                      >
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="extreme">Extreme</option>
+                      </select>
+                    </div>
+                    <div class="col-12 mb-3">
+                      <label class="form-label fw-bold"
+                        >Existing Controls</label
+                      >
+                      <textarea
+                        name="hazards[0][controls]"
+                        class="form-control"
+                        rows="2"
+                        placeholder="Describe existing controls: e.g., Rock bolts installed immediately after blasting, ground support mesh on exposed faces..."
+                      ></textarea>
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label fw-bold">Affected Groups</label>
+                      <input
+                        type="text"
+                        name="hazards[0][affectedGroups]"
+                        class="form-control"
+                        placeholder="e.g., Underground workers, geotechnical inspectors, maintenance personnel"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                class="btn btn-outline-primary btn-sm"
+                onclick="addHazard()"
+              >
+                <i class="fas fa-plus me-1"></i> Add Another Hazard
+              </button>
+            </div>
+          </div>
+
+          <div class="card mb-4 border">
+            <div class="card-header bg-light">
+              <h5 class="mb-0">
+                <i class="fas fa-users me-2 text-primary"></i>Affected Groups &
+                Specific Concerns
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <label class="form-label fw-bold"
+                  >Who is Affected? <span class="text-danger">*</span></label
+                >
+                <textarea
+                  name="affectedGroups"
+                  class="form-control"
+                  rows="3"
+                  placeholder="List all groups affected: e.g., Underground workers (drillers, blasters, bolters), Geotechnical inspectors, Maintenance personnel, Safety officers, Supervisors, Contractors, Emergency response team..."
+                ></textarea>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold"
+                  >Specific Concerns / Observations</label
+                >
+                <textarea
+                  name="specificConcerns"
+                  class="form-control"
+                  rows="4"
+                  placeholder="List any specific concerns: e.g., Ground conditions deteriorating at 3B development heading, Water ingress increasing, Ventilation ducting needs upgrading, Radio communication intermittent, Emergency escape route signage faded..."
+                ></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between">
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              onclick="prevStep(1)"
+            >
+              <i class="fas fa-arrow-left me-2"></i> Back
+            </button>
+            <button type="button" class="btn btn-primary" onclick="nextStep(3)">
+              Next: Sections 1-3 <i class="fas fa-arrow-right ms-2"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- ========== STEP 3: SECTIONS 1-3 (Executive Summary, Scope, Hazard Analysis) ========== -->
+        <div id="step3" class="form-step">
+          <!-- Executive Summary -->
+          <div class="card mb-4 border">
+            <div
+              class="card-header"
+              style="background: linear-gradient(90deg, #4ca1af, #2c3e50)"
+            >
+              <h5 class="mb-0 text-white">
+                <i class="fas fa-file-alt me-2"></i>1. Executive Summary
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="alert alert-secondary mb-3">
+                <i class="fas fa-lightbulb text-warning me-2"></i>
+                <strong>Guide:</strong> Write a brief overview (2-3 paragraphs)
+                that includes:
+                <ul class="mt-2 mb-0">
+                  <li>What activity/area is being assessed?</li>
+                  <li>What are the main hazards you identified?</li>
+                  <li>
+                    What is the overall risk level (Low/Medium/High/Extreme)?
+                  </li>
+                  <li>What are your key recommendations?</li>
+                </ul>
+              </div>
+              <textarea
+                name="ExecutiveSummary"
+                class="form-control section-textarea"
+                rows="8"
+                data-section="ExecutiveSummary"
+                placeholder="Example: This risk assessment evaluates underground development work at North Shaft Level 3 (450m depth). Key activities include drilling, blasting, rock bolting, ore haulage, and pump maintenance. Major hazards identified include rock falls (critical), methane gas accumulation (high), confined space risks (high), and heavy equipment movement (high). The overall risk level before controls is HIGH. Recommended controls include upgrading ventilation, improving ground support, enhancing communication systems, and implementing fatigue management..."
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- Scope & Methodology -->
+          <div class="card mb-4 border">
+            <div
+              class="card-header"
+              style="background: linear-gradient(90deg, #3498db, #2980b9)"
+            >
+              <h5 class="mb-0 text-white">
+                <i class="fas fa-chart-line me-2"></i>2. Scope & Methodology
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="alert alert-secondary mb-3">
+                <i class="fas fa-lightbulb text-warning me-2"></i>
+                <strong>Guide:</strong> Describe:
+                <ul class="mt-2 mb-0">
+                  <li>What activities are covered in this assessment?</li>
+                  <li>
+                    What methodology did you use? (e.g., ISO 45001, OSHA
+                    standards)
+                  </li>
+                  <li>Who was consulted during this assessment?</li>
+                  <li>What tools or techniques were used?</li>
+                </ul>
+              </div>
+              <textarea
+                name="ScopeMethodology"
+                class="form-control section-textarea"
+                rows="8"
+                data-section="ScopeMethodology"
+                placeholder="Example: This assessment covers all underground development activities at Level 3 including drilling, blasting, rock bolting, ore haulage, pump maintenance, and ventilation installation. The risk analysis was conducted in accordance with ISO 45001:2018 and OSHA 1926. Consultations were held with shift supervisors, safety officers, geotechnical engineers, and experienced underground workers. A combination of job safety analysis (JSA), workplace inspection, and worker interviews was used..."
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- Detailed Hazard Analysis -->
+          <div class="card mb-4 border">
+            <div
+              class="card-header"
+              style="background: linear-gradient(90deg, #e74c3c, #c0392b)"
+            >
+              <h5 class="mb-0 text-white">
+                <i class="fas fa-exclamation-triangle me-2"></i>3. Detailed
+                Hazard Analysis
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="alert alert-secondary mb-3">
+                <i class="fas fa-lightbulb text-warning me-2"></i>
+                <strong>Guide:</strong> For EACH hazard you listed earlier,
+                provide:
+                <ul class="mt-2 mb-0">
+                  <li><strong>Hazard:</strong> Name the hazard</li>
+                  <li>
+                    <strong>Risk Before Controls:</strong> Likelihood (Rare to
+                    Almost Certain) and Consequence (Minor to Catastrophic)
+                  </li>
+                  <li>
+                    <strong>Risk Score:</strong> 1-25 (Likelihood × Consequence)
+                  </li>
+                  <li>
+                    <strong>Existing Controls:</strong> What's already in place?
+                  </li>
+                  <li>
+                    <strong>Effectiveness:</strong> How well do they work?
+                  </li>
+                  <li>
+                    <strong>Recommended Additional Controls:</strong> What else
+                    is needed?
+                  </li>
+                  <li>
+                    <strong>Responsible Party:</strong> Who will implement?
+                  </li>
+                  <li><strong>Deadline:</strong> When?</li>
+                  <li>
+                    <strong>Residual Risk:</strong> Risk level after controls
+                  </li>
+                </ul>
+              </div>
+              <textarea
+                name="DetailedHazardAnalysis"
+                class="form-control section-textarea"
+                rows="12"
+                data-section="DetailedHazardAnalysis"
+                placeholder="Example:
+Hazard: Rock falls from freshly blasted face
+Risk Before Controls: Likely (4) × Major (4) = Score 16 (High)
+Existing Controls: Rock bolts installed immediately after blasting, ground support mesh, daily geotechnical inspections
+Effectiveness: Partially effective - some areas still show instability
+Recommended Controls: Install additional spot bolting, use ground penetrating radar before entry, implement stricter exclusion zones
+Responsible: Shift Supervisor
+Deadline: Within 7 days
+Residual Risk: Possible (3) × Moderate (3) = Score 9 (Medium)"
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between">
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              onclick="prevStep(2)"
+            >
+              <i class="fas fa-arrow-left me-2"></i> Back
+            </button>
+            <button type="button" class="btn btn-primary" onclick="nextStep(4)">
+              Next: Sections 4-6 <i class="fas fa-arrow-right ms-2"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- ========== STEP 4: SECTIONS 4-6 (Risk Matrix, Control Measures, Emergency) ========== -->
+        <div id="step4" class="form-step">
+          <!-- Risk Matrix Summary -->
+          <div class="card mb-4 border">
+            <div
+              class="card-header"
+              style="background: linear-gradient(90deg, #f39c12, #e67e22)"
+            >
+              <h5 class="mb-0 text-white">
+                <i class="fas fa-table me-2"></i>4. Risk Matrix Summary
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="alert alert-secondary mb-3">
+                <i class="fas fa-lightbulb text-warning me-2"></i>
+                <strong>Guide:</strong> Summarize the risk distribution:
+                <ul class="mt-2 mb-0">
+                  <li>How many hazards are Low/Medium/High/Extreme risk?</li>
+                  <li>Which risks require IMMEDIATE action?</li>
+                  <li>Create a simple risk heat map description</li>
+                </ul>
+              </div>
+              <textarea
+                name="RiskMatrixSummary"
+                class="form-control section-textarea"
+                rows="8"
+                data-section="RiskMatrixSummary"
+                placeholder="Example:
+Risk Distribution:
+- Extreme (Score 20-25): 1 hazard (Rock falls)
+- High (Score 15-19): 3 hazards (Methane gas, Confined space, Heavy equipment)
+- Medium (Score 8-14): 4 hazards (Dust, Water ingress, Temperature, DPM)
+- Low (Score 1-7): 2 hazards (Noise, Manual handling)
+
+Highest priority risks requiring immediate action:
+1. Rock falls from freshly blasted face
+2. Methane gas accumulation
+3. Confined space entry in sump pump station"
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- Control Measures Summary -->
+          <div class="card mb-4 border">
+            <div
+              class="card-header"
+              style="background: linear-gradient(90deg, #27ae60, #2ecc71)"
+            >
+              <h5 class="mb-0 text-white">
+                <i class="fas fa-shield-alt me-2"></i>5. Control Measures
+                Summary
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="alert alert-secondary mb-3">
+                <i class="fas fa-lightbulb text-warning me-2"></i>
+                <strong>Guide:</strong> Organize controls by type:
+                <ul class="mt-2 mb-0">
+                  <li>
+                    <strong>Engineering Controls:</strong> Physical changes to
+                    work environment
+                  </li>
+                  <li>
+                    <strong>Administrative Controls:</strong> Procedures,
+                    training, signage
+                  </li>
+                  <li>
+                    <strong>PPE Requirements:</strong> Specific equipment needed
+                  </li>
+                </ul>
+              </div>
+              <textarea
+                name="ControlMeasuresSummary"
+                class="form-control section-textarea"
+                rows="10"
+                data-section="ControlMeasuresSummary"
+                placeholder="Example:
+Engineering Controls:
+- Upgrade ventilation ducting to increase airflow to face
+- Install additional dewatering pumps in sump area
+- Install repeater stations for radio communication
+- Improve ground support with additional rock bolts and mesh
+
+Administrative Controls:
+- Implement fatigue management plan (max 10-hour shifts in hot conditions)
+- Replace faded emergency escape route signage
+- Enforce confined space entry permit system
+- Conduct daily pre-shift safety meetings
+
+PPE Requirements:
+- N100 respirators for dust protection (not N95)
+- Heat-resistant clothing for high-temperature areas
+- Personal gas detectors for all workers (calibrated daily)
+- High-visibility reflective gear for haulage ways"
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- Emergency Procedures -->
+          <div class="card mb-4 border">
+            <div
+              class="card-header"
+              style="background: linear-gradient(90deg, #e74c3c, #c0392b)"
+            >
+              <h5 class="mb-0 text-white">
+                <i class="fas fa-ambulance me-2"></i>6. Emergency Procedures
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="alert alert-secondary mb-3">
+                <i class="fas fa-lightbulb text-warning me-2"></i>
+                <strong>Guide:</strong> Describe emergency response for each
+                major risk:
+                <ul class="mt-2 mb-0">
+                  <li>Rock fall / Ground collapse response</li>
+                  <li>Gas detection / Methane emergency</li>
+                  <li>Flooding / Water ingress</li>
+                  <li>Fire / Explosion</li>
+                  <li>Medical emergency</li>
+                  <li>Evacuation procedures and muster points</li>
+                </ul>
+              </div>
+              <textarea
+                name="EmergencyProcedures"
+                class="form-control section-textarea"
+                rows="10"
+                data-section="EmergencyProcedures"
+                placeholder="Example:
+Rock Fall Emergency:
+1. Activate emergency stop
+2. Evacuate immediate area to refuge chamber (50m from face)
+3. Call surface control via emergency phone
+4. Wait for rescue team with hydraulic tools
+
+Gas Emergency (Methane):
+1. Gas alarm activates (continuous monitoring system)
+2. All personnel evacuate to fresh air
+3. Ventilation fans run at maximum
+4. No re-entry until gas cleared and tested
+
+Flooding Emergency:
+1. Alert all personnel via PA system
+2. Evacuate via marked escape routes (Level 3 → Level 2)
+3. Close watertight doors
+4. Emergency pumps activated
+5. Assembly point: Level 2 refuge station
+
+General Evacuation:
+- Primary escape route: North Shaft
+- Secondary escape route: Ventilation raise
+- Muster point: Surface at North Shaft headframe
+- Roll call: Supervisors to account for all workers"
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between">
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              onclick="prevStep(3)"
+            >
+              <i class="fas fa-arrow-left me-2"></i> Back
+            </button>
+            <button type="button" class="btn btn-primary" onclick="nextStep(5)">
+              Next: Sections 7-9 <i class="fas fa-arrow-right ms-2"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- ========== STEP 5: SECTIONS 7-9 (Monitoring, Action Plan, Approvals) ========== -->
+        <div id="step5" class="form-step">
+          <!-- Monitoring & Review -->
+          <div class="card mb-4 border">
+            <div
+              class="card-header"
+              style="background: linear-gradient(90deg, #3498db, #2980b9)"
+            >
+              <h5 class="mb-0 text-white">
+                <i class="fas fa-chart-line me-2"></i>7. Monitoring & Review
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="alert alert-secondary mb-3">
+                <i class="fas fa-lightbulb text-warning me-2"></i>
+                <strong>Guide:</strong> Specify:
+                <ul class="mt-2 mb-0">
+                  <li>
+                    How often will controls be monitored? (Daily/Weekly/Monthly)
+                  </li>
+                  <li>Who is responsible for monitoring?</li>
+                  <li>What are your Key Performance Indicators (KPIs)?</li>
+                  <li>When will the full assessment be reviewed?</li>
+                </ul>
+              </div>
+              <textarea
+                name="MonitoringReview"
+                class="form-control section-textarea"
+                rows="8"
+                data-section="MonitoringReview"
+                placeholder="Example:
+Monitoring Schedule:
+- Daily: Pre-shift safety inspections, gas detector checks, ventilation checks
+- Weekly: Geotechnical inspections, equipment inspections
+- Monthly: Air quality monitoring, DPM level testing
+- Quarterly: Full risk assessment review
+
+Responsible Parties:
+- Shift Supervisor: Daily checks
+- Safety Officer: Weekly inspections
+- HSE Manager: Monthly and quarterly reviews
+
+Key Performance Indicators (KPIs):
+- Zero lost-time injuries related to rock falls
+- Gas detection alarm response time < 2 minutes
+- 100% PPE compliance
+- Monthly safety audit score > 90%
+
+Next Full Review: October 2026 (6 months) or immediately after any incident"
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- Action Plan -->
+          <div class="card mb-4 border">
+            <div
+              class="card-header"
+              style="background: linear-gradient(90deg, #4ca1af, #2c3e50)"
+            >
+              <h5 class="mb-0 text-white">
+                <i class="fas fa-list-check me-2"></i>8. Action Plan
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="alert alert-secondary mb-3">
+                <i class="fas fa-lightbulb text-warning me-2"></i>
+                <strong>Guide:</strong> Create a table with:
+                <ul class="mt-2 mb-0">
+                  <li><strong>Action Item:</strong> What needs to be done?</li>
+                  <li><strong>Priority:</strong> High/Medium/Low</li>
+                  <li><strong>Responsible:</strong> Who will do it?</li>
+                  <li><strong>Deadline:</strong> When must it be completed?</li>
+                  <li>
+                    <strong>Status:</strong> Not Started/In Progress/Completed
+                  </li>
+                </ul>
+              </div>
+              <textarea
+                name="ActionPlan"
+                class="form-control section-textarea"
+                rows="12"
+                data-section="ActionPlan"
+                placeholder="Example:
+| Action Item | Priority | Responsible | Deadline | Status |
+|-------------|----------|-------------|----------|--------|
+| Upgrade ventilation ducting at Level 3B | High | Mine Engineer | 30 April 2026 | Not Started |
+| Install radio repeater near the face | High | Communications Tech | 15 April 2026 | In Progress |
+| Replace faded escape route signage | Medium | Safety Officer | 10 April 2026 | Not Started |
+| Procure N100 respirators for all workers | High | Procurement | 07 April 2026 | Not Started |
+| Conduct confined space rescue drill | Medium | Rescue Team | 20 April 2026 | Not Started |
+| Install additional dewatering pump | High | Maintenance | 25 April 2026 | In Progress |
+| Implement fatigue management training | Low | HR Department | 15 May 2026 | Not Started |"
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- Approvals -->
+          <div class="card mb-4 border">
+            <div
+              class="card-header"
+              style="background: linear-gradient(90deg, #95a5a6, #7f8c8d)"
+            >
+              <h5 class="mb-0 text-white">
+                <i class="fas fa-signature me-2"></i>9. Approvals
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="alert alert-secondary mb-3">
+                <i class="fas fa-lightbulb text-warning me-2"></i>
+                <strong>Guide:</strong> List who needs to approve this
+                assessment:
+                <ul class="mt-2 mb-0">
+                  <li>Site Manager</li>
+                  <li>HSE Manager</li>
+                  <li>Safety Officer (you)</li>
+                  <li>Union Representative (if applicable)</li>
+                </ul>
+              </div>
+              <textarea
+                name="Approvals"
+                class="form-control section-textarea"
+                rows="8"
+                data-section="Approvals"
+                placeholder="Example:
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| Site Manager | _________________ | | |
+| HSE Manager | _________________ | | |
+| Safety Officer | _________________ | | |
+| Union Rep | _________________ | | |
+
+Declaration: I confirm that this risk assessment has been reviewed and all recommended controls are feasible and will be implemented as scheduled.
+
+Date of Approval: _______________
+Next Review Date: _______________"
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between">
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              onclick="prevStep(4)"
+            >
+              <i class="fas fa-arrow-left me-2"></i> Back
+            </button>
+            <button type="button" class="btn btn-primary" onclick="nextStep(6)">
+              Next: Review & Submit <i class="fas fa-arrow-right ms-2"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- ========== STEP 6: REVIEW & SUBMIT ========== -->
+        <div id="step6" class="form-step">
+          <div class="card mb-4 border">
+            <div class="card-header bg-success text-white">
+              <h5 class="mb-0">
+                <i class="fas fa-check-circle me-2"></i>Review Your Assessment
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Please review all sections below before submitting. You can go
+                back to edit any section.
+              </div>
+
+              <div id="reviewContent">
+                <p class="text-muted text-center py-4">Loading preview...</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between">
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              onclick="prevStep(5)"
+            >
+              <i class="fas fa-arrow-left me-2"></i> Back
+            </button>
+            <button type="submit" class="btn btn-success btn-lg" id="submitBtn">
+              <i class="fas fa-save me-2"></i> Create Risk Assessment
+            </button>
+          </div>
+        </div>
+
+        <!-- Hidden fields for dynamic hazards -->
+        <input type="hidden" name="hazardsCount" id="hazardsCount" value="1" />
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentStep = 1;
+  let hazardCounter = 1;
+
+  // Step navigation functions
+  function showStep(step) {
+    document.querySelectorAll(".form-step").forEach((el, idx) => {
+      el.classList.remove("active");
+      if (idx + 1 === step) el.classList.add("active");
+    });
+
+    // Update step circles
+    for (let i = 1; i <= 6; i++) {
+      const circle = document.getElementById(`step${i}Circle`);
+      if (circle) {
+        circle.classList.remove("active", "completed");
+        if (i < step) circle.classList.add("completed");
+        else if (i === step) circle.classList.add("active");
+      }
+    }
+
+    currentStep = step;
+
+    // Update review content if on step 6
+    if (step === 6) updateReview();
+  }
+
+  function nextStep(step) {
+    // Validate current step before proceeding
+    if (currentStep === 1) {
+      const title = document.querySelector('input[name="title"]');
+      if (!title.value.trim()) {
+        Swal.fire("Error", "Please enter an assessment title", "error");
+        return;
+      }
+    }
+    if (currentStep === 2) {
+      const hazards = document.querySelectorAll(".hazard-item");
+      let hasHazards = false;
+      hazards.forEach((h) => {
+        const desc = h.querySelector('input[name*="[description]"]');
+        if (desc && desc.value.trim()) hasHazards = true;
+      });
+      if (!hasHazards) {
+        Swal.fire("Error", "Please add at least one hazard", "error");
+        return;
+      }
+    }
+    showStep(step);
+  }
+
+  function prevStep(step) {
+    showStep(step);
+  }
+
+  // Add hazard function
+  function addHazard() {
+    const container = document.getElementById("hazards-container");
+    const newIndex = hazardCounter;
+    const newHazard = document.createElement("div");
+    newHazard.className = "hazard-item card mb-3 p-3 border";
+    newHazard.innerHTML = `
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <strong>Hazard #${newIndex + 1}</strong>
+        <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.hazard-item').remove(); updateHazardIndices();">
+          <i class="fas fa-trash"></i> Remove
+        </button>
+      </div>
+      <div class="row">
+        <div class="col-12 mb-3">
+          <label class="form-label fw-bold">Hazard Description</label>
+          <input type="text" name="hazards[${newIndex}][description]" class="form-control" placeholder="e.g., Rock falls from freshly blasted face">
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-bold">Category</label>
+          <select name="hazards[${newIndex}][category]" class="form-select">
+            <option value="physical">Physical</option>
+            <option value="chemical">Chemical</option>
+            <option value="biological">Biological</option>
+            <option value="ergonomic">Ergonomic</option>
+            <option value="psychosocial">Psychosocial</option>
+            <option value="electrical">Electrical</option>
+            <option value="mechanical">Mechanical</option>
+          </select>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-bold">Initial Risk Level</label>
+          <select name="hazards[${newIndex}][initialRiskLevel]" class="form-select">
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="extreme">Extreme</option>
+          </select>
+        </div>
+        <div class="col-12 mb-3">
+          <label class="form-label fw-bold">Existing Controls</label>
+          <textarea name="hazards[${newIndex}][controls]" class="form-control" rows="2" placeholder="Describe existing controls..."></textarea>
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-bold">Affected Groups</label>
+          <input type="text" name="hazards[${newIndex}][affectedGroups]" class="form-control" placeholder="e.g., Underground workers, inspectors...">
+        </div>
+      </div>
+    `;
+    container.appendChild(newHazard);
+    hazardCounter++;
+    document.getElementById("hazardsCount").value = hazardCounter;
+  }
+
+  function updateHazardIndices() {
+    const hazards = document.querySelectorAll(".hazard-item");
+    hazards.forEach((hazard, idx) => {
+      const inputs = hazard.querySelectorAll("input, select, textarea");
+      inputs.forEach((input) => {
+        const name = input.getAttribute("name");
+        if (name) {
+          input.setAttribute(
+            "name",
+            name.replace(/hazards\[\d+\]/, `hazards[${idx}]`),
+          );
+        }
+      });
+      const strong = hazard.querySelector("strong");
+      if (strong) strong.textContent = `Hazard #${idx + 1}`;
+    });
+    hazardCounter = hazards.length;
+    document.getElementById("hazardsCount").value = hazardCounter;
+  }
+
+  // Update review preview
+  function updateReview() {
+    const title =
+      document.querySelector('input[name="title"]').value || "Not provided";
+    const description =
+      document.querySelector('textarea[name="description"]')?.value ||
+      "Not provided";
+
+    const sections = [
+      "ExecutiveSummary",
+      "ScopeMethodology",
+      "DetailedHazardAnalysis",
+      "RiskMatrixSummary",
+      "ControlMeasuresSummary",
+      "EmergencyProcedures",
+      "MonitoringReview",
+      "ActionPlan",
+      "Approvals",
+    ];
+
+    let html = `<div class="mb-4"><strong>Title:</strong> ${escapeHtml(title)}</div>`;
+    html += `<div class="mb-4"><strong>Description:</strong> ${escapeHtml(description.substring(0, 200))}...</div>`;
+    html += `<hr>`;
+
+    sections.forEach((section) => {
+      const textarea = document.querySelector(`textarea[name="${section}"]`);
+      const content = textarea ? textarea.value : "";
+      const preview =
+        content.substring(0, 150) + (content.length > 150 ? "..." : "");
+      html += `
+        <div class="mb-3">
+          <strong>${section.replace(/([A-Z])/g, " $1").trim()}:</strong>
+          <p class="text-muted small">${escapeHtml(preview) || "Not provided"}</p>
+        </div>
+      `;
+    });
+
+    document.getElementById("reviewContent").innerHTML = html;
+  }
+
+  function escapeHtml(text) {
+    if (!text) return "";
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // Initialize
+  document.addEventListener("DOMContentLoaded", () => {
+    showStep(1);
+  });
+</script>
+
+<style>
+  .form-step {
+    display: none;
+  }
+  .form-step.active {
+    display: block;
+  }
+
+  .step-indicator {
+    text-align: center;
+    flex: 1;
+  }
+  .step-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e9ecef;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #6c757d;
+    transition: all 0.3s;
+  }
+  .step-circle.active {
+    background: #26a69a;
+    color: white;
+  }
+  .step-circle.completed {
+    background: #28a745;
+    color: white;
+  }
+  .step-label {
+    display: block;
+    font-size: 12px;
+    margin-top: 5px;
+    color: #6c757d;
+  }
+  .step-line {
+    flex: 1;
+    height: 2px;
+    background: #e9ecef;
+    margin: 0 5px;
+    margin-top: 20px;
+  }
+
+  .section-card {
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
+  }
+  .section-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  }
+  .section-textarea:focus {
+    border-color: #26a69a;
+    box-shadow: 0 0 0 0.2rem rgba(38, 166, 154, 0.25);
+  }
+  .is-invalid {
+    border-color: #dc3545;
+  }
+  .progress {
+    background-color: #e9ecef;
+  }
+
+  @media (max-width: 768px) {
+    .step-label {
+      display: none;
+    }
+    .step-circle {
+      width: 30px;
+      height: 30px;
+      font-size: 12px;
+    }
+  }
+</style>
+
+<%- include('../partials/footer') %>

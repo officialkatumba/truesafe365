@@ -450,6 +450,11 @@ app.use("/functions", require("./routes/functionRoutes"));
 const aiDocumentRoutes = require("../backend/routes/aiDocumentRoutes");
 app.use("/ai", aiDocumentRoutes);
 
+// Add this line with your other route imports
+const incidentRoutes = require("./routes/incidentRoutes");
+
+// Add this line with your other route registrations
+app.use("/incidents", incidentRoutes);
 // -------------------- SERVER --------------------
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
