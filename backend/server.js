@@ -459,6 +459,9 @@ app.use("/incidents", incidentRoutes);
 // Safety talk routes
 const safetyTalkRoutes = require("./routes/safetyTalkRoutes");
 app.use("/safety-talks", safetyTalkRoutes);
+
+const safetyObservationRoutes = require("./routes/safetyObservationRoutes");
+app.use("/safety-observations", safetyObservationRoutes);
 // -------------------- SERVER --------------------
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));

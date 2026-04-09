@@ -1,0 +1,136 @@
+<%- include('../partials/header') %> <%- include('../partials/navbar') %>
+
+<div class="container py-4">
+  <div class="card shadow-lg border-0" style="border-radius: 20px">
+    <div
+      class="card-header"
+      style="
+        background: linear-gradient(135deg, #9c27b0, #673ab7);
+        color: white;
+        border-radius: 20px 20px 0 0;
+      "
+    >
+      <h4 class="mb-0">
+        <i class="fas fa-eye me-2"></i>Record Safety Observation
+      </h4>
+      <p class="mb-0 small opacity-75">Work Area: <%= workArea.name %></p>
+    </div>
+    <div class="card-body p-4">
+      <div class="alert alert-info mb-4">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>What is a Safety Observation?</strong><br />
+        A safety observation is a proactive way to identify unsafe conditions,
+        at-risk behaviors, or positive safety practices before they lead to
+        incidents. Report anything that could affect safety of people or
+        equipment.
+      </div>
+
+      <form method="POST">
+        <!-- Observation Type -->
+        <div class="mb-4">
+          <label class="form-label fw-bold"
+            >Observation Type <span class="text-danger">*</span></label
+          >
+          <div class="row">
+            <div class="col-md-4 mb-2">
+              <div class="card border h-100 type-card" data-type="positive">
+                <div class="card-body text-center">
+                  <i class="fas fa-thumbs-up fa-3x text-success mb-2"></i>
+                  <h6>Positive</h6>
+                  <p class="small text-muted">Good safety practice observed</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 mb-2">
+              <div class="card border h-100 type-card" data-type="at_risk">
+                <div class="card-body text-center">
+                  <i
+                    class="fas fa-exclamation-triangle fa-3x text-warning mb-2"
+                  ></i>
+                  <h6>At-Risk Behavior</h6>
+                  <p class="small text-muted">Unsafe act or behavior</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 mb-2">
+              <div class="card border h-100 type-card" data-type="condition">
+                <div class="card-body text-center">
+                  <i class="fas fa-hard-hat fa-3x text-danger mb-2"></i>
+                  <h6>Unsafe Condition</h6>
+                  <p class="small text-muted">Hazardous physical condition</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <input type="hidden" name="type" id="observationType" required />
+        </div>
+
+        <!-- Description -->
+        <div class="mb-3">
+          <label class="form-label fw-bold"
+            >Description <span class="text-danger">*</span></label
+          >
+          <textarea
+            name="description"
+            class="form-control"
+            rows="5"
+            required
+            placeholder="Describe what you observed..."
+          ></textarea>
+          <div class="form-text">
+            Be specific: what, where, when, who was involved (if applicable)
+          </div>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="mb-3">
+          <label class="form-label fw-bold">Recommendations</label>
+          <textarea
+            name="recommendations"
+            class="form-control"
+            rows="3"
+            placeholder="What would you recommend to fix or improve this?"
+          ></textarea>
+        </div>
+
+        <div class="d-flex justify-content-between gap-3 mt-4">
+          <a
+            href="/work-areas/<%= workArea._id %>"
+            class="btn btn-outline-secondary px-4"
+          >
+            <i class="fas fa-times me-2"></i>Cancel
+          </a>
+          <button type="submit" class="btn btn-primary px-5">
+            <i class="fas fa-save me-2"></i>Submit Observation
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Type selection
+  document.querySelectorAll(".type-card").forEach((card) => {
+    card.addEventListener("click", function () {
+      document
+        .querySelectorAll(".type-card")
+        .forEach((c) => c.classList.remove("border-primary", "bg-light"));
+      this.classList.add("border-primary", "bg-light");
+      document.getElementById("observationType").value = this.dataset.type;
+    });
+  });
+</script>
+
+<style>
+  .type-card {
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .type-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+</style>
+
+<%- include('../partials/footer') %>

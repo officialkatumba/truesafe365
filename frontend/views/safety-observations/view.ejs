@@ -1,0 +1,44 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="container py-4">
+  <div class="card shadow-lg border-0">
+    <div class="card-header" style="background: linear-gradient(135deg, #9c27b0, #673ab7); color: white;">
+      <h4 class="mb-0"><i class="fas fa-eye me-2"></i>Safety Observation</h4>
+    </div>
+    <div class="card-body p-4">
+      <div class="row">
+        <div class="col-md-8">
+          <div class="mb-3"><strong>Type:</strong> <span class="badge <%= observation.type === 'positive' ? 'bg-success' : observation.type === 'at_risk' ? 'bg-warning text-dark' : 'bg-danger' %>"><%= observation.type %></span></div>
+          <div class="mb-3"><strong>Description:</strong><p class="mt-1"><%= observation.description %></p></div>
+          <% if (observation.recommendations) { %><div class="mb-3"><strong>Recommendations:</strong><p class="mt-1"><%= observation.recommendations %></p></div><% } %>
+          <% if (observation.correctiveActions) { %><div class="mb-3"><strong>Corrective Actions Taken:</strong><p class="mt-1"><%= observation.correctiveActions %></p></div><% } %>
+        </div>
+        <div class="col-md-4">
+          <div class="card bg-light"><div class="card-body">
+            <p><strong>Work Area:</strong> <%= observation.workArea?.name %></p>
+            <p><strong>Observed By:</strong> <%= observation.observedBy?.name %></p>
+            <p><strong>Date:</strong> <%= new Date(observation.date).toLocaleString() %></p>
+            <p><strong>Status:</strong> <span class="badge <%= observation.status === 'closed' ? 'bg-success' : observation.status === 'in_review' ? 'bg-info' : 'bg-warning text-dark' %>"><%= observation.status %></span></p>
+          </div></div>
+        </div>
+      </div>
+
+      <!-- Action Buttons for Safety Officers -->
+      <% if (user.role === 'safety_officer' && observation.status !== 'closed') { %>
+      <div class="mt-4 pt-3 border-top">
+        <h6 class="fw-bold">Update Observation</h6>
+        <form method="POST" action="/safety-observations/<%= observation._id %>/update" class="mt-3">
+          <div class="mb-3"><label class="form-label">Corrective Actions Taken</label><textarea name="correctiveActions" class="form-control" rows="3"></textarea></div>
+          <div class="mb-3"><label class="form-label">Status</label><select name="status" class="form-select"><option value="open">Open</option><option value="in_review">In Review</option><option value="closed">Closed</option></select></div>
+          <button type="submit" class="btn btn-primary">Update Observation</button>
+        </form>
+      </div>
+      <% } %>
+
+      <div class="mt-4"><a href="/safety-observations" class="btn btn-outline-secondary">← Back to List</a></div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
