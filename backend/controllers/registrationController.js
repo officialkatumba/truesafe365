@@ -289,6 +289,17 @@ exports.registerEnterpriseAdmin = async (req, res) => {
 };
 
 // Helper function to generate company PIN
+// function generateCompanyPin() {
+//   // Generate a 6-character alphanumeric PIN (e.g., "A3B9C2")
+//   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789";
+//   let pin = "";
+//   for (let i = 0; i < 6; i++) {
+//     pin += chars.charAt(Math.floor(Math.random() * chars.length));
+//   }
+//   return pin;
+// }
+
+// Helper function to generate company PIN
 function generateCompanyPin() {
   // Generate a 6-character alphanumeric PIN (e.g., "A3B9C2")
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789";
@@ -299,6 +310,92 @@ function generateCompanyPin() {
   return pin;
 }
 
+// Regenerate company PIN
+// exports.regenerateCompanyPin = async (req, res) => {
+//   try {
+//     const User = require("../models/User");
+
+//     // Find the admin user (assuming req.user is the admin)
+//     const admin = await User.findById(req.user._id);
+
+//     if (!admin || admin.role !== "system_admin") {
+//       req.flash("error", "Unauthorized access");
+//       return res.redirect("/admin/dashboard");
+//     }
+
+//     // Generate new PIN
+//     const newPin = generateCompanyPin();
+
+//     // Set expiration date (7 days from now)
+//     const expiresAt = new Date();
+//     expiresAt.setDate(expiresAt.getDate() + 7);
+
+//     // Update admin with new PIN
+//     admin.companyPin = newPin;
+//     admin.companyPinExpiresAt = expiresAt;
+//     admin.companyPinUsedBy = []; // Reset used by array
+//     admin.maxPinUses = 10; // Allow up to 10 uses per PIN
+
+//     await admin.save();
+
+//     req.flash(
+//       "success",
+//       `New company PIN generated: ${newPin}. It will expire on ${expiresAt.toLocaleDateString()}`,
+//     );
+//     res.redirect("/admin/dashboard");
+//   } catch (error) {
+//     console.error("Error regenerating PIN:", error);
+//     req.flash("error", "Error regenerating company PIN");
+//     res.redirect("/admin/dashboard");
+//   }
+// };
+
+// Regenerate company PIN
+// Regenerate company PIN
+exports.regenerateCompanyPin = async (req, res) => {
+  try {
+    const User = require("../models/User");
+
+    // Find the admin user
+    const admin = await User.findById(req.user._id);
+
+    if (!admin || admin.role !== "system_admin") {
+      req.flash("error", "Unauthorized access");
+      return res.redirect("/dashboard");
+    }
+
+    // Generate new PIN
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789";
+    let newPin = "";
+    for (let i = 0; i < 6; i++) {
+      newPin += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+
+    // Set expiration date (7 days from now)
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    // Update admin with new PIN
+    admin.companyPin = newPin;
+    admin.companyPinExpiresAt = expiresAt;
+    admin.companyPinUsedBy = [];
+    admin.maxPinUses = 10;
+
+    await admin.save();
+
+    req.flash(
+      "success",
+      `New company PIN generated: ${newPin}. It will expire on ${expiresAt.toLocaleDateString()}`,
+    );
+
+    // ✅ FIXED: Redirect to the correct admin dashboard URL
+    return res.redirect("/dashboard/admin");
+  } catch (error) {
+    console.error("Error regenerating PIN:", error);
+    req.flash("error", "Error regenerating company PIN: " + error.message);
+    return res.redirect("/dashboard/admin");
+  }
+};
 // backend/controllers/registrationController.js
 
 // Show safety officer join form
@@ -648,11 +745,11 @@ exports.showWorkerJoinForm = async (req, res) => {
     }).select("companyName companySize companyPin _id");
 
     // Convert to plain objects for the template
-    const companiesList = companies.map(company => ({
+    const companiesList = companies.map((company) => ({
       _id: company._id,
       companyName: company.companyName,
       companySize: company.companySize || "N/A",
-      companyPin: company.companyPin
+      companyPin: company.companyPin,
     }));
 
     res.render("registration/worker-join", {
@@ -673,14 +770,14 @@ exports.showWorkerJoinForm = async (req, res) => {
 // Process worker joining with company selection AND PIN
 exports.joinWorker = async (req, res) => {
   try {
-    const { 
-      companyId, 
+    const {
+      companyId,
       companyPin,
-      name, 
-      email, 
-      phone, 
-      password, 
-      confirmPassword 
+      name,
+      email,
+      phone,
+      password,
+      confirmPassword,
     } = req.body;
 
     // Validate required fields

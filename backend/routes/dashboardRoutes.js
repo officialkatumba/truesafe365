@@ -154,6 +154,11 @@ const SafetyOfficer = require("../models/SafetyOfficer");
 const User = require("../models/User");
 const WorkArea = require("../models/WorkArea");
 
+// Add these lines with your other requires
+const Incident = require("../models/Incident");
+const SafetyObservation = require("../models/SafetyObservation");
+const SafetyTalk = require("../models/SafetyTalk");
+
 // Enterprise Safety Officer Dashboard
 router.get("/officer", ensureAuthenticated, async (req, res) => {
   try {
@@ -199,6 +204,61 @@ router.get("/officer", ensureAuthenticated, async (req, res) => {
 });
 
 // Worker Dashboard
+// router.get("/worker", ensureAuthenticated, async (req, res) => {
+//   try {
+//     if (req.user.role !== "worker") {
+//       req.flash("error", "Access denied - Workers only");
+//       return res.redirect("/api/users/login");
+//     }
+
+//     // Find company
+//     const company = await User.findById(req.user.companyId).select(
+//       "companyName",
+//     );
+
+//     // Find work area where this worker is assigned
+//     const workArea = await WorkArea.findOne({
+//       "workers.user": req.user._id,
+//       "workers.isActive": true,
+//     }).select("name location");
+
+//     // Get worker details from the work area
+//     let workerDetails = null;
+//     if (workArea) {
+//       const worker = workArea.workers.find(
+//         (w) => w.user.toString() === req.user._id.toString(),
+//       );
+//       workerDetails = worker;
+//     }
+
+//     const stats = {
+//       incidentsReported: 0, // Can fetch from Incident model
+//       observations: 0,
+//       safetyTalks: 0,
+//     };
+
+//     const recentActivities = [];
+
+//     res.render("workers/dashboard", {
+//       user: req.user,
+//       worker: {
+//         name: req.user.name,
+//         workerNumber: req.user.workerNumber,
+//         shift: workerDetails?.shift || "Morning",
+//         position: workerDetails?.position || "General Worker",
+//       },
+//       company: company || { companyName: "Your Company" },
+//       workArea: workArea,
+//       stats: stats,
+//       recentActivities: recentActivities,
+//     });
+//   } catch (error) {
+//     console.error("Error loading worker dashboard:", error);
+//     req.flash("error", "Error loading dashboard");
+//     res.redirect("/api/users/login");
+//   }
+// });
+
 router.get("/worker", ensureAuthenticated, async (req, res) => {
   try {
     if (req.user.role !== "worker") {
@@ -211,36 +271,42 @@ router.get("/worker", ensureAuthenticated, async (req, res) => {
       "companyName",
     );
 
-    // Find work area where this worker is assigned
-    const workArea = await WorkArea.findOne({
-      "workers.user": req.user._id,
-      "workers.isActive": true,
-    }).select("name location");
-
-    // Get worker details from the work area
-    let workerDetails = null;
-    if (workArea) {
-      const worker = workArea.workers.find(
-        (w) => w.user.toString() === req.user._id.toString(),
+    // Use the workArea field directly from the user object
+    let workArea = null;
+    if (req.user.workArea) {
+      workArea = await WorkArea.findById(req.user.workArea).populate(
+        "worksite",
+        "name",
       );
-      workerDetails = worker;
     }
 
     const stats = {
-      incidentsReported: 0, // Can fetch from Incident model
-      observations: 0,
-      safetyTalks: 0,
+      incidentsReported: await Incident.countDocuments({
+        reportedByUser: req.user._id,
+      }),
+      observations: await SafetyObservation.countDocuments({
+        observedBy: req.user._id,
+      }),
+      safetyTalks: workArea
+        ? await SafetyTalk.countDocuments({ targetWorkAreas: workArea._id })
+        : 0,
     };
 
-    const recentActivities = [];
+    const recentActivities = await Incident.find({
+      reportedByUser: req.user._id,
+    })
+      .sort({ createdAt: -1 })
+      .limit(5);
 
     res.render("workers/dashboard", {
       user: req.user,
       worker: {
         name: req.user.name,
+        email: req.user.email,
         workerNumber: req.user.workerNumber,
-        shift: workerDetails?.shift || "Morning",
-        position: workerDetails?.position || "General Worker",
+        shift: req.user.shift || "Morning",
+        position: "General Worker",
+        phone: req.user.phone,
       },
       company: company || { companyName: "Your Company" },
       workArea: workArea,
@@ -253,7 +319,6 @@ router.get("/worker", ensureAuthenticated, async (req, res) => {
     res.redirect("/api/users/login");
   }
 });
-
 // Enterprise Admin Dashboard
 router.get("/admin", ensureAuthenticated, (req, res) => {
   if (req.user.role !== "system_admin") {

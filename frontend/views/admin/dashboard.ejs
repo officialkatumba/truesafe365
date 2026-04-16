@@ -31,10 +31,19 @@
       <!-- Company PIN Card -->
       <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
         <div class="card-body p-4">
-          <h5 class="fw-bold mb-3" style="color: #1e3c5c;">
-            <i class="fas fa-building me-2" style="color: #e67e22;"></i>
-            Company Information
-          </h5>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0" style="color: #1e3c5c;">
+              <i class="fas fa-building me-2" style="color: #e67e22;"></i>
+              Company Information
+            </h5>
+            <% if (user.companyPin) { %>
+            <form method="POST" action="/register/regenerate-pin" class="d-inline" id="regeneratePinForm">
+              <button type="submit" class="btn btn-sm btn-warning" id="regeneratePinBtn">
+                <i class="fas fa-sync-alt me-1"></i> Regenerate PIN
+              </button>
+            </form>
+            <% } %>
+          </div>
           <div class="row">
             <div class="col-md-6">
               <p class="mb-2"><strong>Company Name:</strong> <%= user.companyName || 'Not set' %></p>
@@ -50,8 +59,19 @@
             </div>
             <div class="col-md-6">
               <% if (user.companyPinExpiresAt) { %>
-              <p class="mb-2"><strong>PIN Expires:</strong> <%= new Date(user.companyPinExpiresAt).toLocaleDateString() %></p>
-              <p class="mb-2"><strong>PIN Uses Left:</strong> <%= (user.maxPinUses || 1) - ((user.companyPinUsedBy && user.companyPinUsedBy.length) || 0) %></p>
+              <p class="mb-2"><strong>PIN Expires:</strong> 
+                <span class="<%= new Date(user.companyPinExpiresAt) < new Date() ? 'text-danger fw-bold' : '' %>">
+                  <%= new Date(user.companyPinExpiresAt).toLocaleDateString() %>
+                  <% if (new Date(user.companyPinExpiresAt) < new Date()) { %>
+                    <i class="fas fa-exclamation-circle ms-1"></i> (Expired)
+                  <% } %>
+                </span>
+              </p>
+              <p class="mb-2"><strong>PIN Uses Left:</strong> 
+                <span class="<%= (user.maxPinUses || 1) - ((user.companyPinUsedBy && user.companyPinUsedBy.length) || 0) <= 0 ? 'text-danger fw-bold' : '' %>">
+                  <%= (user.maxPinUses || 1) - ((user.companyPinUsedBy && user.companyPinUsedBy.length) || 0) %>
+                </span>
+              </p>
               <% } else { %>
               <p class="mb-2 text-muted"><i class="fas fa-info-circle me-1"></i> No PIN generated yet</p>
               <% } %>
@@ -60,7 +80,8 @@
           <div class="mt-3 p-3 rounded-3" style="background: #f8f9fa;">
             <small class="text-muted">
               <i class="fas fa-info-circle me-1" style="color: #e67e22;"></i>
-              Share this PIN with safety officers and workers to join your company. Each PIN can be used up to <%= user.maxPinUses || 1 %> time(s).
+              Share this PIN with safety officers and workers to join your company. Each PIN can be used up to <%= user.maxPinUses || 1 %> time(s) and expires after 7 days.
+              <strong class="text-warning">Regenerate a new PIN when the current one expires or when you need to restrict access.</strong>
             </small>
           </div>
         </div>
@@ -159,9 +180,6 @@
         <a href="/worksites/create" class="btn btn-outline-primary btn-sm">
           <i class="fas fa-plus-circle me-1"></i> New Worksite
         </a>
-        <!-- <a href="/work-areas/create" class="btn btn-outline-success btn-sm">
-          <i class="fas fa-map-marked-alt me-1"></i> New Work Area
-        </a> -->
         <a href="/admin/safety-officers/create" class="btn btn-outline-warning btn-sm">
           <i class="fas fa-user-plus me-1"></i> Add Officer
         </a>
@@ -171,6 +189,7 @@
       </div>
 
       <hr />
+      
       <!-- SECTION 1: Site Management Cards -->
       <h4 class="text-center mb-4 fw-bold">
         <i class="fas fa-hard-hat me-2" style="color: #f093fb;"></i>
@@ -223,6 +242,7 @@
           </div>
         </div>
       </div>
+      
       <!-- SECTION 2: Personnel Management Cards -->
       <h4 class="text-center mb-4 fw-bold">
         <i class="fas fa-users me-2" style="color: #f093fb;"></i>
@@ -230,7 +250,6 @@
       </h4>
 
       <div class="row g-4 mb-5">
-        <!-- All Safety Officers Card -->
         <div class="col-lg-4 col-md-6">
           <div class="card shadow-sm border-0 h-100 hover-card">
             <div class="card-body text-center p-4">
@@ -246,7 +265,6 @@
           </div>
         </div>
 
-        <!-- All Workers Card -->
         <div class="col-lg-4 col-md-6">
           <div class="card shadow-sm border-0 h-100 hover-card">
             <div class="card-body text-center p-4">
@@ -262,7 +280,6 @@
           </div>
         </div>
 
-        <!-- Certifications Card -->
         <div class="col-lg-4 col-md-6">
           <div class="card shadow-sm border-0 h-100 hover-card">
             <div class="card-body text-center p-4">
@@ -279,16 +296,13 @@
         </div>
       </div>
 
-
-       
-            <!-- SECTION 3: Compliance & Oversight Cards -->
+      <!-- SECTION 3: Compliance & Oversight Cards -->
       <h4 class="text-center mb-4 fw-bold">
         <i class="fas fa-shield-alt me-2" style="color: #f093fb;"></i>
         Compliance & Oversight
       </h4>
 
       <div class="row g-4 mb-5">
-        <!-- Safety & Health Compliance Card -->
         <div class="col-lg-4 col-md-6">
           <div class="card shadow-sm border-0 h-100 hover-card">
             <div class="card-body text-center p-4">
@@ -304,7 +318,6 @@
           </div>
         </div>
 
-        <!-- Actions Needed Card -->
         <div class="col-lg-4 col-md-6">
           <div class="card shadow-sm border-0 h-100 hover-card">
             <div class="card-body text-center p-4">
@@ -320,7 +333,6 @@
           </div>
         </div>
 
-        <!-- Enhanced Safety Reports Card -->
         <div class="col-lg-4 col-md-6">
           <div class="card shadow-sm border-0 h-100 hover-card">
             <div class="card-body text-center p-4">
@@ -358,6 +370,24 @@ function copyPIN() {
     showConfirmButton: false
   });
 }
+
+document.getElementById('regeneratePinBtn')?.addEventListener('click', function(e) {
+  e.preventDefault();
+  Swal.fire({
+    title: 'Regenerate Company PIN?',
+    text: 'The current PIN will become invalid immediately. All unused uses will be lost.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, regenerate',
+    cancelButtonText: 'Cancel'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      document.getElementById('regeneratePinForm').submit();
+    }
+  });
+});
 </script>
 
 <style>

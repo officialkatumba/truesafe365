@@ -1,41 +1,3 @@
-// const express = require("express");
-// const router = express.Router();
-// const workAreaController = require("../controllers/workAreaController");
-// const { ensureAuthenticated } = require("../middlewares/auth");
-
-// router.use(ensureAuthenticated);
-
-// router.get("/create", workAreaController.showCreateWorkAreaForm);
-// router.post("/create", workAreaController.createWorkArea);
-// router.get("/:id", workAreaController.getWorkArea);
-// router.get("/:id/edit", workAreaController.showEditWorkAreaForm);
-// router.post("/:id/edit", workAreaController.updateWorkArea);
-
-// // Area-specific actions
-// router.get("/:id/incidents", workAreaController.getAreaIncidents);
-// router.get("/:id/risk-assessments", workAreaController.getAreaRiskAssessments);
-// router.get("/:id/safety-talks", workAreaController.getAreaSafetyTalks);
-
-// // Officer assignment routes
-// router.post(
-//   "/:workAreaId/assign-officer",
-//   workAreaController.assignOfficerToWorkArea,
-// );
-// router.delete(
-//   "/:workAreaId/assignments/:assignmentId",
-//   workAreaController.removeOfficerFromWorkArea,
-// );
-// router.get(
-//   "/:workAreaId/available-officers",
-//   workAreaController.getAvailableOfficersForWorkArea,
-// );
-// router.put(
-//   "/:workAreaId/assignments/:assignmentId",
-//   workAreaController.updateOfficerAssignment,
-// );
-
-// module.exports = router;
-
 const express = require("express");
 const router = express.Router();
 const workAreaController = require("../controllers/workAreaController");
@@ -43,17 +5,27 @@ const { ensureAuthenticated } = require("../middlewares/auth");
 
 router.use(ensureAuthenticated);
 
-// IMPORTANT: Place specific routes BEFORE the /:id route
+// Create routes
 router.get("/create", workAreaController.showCreateWorkAreaForm);
 router.post("/create", workAreaController.createWorkArea);
 
-// ✅ NEW: Manage officers page route - place BEFORE /:id
+// View routes
+router.get("/:id", workAreaController.getWorkArea);
+
+// Edit routes
+router.get("/:id/edit", workAreaController.showEditWorkAreaForm);
+router.post("/:id/edit", workAreaController.updateWorkArea);
+
+// API routes
+router.get("/:id/incidents", workAreaController.getAreaIncidents);
+router.get("/:id/risk-assessments", workAreaController.getAreaRiskAssessments);
+router.get("/:id/safety-talks", workAreaController.getAreaSafetyTalks);
+
+// Officer management routes
 router.get(
   "/:workAreaId/manage-officers",
   workAreaController.showManageOfficersPage,
 );
-
-// Officer assignment routes (these use workAreaId param)
 router.post(
   "/:workAreaId/assign-officer",
   workAreaController.assignOfficerToWorkArea,
@@ -71,14 +43,26 @@ router.put(
   workAreaController.updateOfficerAssignment,
 );
 
-// Generic work area routes - place AFTER specific routes
-router.get("/:id", workAreaController.getWorkArea);
-router.get("/:id/edit", workAreaController.showEditWorkAreaForm);
-router.post("/:id/edit", workAreaController.updateWorkArea);
-
-// Area-specific actions
-router.get("/:id/incidents", workAreaController.getAreaIncidents);
-router.get("/:id/risk-assessments", workAreaController.getAreaRiskAssessments);
-router.get("/:id/safety-talks", workAreaController.getAreaSafetyTalks);
+// Worker management routes
+router.get(
+  "/:workAreaId/manage-workers",
+  workAreaController.showManageWorkersPage,
+);
+router.post(
+  "/:workAreaId/assign-worker",
+  workAreaController.assignWorkerToWorkArea,
+);
+router.delete(
+  "/:workAreaId/workers/:assignmentId",
+  workAreaController.removeWorkerFromWorkArea,
+);
+router.get(
+  "/:workAreaId/available-workers",
+  workAreaController.getAvailableWorkersForWorkArea,
+);
+router.put(
+  "/:workAreaId/workers/:assignmentId",
+  workAreaController.updateWorkerAssignment,
+);
 
 module.exports = router;

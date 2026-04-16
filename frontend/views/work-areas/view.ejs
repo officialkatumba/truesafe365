@@ -40,26 +40,7 @@
         </div>
       </div>
 
-      <!-- Daily Safety Talk Section (Collapsible) -->
-      <!-- <div class="safety-talk-container text-center mb-4">
-        <div class="d-flex justify-content-between align-items-center">
-          <div class="timer-label" id="safetyTalkLabel">TODAY'S SAFETY TALK</div>
-          <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#safetyTalkContent" aria-expanded="false">
-            <i class="fas fa-chevron-down me-1"></i> Read More
-          </button>
-        </div>
-        <div class="collapse" id="safetyTalkContent">
-          <div class="safety-talk-content mt-2">
-            <%= workArea.dailySafetyTalk || 'Always wear your PPE. Check your tools before use. Report any unsafe conditions immediately. Stay aware of your surroundings. Safety first, always. Remember that safety is everyone\'s responsibility. Take time to assess risks before starting any task. If you see something unsafe, say something. Your safety and the safety of your colleagues depends on everyone working together. Never take shortcuts when it comes to safety procedures. Proper training and equipment are essential for preventing accidents. Report near misses to help prevent future incidents. Stay hydrated, take breaks, and look out for one another.' %>
-          </div>
-          <div class="timer-meta mt-2">
-            <small>
-              <i class="fas fa-robot me-1" style="color: #26a69a;"></i>
-              AI-Generated | Updated: <%= new Date().toLocaleDateString() %>
-            </small>
-          </div>
-        </div>
-      </div> -->
+     
 
 
       <!-- Daily Safety Talk Section -->
@@ -153,7 +134,7 @@
 </style>
 
       <!-- Compact Action Buttons Row - Conditional based on user role -->
-      <div class="d-flex gap-2 justify-content-center flex-wrap mb-4">
+      <!-- <div class="d-flex gap-2 justify-content-center flex-wrap mb-4">
         <% if (user.role === 'system_admin') { %>
           <a href="/work-areas/<%= workArea._id %>/edit" class="btn btn-outline-primary btn-sm">
             <i class="fas fa-edit me-1"></i> Edit Work Area
@@ -162,29 +143,30 @@
             <i class="fas fa-user-cog me-1"></i> Manage Officers
           </a>
         <% } else if (user.role === 'safety_officer') { %>
-          <a href="/work-areas/<%= workArea._id %>/edit" class="btn btn-outline-primary btn-sm">
-            <i class="fas fa-edit me-1"></i> Edit Work Area
-          </a>
-          <a href="/work-areas/<%= workArea._id %>/manage-officers" class="btn btn-outline-info btn-sm">
-            <i class="fas fa-user-cog me-1"></i> Manage Officers
-          </a>
-          <a href="/incidents/report?workAreaId=<%= workArea._id %>" class="btn btn-outline-danger btn-sm">
-            <i class="fas fa-flag me-1"></i> Report Incident
-          </a>
-          <a href="/safety-talks/generate?workAreaId=<%= workArea._id %>" class="btn btn-outline-success btn-sm">
-            <i class="fas fa-robot me-1"></i> Generate Safety Talk
-          </a>
-          <a href="/risk-assessments/new?workAreaId=<%= workArea._id %>" class="btn btn-outline-warning btn-sm">
-            <i class="fas fa-chart-pie me-1"></i> New Assessment
-          </a>
-          <a href="/ppe/checklist?workAreaId=<%= workArea._id %>" class="btn btn-outline-info btn-sm">
-            <i class="fas fa-helmet-safety me-1"></i> PPE Checklist
-          </a>
-          <a href="/safety-officer/observations/new?workAreaId=<%= workArea._id %>" class="btn btn-outline-info btn-sm">
-            <i class="fas fa-eye me-1"></i> Safety Observation
-          </a>
+         
+          
         <% } %>
-      </div>
+      </div> -->
+
+      <!-- Compact Action Buttons Row - Conditional based on user role -->
+<div class="d-flex gap-2 justify-content-center flex-wrap mb-4">
+  <% if (user.role === 'system_admin') { %>
+    <a href="/work-areas/<%= workArea._id %>/edit" class="btn btn-outline-primary btn-sm">
+      <i class="fas fa-edit me-1"></i> Edit Work Area
+    </a>
+    <a href="/work-areas/<%= workArea._id %>/manage-officers" class="btn btn-outline-info btn-sm">
+      <i class="fas fa-user-cog me-1"></i> Manage Officers
+    </a>
+    <a href="/work-areas/<%= workArea._id %>/manage-workers" class="btn btn-outline-success btn-sm">
+      <i class="fas fa-users me-1"></i> Manage Workers
+    </a>
+  <% } else if (user.role === 'safety_officer') { %>
+    <!-- Safety officer can also manage workers -->
+    <a href="/work-areas/<%= workArea._id %>/manage-workers" class="btn btn-outline-success btn-sm">
+      <i class="fas fa-users me-1"></i> Manage Workers
+    </a>
+  <% } %>
+</div>
 
       <hr />
 
@@ -309,46 +291,53 @@
         </div>
       </div>
 
-      <!-- PPE Requirements Section -->
-      <h4 class="text-center mt-5 mb-4 fw-bold">
-        <i class="fas fa-helmet-safety me-2" style="color: #26a69a;"></i>
-        Required PPE
-      </h4>
+      <!-- Assigned Workers Section -->
+<h4 class="text-center mt-5 mb-4 fw-bold">
+  <i class="fas fa-users me-2" style="color: #4caf50;"></i>
+  Assigned Workers
+</h4>
 
-      <div class="d-flex justify-content-center">
-        <div class="ppe-panel shadow-sm border rounded p-4" style="max-width: 800px; width: 100%;">
-          <div class="row g-2">
-            <% 
-              const ppeItems = (workArea.initialContext?.requiredPPE && workArea.initialContext.requiredPPE.length > 0) 
-                ? workArea.initialContext.requiredPPE 
-                : [
-                    { item: 'hard_hat', label: 'Hard Hat' },
-                    { item: 'safety_glasses', label: 'Safety Glasses' },
-                    { item: 'high_vis_vest', label: 'High-Vis Vest' },
-                    { item: 'steel_toe_boots', label: 'Steel-Toe Boots' },
-                    { item: 'gloves', label: 'Gloves' }
-                  ];
-            %>
-            <% ppeItems.forEach(item => { %>
-              <div class="col-md-4 col-6">
-                <div class="d-flex align-items-center p-2 rounded bg-light">
-                  <i class="fas fa-check-circle text-success me-2"></i>
-                  <span><%= item.customItem || item.label || item.item %></span>
+<div class="d-flex justify-content-center">
+  <div class="workers-panel shadow-sm border rounded p-4" style="max-width: 800px; width: 100%;">
+    <% const assignedWorkers = workArea.assignedWorkers || []; %>
+    <% if (assignedWorkers.filter(a => a.isActive !== false).length > 0) { %>
+      <div class="row g-3">
+        <% assignedWorkers.filter(a => a.isActive !== false).forEach(assignment => { %>
+          <div class="col-md-6">
+            <div class="d-flex align-items-center p-2 rounded bg-light">
+              <div class="rounded-circle bg-success d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
+                <i class="fas fa-hard-hat text-white" style="font-size: 0.9rem;"></i>
+              </div>
+              <div class="flex-grow-1">
+                <strong><%= assignment.worker?.name || 'Unknown' %></strong>
+                <div class="d-flex gap-1 small flex-wrap">
+                  <span class="text-muted"><%= assignment.shift || 'No shift' %></span>
+                  <% if (assignment.isTeamLead) { %>
+                    <span class="badge bg-warning text-dark" style="font-size: 0.6rem;">Team Lead</span>
+                  <% } %>
+                  <% if (assignment.department) { %>
+                    <span class="badge bg-secondary" style="font-size: 0.6rem;"><%= assignment.department %></span>
+                  <% } %>
                 </div>
               </div>
-            <% }) %>
+            </div>
           </div>
-          
-          <% if (workArea.statistics?.ppeComplianceScore) { %>
-          <div class="mt-3 pt-2 border-top text-center">
-            <small class="text-muted">
-              <i class="fas fa-chart-line me-1"></i> 
-              Compliance Score: <strong><%= workArea.statistics.ppeComplianceScore %>%</strong>
-            </small>
-          </div>
-          <% } %>
-        </div>
+        <% }) %>
       </div>
+    <% } else { %>
+      <p class="text-muted text-center py-3">No workers assigned to this work area.</p>
+    <% } %>
+    <% if (user.role === 'safety_officer' || user.role === 'system_admin') { %>
+    <div class="text-center mt-3">
+      <a href="/work-areas/<%= workArea._id %>/manage-workers" class="btn btn-sm btn-outline-success">
+        <i class="fas fa-user-plus me-1"></i> Manage Workers
+      </a>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+    
 
       <!-- Hazards Section -->
       <% if (workArea.identifiedHazards && workArea.identifiedHazards.length > 0) { %>
@@ -520,48 +509,7 @@
               <% } %>
             </div>
 
-            <!-- Safety Talks Tab -->
-            <!-- <div class="tab-pane fade" id="safety-talks" role="tabpanel">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold mb-0"><i class="fas fa-chalkboard-teacher me-2" style="color: #5f2c82;"></i>Safety Talks</h5>
-                <% if (user.role === 'safety_officer') { %>
-                  <a href="/safety-talks/generate?workAreaId=<%= workArea._id %>" class="btn btn-sm" style="background: #5f2c82; color: white; border-radius: 40px;">
-                    <i class="fas fa-robot me-1"></i> Generate Talk
-                  </a>
-                <% } %>
-              </div>
-              
-              <% if (safetyTalks && safetyTalks.length > 0) { %>
-                <div class="list-group">
-                  <% safetyTalks.slice(0, 3).forEach(talk => { %>
-                    <a href="/safety-talks/<%= talk._id %>" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                      <div>
-                        <strong><%= talk.title %></strong>
-                        <span class="badge <%= 
-                          talk.status === 'conducted' ? 'bg-success' : 
-                          talk.status === 'scheduled' ? 'bg-info' : 
-                          'bg-secondary' 
-                        %> ms-2"><%= talk.status %></span>
-                        <div class="small text-muted">
-                          <i class="fas fa-calendar me-1"></i> <%= new Date(talk.date).toLocaleDateString() %>
-                          | Attendees: <%= talk.attendance?.totalAttendees || 0 %>
-                        </div>
-                      </div>
-                      <i class="fas fa-chevron-right text-muted"></i>
-                    </a>
-                  <% }) %>
-                </div>
-                <% if (safetyTalks.length > 3) { %>
-                  <div class="text-center mt-3">
-                    <a href="/safety-talks?workAreaId=<%= workArea._id %>" class="btn btn-sm btn-outline-secondary">
-                      View All <%= safetyTalks.length %> Talks
-                    </a>
-                  </div>
-                <% } %>
-              <% } else { %>
-                <p class="text-muted text-center py-4">No safety talks generated yet.</p>
-              <% } %>
-            </div> -->
+         
 
             <!-- Safety Talks Tab -->
 <div class="tab-pane fade" id="safety-talks" role="tabpanel">
@@ -665,48 +613,8 @@
               <% } %>
             </div>
 
-            <!-- JSA Tab -->
-            <!-- <div class="tab-pane fade" id="jsa" role="tabpanel">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold mb-0"><i class="fas fa-tasks me-2" style="color: #ff9a9e;"></i>Job Safety Analysis</h5>
-                <% if (user.role === 'safety_officer') { %>
-                  <a href="/jsa/new?workAreaId=<%= workArea._id %>" class="btn btn-sm" style="background: #ff9a9e; color: white; border-radius: 40px;">
-                    <i class="fas fa-plus-circle me-1"></i> New JSA
-                  </a>
-                <% } %>
-              </div>
-              
-              <% if (jsa && jsa.length > 0) { %>
-                <div class="list-group">
-                  <% jsa.slice(0, 3).forEach(job => { %>
-                    <a href="/jsa/<%= job._id %>" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                      <div>
-                        <strong><%= job.jobTitle %></strong>
-                        <span class="badge <%= 
-                          job.status === 'active' ? 'bg-success' : 
-                          job.status === 'draft' ? 'bg-secondary' : 
-                          'bg-info' 
-                        %> ms-2"><%= job.status %></span>
-                        <div class="small text-muted">
-                          <i class="fas fa-calendar me-1"></i> <%= new Date(job.createdAt).toLocaleDateString() %>
-                          | Steps: <%= job.steps?.length || 0 %>
-                        </div>
-                      </div>
-                      <i class="fas fa-chevron-right text-muted"></i>
-                    </a>
-                  <% }) %>
-                </div>
-                <% if (jsa.length > 3) { %>
-                  <div class="text-center mt-3">
-                    <a href="/jsa?workAreaId=<%= workArea._id %>" class="btn btn-sm btn-outline-secondary">
-                      View All <%= jsa.length %> JSA
-                    </a>
-                  </div>
-                <% } %>
-              <% } else { %>
-                <p class="text-muted text-center py-4">No job safety analyses created yet.</p>
-              <% } %>
-            </div> -->
+            
+          
 
             <!-- JSA Tab -->
 <div class="tab-pane fade" id="jsa" role="tabpanel">
@@ -738,47 +646,7 @@
 </div>
 
             <!-- PPE Checklists Tab -->
-            <!-- <div class="tab-pane fade" id="ppe" role="tabpanel">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold mb-0"><i class="fas fa-helmet-safety me-2" style="color: #26a69a;"></i>PPE Checklists</h5>
-                <% if (user.role === 'safety_officer') { %>
-                  <a href="/ppe/new?workAreaId=<%= workArea._id %>" class="btn btn-sm" style="background: #26a69a; color: white; border-radius: 40px;">
-                    <i class="fas fa-plus-circle me-1"></i> New Checklist
-                  </a>
-                <% } %>
-              </div>
-              
-              <% if (ppeChecklists && ppeChecklists.length > 0) { %>
-                <div class="list-group">
-                  <% ppeChecklists.slice(0, 3).forEach(checklist => { %>
-                    <a href="/ppe/<%= checklist._id %>" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                      <div>
-                        <strong><%= checklist.title || 'PPE Checklist' %></strong>
-                        <span class="badge <%= 
-                          checklist.status === 'completed' ? 'bg-success' : 
-                          checklist.status === 'active' ? 'bg-info' : 
-                          'bg-secondary' 
-                        %> ms-2"><%= checklist.status %></span>
-                        <div class="small text-muted">
-                          <i class="fas fa-calendar me-1"></i> <%= new Date(checklist.date || checklist.createdAt).toLocaleDateString() %>
-                          | Items: <%= checklist.ppeItems?.length || 0 %>
-                        </div>
-                      </div>
-                      <i class="fas fa-chevron-right text-muted"></i>
-                    </a>
-                  <% }) %>
-                </div>
-                <% if (ppeChecklists.length > 3) { %>
-                  <div class="text-center mt-3">
-                    <a href="/ppe?workAreaId=<%= workArea._id %>" class="btn btn-sm btn-outline-secondary">
-                      View All <%= ppeChecklists.length %> Checklists
-                    </a>
-                  </div>
-                <% } %>
-              <% } else { %>
-                <p class="text-muted text-center py-4">No PPE checklists created yet.</p>
-              <% } %>
-            </div> -->
+          
 
             <!-- PPE Checklists Tab -->
 <div class="tab-pane fade" id="ppe" role="tabpanel">
@@ -820,50 +688,7 @@
 </div>
 
             <!-- Safety Observations Tab -->
-            <!-- <div class="tab-pane fade" id="observations" role="tabpanel">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold mb-0"><i class="fas fa-eye me-2" style="color: #9c27b0;"></i>Safety Observations</h5>
-                <% if (user.role === 'safety_officer') { %>
-                  <a href="/safety-officer/observations/new?workAreaId=<%= workArea._id %>" class="btn btn-sm" style="background: #9c27b0; color: white; border-radius: 40px;">
-                    <i class="fas fa-plus-circle me-1"></i> New Observation
-                  </a>
-                <% } %>
-              </div>
-              
-              <% if (safetyObservations && safetyObservations.length > 0) { %>
-                <div class="list-group">
-                  <% safetyObservations.slice(0, 3).forEach(observation => { %>
-                    <a href="/safety-officer/observations/<%= observation._id %>" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                      <div>
-                        <strong><%= observation.type === 'positive' ? '✅ Positive' : (observation.type === 'at_risk' ? '⚠️ At-Risk' : '🏗️ Condition') %></strong>
-                        <span class="badge <%= 
-                          observation.status === 'closed' ? 'bg-success' : 
-                          observation.status === 'in_review' ? 'bg-warning text-dark' : 
-                          'bg-secondary' 
-                        %> ms-2"><%= observation.status || 'open' %></span>
-                        <div class="small text-muted">
-                          <i class="fas fa-calendar me-1"></i> <%= new Date(observation.date || observation.createdAt).toLocaleDateString() %>
-                          | <%= observation.description?.substring(0, 80) %><%= observation.description?.length > 80 ? '...' : '' %>
-                        </div>
-                      </div>
-                      <i class="fas fa-chevron-right text-muted"></i>
-                    </a>
-                  <% }) %>
-                </div>
-                <% if (safetyObservations.length > 3) { %>
-                  <div class="text-center mt-3">
-                    <a href="/safety-officer/observations?workAreaId=<%= workArea._id %>" class="btn btn-sm btn-outline-secondary">
-                      View All <%= safetyObservations.length %> Observations
-                    </a>
-                  </div>
-                <% } %>
-              <% } else { %>
-                <p class="text-muted text-center py-4">No safety observations recorded yet.</p>
-              <% } %>
-            </div>
-          </div>
-        </div>
-      </div> -->
+            
 
       <!-- Safety Observations Tab -->
 <div class="tab-pane fade" id="observations" role="tabpanel">
