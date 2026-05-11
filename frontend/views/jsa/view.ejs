@@ -43,7 +43,7 @@
   <% }); %>
 
   <!-- Consolidated Report Section -->
-  <div class="card shadow-lg mb-4 border-0"><div class="card-header bg-dark text-white py-3"><h5 class="mb-0"><i class="fas fa-layer-group me-2"></i>Complete JSA Report</h5></div>
+  <!-- <div class="card shadow-lg mb-4 border-0"><div class="card-header bg-dark text-white py-3"><h5 class="mb-0"><i class="fas fa-layer-group me-2"></i>Complete JSA Report</h5></div>
     <div class="card-body text-center">
       <% const hasPdf = jsa.consolidatedJSA?.pdfUploaded === true; %>
       <% if (allConfirmedNow && !hasPdf) { %>
@@ -58,7 +58,75 @@
           <p class="mt-2 small"><%= confirmedCount %> of <%= jsaSections.length %> sections confirmed</p></div>
       <% } %>
     </div>
+  </div> -->
+
+  <div class="card shadow-lg mb-4 border-0 document-card">
+  <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #198754, #0f5132);">
+    <h5 class="mb-0">
+      <i class="fas fa-file-word me-2"></i>
+      Full Editable JSA Word Document
+    </h5>
   </div>
+
+  <div class="card-body text-center">
+    <% if (allConfirmedNow) { %>
+      <div class="alert alert-success border-success mb-0">
+        <i class="fas fa-check-circle fa-3x mb-3 d-block text-success"></i>
+
+        <h4 class="fw-bold">Get the Full Editable Word Document</h4>
+
+        <p class="mb-3">
+          All JSA sections have been confirmed. You can now download the complete
+          professionally formatted Word document. The Safety Officer can edit it,
+          review it, print it, sign it, communicate it to workers, and file it as
+          the official Job Safety Analysis record.
+        </p>
+
+        <a
+          href="/jsa/<%= jsa._id %>/download-word"
+          class="btn btn-success btn-lg px-5 py-3"
+        >
+          <i class="fas fa-file-word me-2"></i>
+          Download Editable JSA Word Document
+        </a>
+
+        <div class="mt-3">
+          <small class="text-muted d-block">
+            <i class="fas fa-database me-1"></i>
+            The document is generated directly from the confirmed JSA database sections.
+          </small>
+          <small class="text-muted d-block">
+            <i class="fas fa-edit me-1"></i>
+            No PDF. No cloud upload. Fully editable Microsoft Word format.
+          </small>
+        </div>
+      </div>
+    <% } else { %>
+      <div class="alert alert-secondary mb-0">
+        <i class="fas fa-info-circle fa-3x mb-3 d-block text-secondary"></i>
+
+        <h4 class="fw-bold">JSA Word Document Not Ready Yet</h4>
+
+        <p>
+          Please confirm all <%= jsaSections.length %> JSA sections above before
+          downloading the full editable Word document.
+        </p>
+
+        <div class="progress mt-3" style="height: 10px; max-width: 350px; margin: 0 auto;">
+          <div
+            class="progress-bar bg-success"
+            role="progressbar"
+            style="width: <%= (confirmedCount / jsaSections.length * 100) %>%"
+          ></div>
+        </div>
+
+        <p class="mt-2 small mb-0">
+          <%= confirmedCount %> of <%= jsaSections.length %> sections confirmed
+        </p>
+      </div>
+    <% } %>
+  </div>
+</div>
 
   <div class="text-center mt-3"><a href="/work-areas/<%= jsa.workArea?._id %>" class="btn btn-outline-secondary px-4"><i class="fas fa-arrow-left me-2"></i>Back to Work Area</a></div>
 </div>

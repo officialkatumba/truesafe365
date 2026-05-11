@@ -27,6 +27,6 @@ router.post("/:id/approve", jsaController.approveJSA);
 
 // Consolidated report
 router.post("/:id/generate-consolidated", jsaController.generateConsolidated);
-router.get("/:id/download-pdf", jsaController.downloadPDF);
+router.get("/:id/download-word", jsaController.downloadWord);
 
 module.exports = router;

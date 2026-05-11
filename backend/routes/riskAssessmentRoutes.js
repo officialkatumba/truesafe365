@@ -32,8 +32,8 @@ router.post(
   riskAssessmentController.generateConsolidated,
 );
 router.get(
-  "/:id/download-pdf",
-  riskAssessmentController.downloadConsolidatedPDF,
+  "/:id/download-word",
+  riskAssessmentController.downloadConsolidatedWord,
 );
 
 module.exports = router;

@@ -141,10 +141,12 @@
         <div class="card-body">
           <h6 class="fw-bold mb-3"><i class="fas fa-cog me-2 text-primary"></i>Actions</h6>
           <div class="d-grid gap-2">
-            <button class="btn btn-outline-secondary" onclick="window.print()">
+            <!-- <button class="btn btn-outline-secondary" onclick="window.print()">
               <i class="fas fa-print me-2"></i>Print / Save as PDF
-            </button>
-            
+            </button> -->
+            <a href="/safety-talks/<%= talk._id %>/download-word" class="btn btn-outline-primary">
+              <i class="fas fa-download me-2"></i>Download Word Document
+            </a>
             <% if (talk.status !== 'conducted' && user.role === 'safety_officer') { %>
             <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#conductModal">
               <i class="fas fa-check-circle me-2"></i>Mark as Conducted

@@ -4,31 +4,12 @@ const Incident = require("../models/Incident");
 const SafetyObservation = require("../models/SafetyObservation");
 const PPEChecklist = require("../models/PPEChecklist");
 const { OpenAI } = require("openai");
-const { Storage } = require("@google-cloud/storage");
 const fs = require("fs");
 const path = require("path");
-const { generateJSAPDF } = require("../utils/jsaPDFGenerator");
-
+const { generateJSAWordBuffer } = require("../utils/jsaWordGenerator");
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-
-const storage = new Storage({
-  credentials: {
-    type: process.env.GOOGLE_TYPE,
-    project_id: process.env.GOOGLE_PROJECT_ID,
-    private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID,
-    private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
-    client_email: process.env.GOOGLE_CLIENT_EMAIL,
-    client_id: process.env.GOOGLE_CLIENT_ID,
-    auth_uri: process.env.GOOGLE_AUTH_URI,
-    token_uri: process.env.GOOGLE_TOKEN_URI,
-    auth_provider_x509_cert_url: process.env.GOOGLE_AUTH_PROVIDER_CERT_URL,
-    client_x509_cert_url: process.env.GOOGLE_CLIENT_CERT_URL,
-  },
-});
-
-const bucket = storage.bucket(process.env.GCLOUD_STORAGE_BUCKET);
 
 const jsaSections = [
   {
@@ -541,5 +522,53 @@ exports.approveJSA = async (req, res) => {
   } catch (error) {
     console.error("Error approving:", error);
     res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+exports.downloadWord = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const jsa = await JSA.findById(id)
+      .populate("workArea")
+      .populate("preparedBy", "name")
+      .populate("reviewedBy", "name")
+      .populate("approvedBy", "name");
+
+    if (!jsa) {
+      return res.status(404).send("JSA not found");
+    }
+
+    const allConfirmed = jsaSections.every(
+      (section) => jsa.sectionConfirmed?.[section.key] === true,
+    );
+
+    if (!allConfirmed) {
+      return res
+        .status(400)
+        .send(
+          "Please confirm all JSA sections before downloading the Word document.",
+        );
+    }
+
+    const buffer = await generateJSAWordBuffer({
+      jsa,
+      jsaSections,
+    });
+
+    const safeNumber = jsa.jsaNumber || Date.now();
+    const fileName = `jsa_${safeNumber}.docx`;
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    );
+
+    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+
+    return res.send(buffer);
+  } catch (error) {
+    console.error("Error downloading JSA Word document:", error);
+    return res.status(500).send("Error generating JSA Word document");
   }
 };

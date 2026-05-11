@@ -3,31 +3,14 @@ const WorkArea = require("../models/WorkArea");
 const Incident = require("../models/Incident");
 const SafetyTalk = require("../models/SafetyTalk");
 const { OpenAI } = require("openai");
-const { Storage } = require("@google-cloud/storage");
 const fs = require("fs");
 const path = require("path");
-const { generateRiskPDF } = require("../utils/riskPDFGenerator");
 
+const { generateRiskWordBuffer } = require("../utils/riskWordGenerator");
+const { generateRiskPDF } = require("../utils/riskWordGenerator");
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-
-const storage = new Storage({
-  credentials: {
-    type: process.env.GOOGLE_TYPE,
-    project_id: process.env.GOOGLE_PROJECT_ID,
-    private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID,
-    private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
-    client_email: process.env.GOOGLE_CLIENT_EMAIL,
-    client_id: process.env.GOOGLE_CLIENT_ID,
-    auth_uri: process.env.GOOGLE_AUTH_URI,
-    token_uri: process.env.GOOGLE_TOKEN_URI,
-    auth_provider_x509_cert_url: process.env.GOOGLE_AUTH_PROVIDER_CERT_URL,
-    client_x509_cert_url: process.env.GOOGLE_CLIENT_CERT_URL,
-  },
-});
-
-const bucket = storage.bucket(process.env.GCLOUD_STORAGE_BUCKET);
 
 const sections = [
   {
@@ -386,12 +369,112 @@ exports.confirmSection = async (req, res) => {
   }
 };
 
+// exports.generateConsolidated = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const assessment = await RiskAssessment.findById(id)
+//       .populate("workArea")
+//       .populate("conductedBy", "name");
+//     if (!assessment) {
+//       req.flash("error", "Assessment not found");
+//       return res.redirect("/dashboard");
+//     }
+
+//     const allConfirmed = sections.every(
+//       (section) => assessment.sectionConfirmed?.[section.key] === true,
+//     );
+//     if (!allConfirmed) {
+//       req.flash("error", "Please confirm all sections first");
+//       return res.redirect(`/risk-assessments/${assessment._id}`);
+//     }
+
+//     let consolidatedContent = `# COMPLETE RISK ASSESSMENT REPORT\n\n`;
+//     consolidatedContent += `**Assessment #${assessment.assessmentNumber}**\n`;
+//     consolidatedContent += `**Title:** ${assessment.title}\n`;
+//     consolidatedContent += `**Work Area:** ${assessment.workArea?.name || "N/A"}\n`;
+//     consolidatedContent += `**Conducted By:** ${assessment.conductedBy?.name || "N/A"}\n`;
+//     consolidatedContent += `**Date:** ${new Date(assessment.assessmentDate).toLocaleDateString()}\n\n---\n\n`;
+
+//     for (const section of sections) {
+//       const activeVersion = assessment.activeVersion?.[section.key] || "human";
+//       let content = "";
+//       if (activeVersion === "ai") {
+//         content = assessment.aiSections?.[section.key]?.content || "";
+//       } else {
+//         content = assessment.humanSections?.[section.key] || "";
+//       }
+//       if (content) {
+//         consolidatedContent += `## ${section.title}\n\n${content}\n\n---\n\n`;
+//       }
+//     }
+
+//     assessment.consolidatedAssessment = {
+//       content: consolidatedContent,
+//       pdfUploaded: false,
+//       pdfUrl: "",
+//       generatedAt: new Date(),
+//     };
+//     assessment.overallStatus.consolidatedGenerated = true;
+//     await assessment.save();
+
+//     const fileName = `consolidated_risk_assessment_${assessment.assessmentNumber}.pdf`;
+//     const localPath = path.join(__dirname, `../pdfs/${fileName}`);
+//     const storagePath = `risk-assessments/${fileName}`;
+
+//     if (!fs.existsSync(path.dirname(localPath)))
+//       fs.mkdirSync(path.dirname(localPath), { recursive: true });
+
+//     try {
+//       await generateRiskPDF({
+//         sectionTitle: "COMPLETE RISK ASSESSMENT",
+//         content: consolidatedContent,
+//         filePath: localPath,
+//         assessmentDetails: {
+//           assessmentNumber: assessment.assessmentNumber,
+//           title: assessment.title,
+//           workArea: assessment.workArea?.name,
+//           assessmentDate: assessment.assessmentDate,
+//         },
+//       });
+//       await bucket.upload(localPath, {
+//         destination: storagePath,
+//         gzip: true,
+//         metadata: { cacheControl: "public, max-age=31536000" },
+//       });
+//       const file = bucket.file(storagePath);
+//       const [url] = await file.getSignedUrl({
+//         version: "v4",
+//         action: "read",
+//         expires: Date.now() + 365 * 24 * 60 * 60 * 1000,
+//       });
+//       assessment.consolidatedAssessment.pdfUrl = url;
+//       assessment.consolidatedAssessment.pdfUploaded = true;
+//       await assessment.save();
+//     } catch (err) {
+//       console.error("PDF failed:", err.message);
+//       req.flash("error", "PDF generation failed");
+//       return res.redirect(`/risk-assessments/${assessment._id}`);
+//     } finally {
+//       if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
+//     }
+
+//     req.flash("success", "Consolidated report generated!");
+//     res.redirect(`/risk-assessments/${assessment._id}`);
+//   } catch (error) {
+//     console.error("Error generating consolidated:", error);
+//     req.flash("error", "Failed to generate consolidated report");
+//     res.redirect(`/risk-assessments/${req.params.id}`);
+//   }
+// };
+
 exports.generateConsolidated = async (req, res) => {
   try {
     const { id } = req.params;
+
     const assessment = await RiskAssessment.findById(id)
       .populate("workArea")
       .populate("conductedBy", "name");
+
     if (!assessment) {
       req.flash("error", "Assessment not found");
       return res.redirect("/dashboard");
@@ -400,30 +483,48 @@ exports.generateConsolidated = async (req, res) => {
     const allConfirmed = sections.every(
       (section) => assessment.sectionConfirmed?.[section.key] === true,
     );
+
     if (!allConfirmed) {
       req.flash("error", "Please confirm all sections first");
       return res.redirect(`/risk-assessments/${assessment._id}`);
     }
 
     let consolidatedContent = `# COMPLETE RISK ASSESSMENT REPORT\n\n`;
-    consolidatedContent += `**Assessment #${assessment.assessmentNumber}**\n`;
-    consolidatedContent += `**Title:** ${assessment.title}\n`;
-    consolidatedContent += `**Work Area:** ${assessment.workArea?.name || "N/A"}\n`;
-    consolidatedContent += `**Conducted By:** ${assessment.conductedBy?.name || "N/A"}\n`;
-    consolidatedContent += `**Date:** ${new Date(assessment.assessmentDate).toLocaleDateString()}\n\n---\n\n`;
+    consolidatedContent += `Assessment Number: ${assessment.assessmentNumber || "N/A"}\n`;
+    consolidatedContent += `Title: ${assessment.title || "N/A"}\n`;
+    consolidatedContent += `Work Area: ${assessment.workArea?.name || "N/A"}\n`;
+    consolidatedContent += `Conducted By: ${assessment.conductedBy?.name || "N/A"}\n`;
+    consolidatedContent += `Date: ${
+      assessment.assessmentDate
+        ? new Date(assessment.assessmentDate).toLocaleDateString("en-GB")
+        : "N/A"
+    }\n\n`;
+
+    consolidatedContent += `------------------------------------------------------------\n\n`;
 
     for (const section of sections) {
       const activeVersion = assessment.activeVersion?.[section.key] || "human";
+
       let content = "";
+
       if (activeVersion === "ai") {
         content = assessment.aiSections?.[section.key]?.content || "";
       } else {
         content = assessment.humanSections?.[section.key] || "";
       }
-      if (content) {
-        consolidatedContent += `## ${section.title}\n\n${content}\n\n---\n\n`;
-      }
+
+      consolidatedContent += `## ${section.title}\n\n`;
+      consolidatedContent += `${content || "No content provided."}\n\n`;
+      consolidatedContent += `------------------------------------------------------------\n\n`;
     }
+
+    consolidatedContent += `## Approval and Sign-Off\n\n`;
+    consolidatedContent += `Prepared By: ______________________________\n\n`;
+    consolidatedContent += `Signature: ________________________________\n\n`;
+    consolidatedContent += `Date: _____________________________________\n\n`;
+    consolidatedContent += `Reviewed / Approved By: ___________________\n\n`;
+    consolidatedContent += `Signature: ________________________________\n\n`;
+    consolidatedContent += `Date: _____________________________________\n\n`;
 
     assessment.consolidatedAssessment = {
       content: consolidatedContent,
@@ -431,70 +532,83 @@ exports.generateConsolidated = async (req, res) => {
       pdfUrl: "",
       generatedAt: new Date(),
     };
+
     assessment.overallStatus.consolidatedGenerated = true;
+    assessment.status = "completed";
+
     await assessment.save();
 
-    const fileName = `consolidated_risk_assessment_${assessment.assessmentNumber}.pdf`;
-    const localPath = path.join(__dirname, `../pdfs/${fileName}`);
-    const storagePath = `risk-assessments/${fileName}`;
+    req.flash(
+      "success",
+      "Consolidated risk assessment prepared. You can now download the editable Word document.",
+    );
 
-    if (!fs.existsSync(path.dirname(localPath)))
-      fs.mkdirSync(path.dirname(localPath), { recursive: true });
-
-    try {
-      await generateRiskPDF({
-        sectionTitle: "COMPLETE RISK ASSESSMENT",
-        content: consolidatedContent,
-        filePath: localPath,
-        assessmentDetails: {
-          assessmentNumber: assessment.assessmentNumber,
-          title: assessment.title,
-          workArea: assessment.workArea?.name,
-          assessmentDate: assessment.assessmentDate,
-        },
-      });
-      await bucket.upload(localPath, {
-        destination: storagePath,
-        gzip: true,
-        metadata: { cacheControl: "public, max-age=31536000" },
-      });
-      const file = bucket.file(storagePath);
-      const [url] = await file.getSignedUrl({
-        version: "v4",
-        action: "read",
-        expires: Date.now() + 365 * 24 * 60 * 60 * 1000,
-      });
-      assessment.consolidatedAssessment.pdfUrl = url;
-      assessment.consolidatedAssessment.pdfUploaded = true;
-      await assessment.save();
-    } catch (err) {
-      console.error("PDF failed:", err.message);
-      req.flash("error", "PDF generation failed");
-      return res.redirect(`/risk-assessments/${assessment._id}`);
-    } finally {
-      if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
-    }
-
-    req.flash("success", "Consolidated report generated!");
     res.redirect(`/risk-assessments/${assessment._id}`);
   } catch (error) {
-    console.error("Error generating consolidated:", error);
-    req.flash("error", "Failed to generate consolidated report");
+    console.error("Error generating consolidated risk assessment:", error);
+    req.flash("error", "Failed to generate consolidated risk assessment");
     res.redirect(`/risk-assessments/${req.params.id}`);
   }
 };
 
-exports.downloadConsolidatedPDF = async (req, res) => {
+// exports.downloadConsolidatedPDF = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const assessment = await RiskAssessment.findById(id);
+//     if (!assessment) return res.status(404).send("Assessment not found");
+//     if (!assessment.consolidatedAssessment?.pdfUrl)
+//       return res.status(404).send("PDF not found");
+//     res.redirect(assessment.consolidatedAssessment.pdfUrl);
+//   } catch (error) {
+//     console.error("Error downloading PDF:", error);
+//     res.status(500).send("Error downloading PDF");
+//   }
+// };
+
+exports.downloadConsolidatedWord = async (req, res) => {
   try {
     const { id } = req.params;
-    const assessment = await RiskAssessment.findById(id);
-    if (!assessment) return res.status(404).send("Assessment not found");
-    if (!assessment.consolidatedAssessment?.pdfUrl)
-      return res.status(404).send("PDF not found");
-    res.redirect(assessment.consolidatedAssessment.pdfUrl);
+
+    const assessment = await RiskAssessment.findById(id)
+      .populate("workArea")
+      .populate("conductedBy", "name");
+
+    if (!assessment) {
+      return res.status(404).send("Risk assessment not found");
+    }
+
+    const allConfirmed = sections.every(
+      (section) => assessment.sectionConfirmed?.[section.key] === true,
+    );
+
+    if (!allConfirmed) {
+      return res
+        .status(400)
+        .send(
+          "Please confirm all sections before downloading the Word document.",
+        );
+    }
+
+    const buffer = await generateRiskWordBuffer({
+      assessment,
+      sections,
+    });
+
+    const safeAssessmentNumber = assessment.assessmentNumber || Date.now();
+
+    const fileName = `risk_assessment_${safeAssessmentNumber}.docx`;
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    );
+
+    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+
+    return res.send(buffer);
   } catch (error) {
-    console.error("Error downloading PDF:", error);
-    res.status(500).send("Error downloading PDF");
+    console.error("Error downloading Word document:", error);
+    return res.status(500).send("Error generating Word document");
   }
 };
 

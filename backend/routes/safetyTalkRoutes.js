@@ -18,4 +18,6 @@ router.post("/:id/conduct", safetyTalkController.markAsConducted);
 // API endpoint for dashboard
 router.get("/api/workarea/:workAreaId", safetyTalkController.getWorkAreaTalks);
 
+router.get("/:id/download-word", safetyTalkController.downloadWord);
+
 module.exports = router;

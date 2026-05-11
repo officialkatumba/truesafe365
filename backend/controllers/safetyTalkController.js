@@ -4,6 +4,10 @@ const Incident = require("../models/Incident");
 const RiskAssessment = require("../models/RiskAssessment");
 const { OpenAI } = require("openai");
 
+const {
+  generateSafetyTalkWordBuffer,
+} = require("../utils/safetyTalkWordGenerator");
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -281,5 +285,41 @@ exports.markAsConducted = async (req, res) => {
     console.error("Error marking talk:", error);
     req.flash("error", "Error updating safety talk");
     res.redirect(`/safety-talks/${req.params.id}`);
+  }
+};
+
+exports.downloadWord = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const talk = await SafetyTalk.findById(id)
+      .populate("targetWorkAreas", "name worksite")
+      .populate("generatedBy", "name")
+      .populate("conductedBy", "name")
+      .populate(
+        "basedOn.recentIncidents",
+        "incidentNumber type severity description",
+      );
+
+    if (!talk) {
+      return res.status(404).send("Safety talk not found");
+    }
+
+    const buffer = await generateSafetyTalkWordBuffer({ talk });
+
+    const safeNumber = talk.talkNumber || Date.now();
+    const fileName = `safety_talk_${safeNumber}.docx`;
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    );
+
+    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+
+    return res.send(buffer);
+  } catch (error) {
+    console.error("Error downloading Safety Talk Word document:", error);
+    return res.status(500).send("Error generating Safety Talk Word document");
   }
 };

@@ -5,23 +5,43 @@
   <div class="p-4 mb-4 rounded-3" style="background: linear-gradient(135deg, #1e3c72, #2a5298)">
     <div class="d-flex justify-content-between align-items-center flex-wrap">
       <div>
-        <h2 class="text-white fw-bold mb-2"><i class="fas fa-chart-pie me-2"></i>Risk Assessment #<%= assessment.assessmentNumber %></h2>
+        <h2 class="text-white fw-bold mb-2">
+          <i class="fas fa-chart-pie me-2"></i>
+          Risk Assessment #<%= assessment.assessmentNumber %>
+        </h2>
         <p class="text-white-50 mb-0"><%= assessment.title %></p>
       </div>
+
       <div class="text-end">
-        <span class="badge <%= assessment.status === 'completed' ? 'bg-success' : 'bg-warning' %> px-3 py-2"><%= assessment.status?.toUpperCase() || 'DRAFT' %></span>
-        <p class="text-white-50 small mt-2 mb-0"><i class="fas fa-calendar me-1"></i><%= new Date(assessment.assessmentDate).toLocaleDateString() %></p>
+        <span class="badge <%= assessment.status === 'completed' || assessment.status === 'approved' ? 'bg-success' : 'bg-warning' %> px-3 py-2">
+          <%= assessment.status?.toUpperCase() || 'DRAFT' %>
+        </span>
+        <p class="text-white-50 small mt-2 mb-0">
+          <i class="fas fa-calendar me-1"></i>
+          <%= new Date(assessment.assessmentDate).toLocaleDateString() %>
+        </p>
       </div>
     </div>
   </div>
 
   <div class="card shadow-sm mb-4 border-0">
     <div class="card-body">
-      <h6 class="fw-bold mb-3"><i class="fas fa-chart-line me-2 text-primary"></i>Overall Completion</h6>
+      <h6 class="fw-bold mb-3">
+        <i class="fas fa-chart-line me-2 text-primary"></i>
+        Overall Completion
+      </h6>
+
       <div class="progress mb-2" style="height: 12px; border-radius: 10px;">
-        <div class="progress-bar bg-success" role="progressbar" style="width: <%= (confirmedCount / sections.length * 100) %>%"></div>
+        <div
+          class="progress-bar bg-success"
+          role="progressbar"
+          style="width: <%= (confirmedCount / sections.length * 100) %>%"
+        ></div>
       </div>
-      <p class="small text-muted mb-0"><%= confirmedCount %> of <%= sections.length %> sections confirmed</p>
+
+      <p class="small text-muted mb-0">
+        <%= confirmedCount %> of <%= sections.length %> sections confirmed
+      </p>
     </div>
   </div>
 
@@ -30,76 +50,169 @@
     const activeVersion = assessment.activeVersion?.[section.key] || "human";
     const hasAI = assessment.aiSections?.[section.key]?.content;
   %>
-  <div class="card shadow-lg mb-4 border-0 section-card">
-    <div class="card-header text-white py-3" style="background: linear-gradient(90deg, <%= section.color === 'primary' ? '#4ca1af, #2c3e50' : section.color === 'info' ? '#3498db, #2980b9' : section.color === 'danger' ? '#e74c3c, #c0392b' : section.color === 'warning' ? '#f39c12, #e67e22' : section.color === 'success' ? '#27ae60, #2ecc71' : '#95a5a6, #7f8c8d' %>);">
-      <div class="d-flex justify-content-between align-items-center flex-wrap">
-        <h5 class="mb-0"><i class="<%= section.icon %> me-2"></i><%= section.title %></h5>
-        <div>
-          <% if (isConfirmed) { %>
-            <span class="badge bg-success me-2"><i class="fas fa-check-circle me-1"></i>Confirmed</span>
-            <span class="badge bg-info"><i class="fas fa-<%= activeVersion === 'ai' ? 'robot' : 'user' %> me-1"></i><%= activeVersion === 'ai' ? 'AI Enhanced' : 'Human Version' %></span>
+    <div class="card shadow-lg mb-4 border-0 section-card">
+      <div
+        class="card-header text-white py-3"
+        style="background: linear-gradient(90deg, <%= section.color === 'primary' ? '#4ca1af, #2c3e50' : section.color === 'info' ? '#3498db, #2980b9' : section.color === 'danger' ? '#e74c3c, #c0392b' : section.color === 'warning' ? '#f39c12, #e67e22' : section.color === 'success' ? '#27ae60, #2ecc71' : '#95a5a6, #7f8c8d' %>);"
+      >
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+          <h5 class="mb-0">
+            <i class="<%= section.icon %> me-2"></i>
+            <%= section.title %>
+          </h5>
+
+          <div>
+            <% if (isConfirmed) { %>
+              <span class="badge bg-success me-2">
+                <i class="fas fa-check-circle me-1"></i>
+                Confirmed
+              </span>
+
+              <span class="badge bg-info">
+                <i class="fas fa-<%= activeVersion === 'ai' ? 'robot' : 'user' %> me-1"></i>
+                <%= activeVersion === 'ai' ? 'AI Enhanced' : 'Human Version' %>
+              </span>
+            <% } else { %>
+              <span class="badge bg-secondary me-2">Pending Confirmation</span>
+            <% } %>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div
+          class="content-display mb-3 p-3 bg-light rounded"
+          id="content-<%= section.key %>"
+          style="max-height: 300px; overflow-y: auto;"
+        >
+          <div class="text-muted text-center py-3">
+            <i class="fas fa-spinner fa-spin me-2"></i>
+            Loading content...
+          </div>
+        </div>
+
+        <div class="d-flex gap-2 flex-wrap justify-content-end">
+          <% if (!isConfirmed) { %>
+            <% if (hasAI) { %>
+              <button
+                class="btn btn-outline-warning btn-sm"
+                onclick="showComparisonModal('<%= section.key %>', '<%= section.title %>')"
+              >
+                <i class="fas fa-code-branch me-1"></i>
+                Compare Versions
+              </button>
+
+              <button
+                class="btn btn-success btn-sm"
+                onclick="confirmSection('<%= section.key %>', true)"
+              >
+                <i class="fas fa-check-circle me-1"></i>
+                Confirm AI Version
+              </button>
+
+              <button
+                class="btn btn-outline-success btn-sm"
+                onclick="confirmSection('<%= section.key %>', false)"
+              >
+                <i class="fas fa-user-check me-1"></i>
+                Keep Human Version
+              </button>
+            <% } else { %>
+              <button
+                class="btn btn-primary btn-sm"
+                onclick="enhanceSection('<%= section.key %>')"
+                id="enhance-<%= section.key %>"
+              >
+                <i class="fas fa-magic me-1"></i>
+                Enhance with AI
+              </button>
+            <% } %>
           <% } else { %>
-            <span class="badge bg-secondary me-2">Pending Confirmation</span>
+            <button
+              class="btn btn-outline-secondary btn-sm"
+              onclick="viewSectionContent('<%= section.key %>')"
+            >
+              <i class="fas fa-eye me-1"></i>
+              View Full Content
+            </button>
           <% } %>
         </div>
       </div>
     </div>
-    <div class="card-body">
-      <div class="content-display mb-3 p-3 bg-light rounded" id="content-<%= section.key %>" style="max-height: 300px; overflow-y: auto;">
-        <div class="text-muted text-center py-3"><i class="fas fa-spinner fa-spin me-2"></i>Loading content...</div>
-      </div>
-      <div class="d-flex gap-2 flex-wrap justify-content-end">
-        <% if (!isConfirmed) { %>
-          <% if (hasAI) { %>
-            <button class="btn btn-outline-warning btn-sm" onclick="showComparisonModal('<%= section.key %>', '<%= section.title %>')"><i class="fas fa-code-branch me-1"></i>Compare Versions</button>
-            <button class="btn btn-success btn-sm" onclick="confirmSection('<%= section.key %>', true)"><i class="fas fa-check-circle me-1"></i>Confirm AI Version</button>
-            <button class="btn btn-outline-success btn-sm" onclick="confirmSection('<%= section.key %>', false)"><i class="fas fa-user-check me-1"></i>Keep Human Version</button>
-          <% } else { %>
-            <button class="btn btn-primary btn-sm" onclick="enhanceSection('<%= section.key %>')" id="enhance-<%= section.key %>"><i class="fas fa-magic me-1"></i>Enhance with AI</button>
-          <% } %>
-        <% } else { %>
-          <button class="btn btn-outline-secondary btn-sm" onclick="viewSectionContent('<%= section.key %>')"><i class="fas fa-eye me-1"></i>View Full Content</button>
-        <% } %>
-      </div>
-    </div>
-  </div>
   <% }); %>
 
-  <div class="card shadow-lg mb-4 border-0">
-    <div class="card-header bg-dark text-white py-3"><h5 class="mb-0"><i class="fas fa-layer-group me-2"></i>Consolidated Report</h5></div>
+  <div class="card shadow-lg mb-4 border-0 document-card">
+    <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #198754, #0f5132);">
+      <h5 class="mb-0">
+        <i class="fas fa-file-word me-2"></i>
+        Full Editable Word Document
+      </h5>
+    </div>
+
     <div class="card-body text-center">
-      <% const hasPdf = assessment.consolidatedAssessment?.pdfUploaded === true; %>
-      <% if (allConfirmedNow && !hasPdf) { %>
-        <div class="alert alert-warning">
-          <i class="fas fa-exclamation-triangle fa-2x mb-2 d-block"></i>
-          <h5>All sections confirmed!</h5>
-          <p>Generate your complete risk assessment report now.</p>
-          <form method="POST" action="/risk-assessments/<%= assessment._id %>/generate-consolidated">
-            <button type="submit" class="btn btn-success btn-lg"><i class="fas fa-file-pdf me-2"></i>Generate Complete Report</button>
-          </form>
-        </div>
-      <% } else if (hasPdf) { %>
-        <div class="alert alert-success">
-          <i class="fas fa-check-circle fa-2x mb-2 d-block"></i>
-          <h5>Report Ready!</h5>
-          <a href="/risk-assessments/<%= assessment._id %>/download-pdf" class="btn btn-success btn-lg" target="_blank"><i class="fas fa-file-pdf me-2"></i>Download PDF Report</a>
+      <% if (allConfirmedNow) { %>
+        <div class="alert alert-success border-success mb-0">
+          <i class="fas fa-check-circle fa-3x mb-3 d-block text-success"></i>
+
+          <h4 class="fw-bold">Get the Full Editable Word Document</h4>
+
+          <p class="mb-3">
+            All sections have been confirmed. You can now download the complete professionally
+            formatted Word document. The Safety Officer can edit it, review it, print it,
+            sign it, and file it as the official risk assessment record.
+          </p>
+
+          <a
+            href="/risk-assessments/<%= assessment._id %>/download-word"
+            class="btn btn-success btn-lg px-5 py-3"
+          >
+            <i class="fas fa-file-word me-2"></i>
+            Download Editable Word Document
+          </a>
+
+          <div class="mt-3">
+            <small class="text-muted d-block">
+              <i class="fas fa-database me-1"></i>
+              The document is generated directly from the confirmed database sections.
+            </small>
+            <small class="text-muted d-block">
+              <i class="fas fa-edit me-1"></i>
+              No PDF. No cloud upload. Fully editable Microsoft Word format.
+            </small>
+          </div>
         </div>
       <% } else { %>
-        <div class="alert alert-secondary">
-          <i class="fas fa-info-circle fa-2x mb-2 d-block"></i>
-          <h5>Waiting for All Sections</h5>
-          <p>Please confirm all <%= sections.length %> sections above.</p>
-          <div class="progress mt-3" style="height: 10px; max-width: 300px; margin: 0 auto;">
-            <div class="progress-bar bg-success" role="progressbar" style="width: <%= (confirmedCount / sections.length * 100) %>%"></div>
+        <div class="alert alert-secondary mb-0">
+          <i class="fas fa-info-circle fa-3x mb-3 d-block text-secondary"></i>
+
+          <h4 class="fw-bold">Word Document Not Ready Yet</h4>
+
+          <p>
+            Please confirm all <%= sections.length %> sections above before downloading
+            the full editable Word document.
+          </p>
+
+          <div class="progress mt-3" style="height: 10px; max-width: 350px; margin: 0 auto;">
+            <div
+              class="progress-bar bg-success"
+              role="progressbar"
+              style="width: <%= (confirmedCount / sections.length * 100) %>%"
+            ></div>
           </div>
-          <p class="mt-2 small"><%= confirmedCount %> of <%= sections.length %> sections confirmed</p>
+
+          <p class="mt-2 small mb-0">
+            <%= confirmedCount %> of <%= sections.length %> sections confirmed
+          </p>
         </div>
       <% } %>
     </div>
   </div>
 
   <div class="text-center mt-3">
-    <a href="/work-areas/<%= assessment.workArea?._id %>" class="btn btn-outline-secondary px-4"><i class="fas fa-arrow-left me-2"></i>Back to Work Area</a>
+    <a href="/work-areas/<%= assessment.workArea?._id %>" class="btn btn-outline-secondary px-4">
+      <i class="fas fa-arrow-left me-2"></i>
+      Back to Work Area
+    </a>
   </div>
 </div>
 
@@ -110,26 +223,55 @@
         <h5 class="modal-title text-white" id="modalTitle">Compare Versions</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
+
       <div class="modal-body p-0">
         <div class="row g-0">
           <div class="col-md-6 border-end">
             <div class="p-3 bg-light">
-              <h6 class="fw-bold text-primary mb-3"><i class="fas fa-user me-2"></i>Human Version</h6>
-              <div id="humanContent" class="p-3 bg-white rounded" style="min-height: 400px; max-height: 500px; overflow-y: auto; white-space: pre-wrap;"></div>
+              <h6 class="fw-bold text-primary mb-3">
+                <i class="fas fa-user me-2"></i>
+                Human Version
+              </h6>
+
+              <div
+                id="humanContent"
+                class="p-3 bg-white rounded"
+                style="min-height: 400px; max-height: 500px; overflow-y: auto; white-space: pre-wrap;"
+              ></div>
             </div>
           </div>
+
           <div class="col-md-6">
             <div class="p-3" style="background: linear-gradient(135deg, #f5f7fa, #c3cfe2);">
-              <h6 class="fw-bold text-success mb-3"><i class="fas fa-robot me-2"></i>AI Enhanced Version</h6>
-              <div id="aiContent" class="p-3 bg-white rounded" style="min-height: 400px; max-height: 500px; overflow-y: auto; white-space: pre-wrap;"></div>
+              <h6 class="fw-bold text-success mb-3">
+                <i class="fas fa-robot me-2"></i>
+                AI Enhanced Version
+              </h6>
+
+              <div
+                id="aiContent"
+                class="p-3 bg-white rounded"
+                style="min-height: 400px; max-height: 500px; overflow-y: auto; white-space: pre-wrap;"
+              ></div>
             </div>
           </div>
         </div>
       </div>
+
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-success" onclick="confirmFromModal()"><i class="fas fa-check-circle me-1"></i>Use AI Version</button>
-        <button type="button" class="btn btn-outline-success" onclick="confirmHumanFromModal()"><i class="fas fa-user-check me-1"></i>Keep Human Version</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+
+        <button type="button" class="btn btn-success" onclick="confirmFromModal()">
+          <i class="fas fa-check-circle me-1"></i>
+          Use AI Version
+        </button>
+
+        <button type="button" class="btn btn-outline-success" onclick="confirmHumanFromModal()">
+          <i class="fas fa-user-check me-1"></i>
+          Keep Human Version
+        </button>
       </div>
     </div>
   </div>
@@ -137,67 +279,185 @@
 
 <script>
   let currentSectionKey = null;
+
   async function loadSectionContent(sectionKey) {
     try {
       const response = await fetch(`/risk-assessments/<%= assessment._id %>/section/${sectionKey}/content`);
       const data = await response.json();
+
       if (data.success) {
-        document.getElementById(`content-${sectionKey}`).innerHTML = `<div class="p-2" style="white-space: pre-wrap;">${escapeHtml(data.content) || '<em class="text-muted">No content yet</em>'}</div>`;
+        document.getElementById(`content-${sectionKey}`).innerHTML = `
+          <div class="p-2" style="white-space: pre-wrap;">
+            ${escapeHtml(data.content) || '<em class="text-muted">No content yet</em>'}
+          </div>
+        `;
       }
-    } catch (error) { console.error('Error loading section:', error); }
+    } catch (error) {
+      console.error('Error loading section:', error);
+    }
   }
-  function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+
+  function escapeHtml(text) {
+    if (!text) return '';
+
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
   async function enhanceSection(sectionKey) {
     const btn = document.getElementById(`enhance-${sectionKey}`);
     const originalText = btn.innerHTML;
+
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Enhancing...';
+
     try {
-      const response = await fetch(`/risk-assessments/<%= assessment._id %>/enhance/${sectionKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+      const response = await fetch(`/risk-assessments/<%= assessment._id %>/enhance/${sectionKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
       const data = await response.json();
+
       if (data.success) {
-        Swal.fire({ icon: 'success', title: 'Enhancement Complete!', text: 'Click "Compare Versions" to review.', confirmButtonColor: '#3085d6' }).then(() => location.reload());
-      } else { throw new Error(data.error); }
-    } catch (error) { Swal.fire({ icon: 'error', title: 'Enhancement Failed', text: error.message }); }
-    finally { btn.disabled = false; btn.innerHTML = originalText; }
+        Swal.fire({
+          icon: 'success',
+          title: 'Enhancement Complete!',
+          text: 'Click "Compare Versions" to review.',
+          confirmButtonColor: '#3085d6'
+        }).then(() => location.reload());
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Enhancement Failed',
+        text: error.message
+      });
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
   }
+
   async function showComparisonModal(sectionKey, sectionTitle) {
     currentSectionKey = sectionKey;
+
     try {
       const response = await fetch(`/risk-assessments/<%= assessment._id %>/section/${sectionKey}/content`);
       const data = await response.json();
+
       if (data.success) {
         const aiResponse = await fetch(`/risk-assessments/<%= assessment._id %>/ai-section/${sectionKey}`);
         const aiData = await aiResponse.json();
+
         document.getElementById('modalTitle').innerHTML = `Compare: ${sectionTitle}`;
-        document.getElementById('humanContent').innerHTML = `<div style="white-space: pre-wrap;">${escapeHtml(data.content)}</div>`;
-        document.getElementById('aiContent').innerHTML = `<div style="white-space: pre-wrap;">${escapeHtml(aiData.content || 'No AI enhancement yet.')}</div>`;
+
+        document.getElementById('humanContent').innerHTML = `
+          <div style="white-space: pre-wrap;">${escapeHtml(data.content)}</div>
+        `;
+
+        document.getElementById('aiContent').innerHTML = `
+          <div style="white-space: pre-wrap;">${escapeHtml(aiData.content || 'No AI enhancement yet.')}</div>
+        `;
+
         new bootstrap.Modal(document.getElementById('comparisonModal')).show();
       }
-    } catch (error) { Swal.fire('Error', 'Failed to load comparison data', 'error'); }
+    } catch (error) {
+      Swal.fire('Error', 'Failed to load comparison data', 'error');
+    }
   }
-  async function confirmFromModal() { await confirmSection(currentSectionKey, true); bootstrap.Modal.getInstance(document.getElementById('comparisonModal')).hide(); }
-  async function confirmHumanFromModal() { await confirmSection(currentSectionKey, false); bootstrap.Modal.getInstance(document.getElementById('comparisonModal')).hide(); }
+
+  async function confirmFromModal() {
+    await confirmSection(currentSectionKey, true);
+
+    const modalInstance = bootstrap.Modal.getInstance(document.getElementById('comparisonModal'));
+    if (modalInstance) modalInstance.hide();
+  }
+
+  async function confirmHumanFromModal() {
+    await confirmSection(currentSectionKey, false);
+
+    const modalInstance = bootstrap.Modal.getInstance(document.getElementById('comparisonModal'));
+    if (modalInstance) modalInstance.hide();
+  }
+
   async function confirmSection(sectionKey, useAI) {
     try {
-      const response = await fetch(`/risk-assessments/<%= assessment._id %>/confirm/${sectionKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ useAI }) });
+      const response = await fetch(`/risk-assessments/<%= assessment._id %>/confirm/${sectionKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ useAI })
+      });
+
       const data = await response.json();
-      if (data.success) { Swal.fire({ icon: 'success', title: 'Confirmed!', timer: 1500, showConfirmButton: false }).then(() => location.reload()); } 
-      else { throw new Error(data.error); }
-    } catch (error) { Swal.fire('Error', error.message, 'error'); }
+
+      if (data.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Confirmed!',
+          timer: 1500,
+          showConfirmButton: false
+        }).then(() => location.reload());
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (error) {
+      Swal.fire('Error', error.message, 'error');
+    }
   }
+
   function viewSectionContent(sectionKey) {
     const container = document.getElementById(`content-${sectionKey}`);
-    Swal.fire({ title: 'Section Content', html: `<div style="text-align: left; max-height: 400px; overflow-y: auto; white-space: pre-wrap;">${escapeHtml(container.innerText)}</div>`, width: '800px', confirmButtonColor: '#3085d6' });
+
+    Swal.fire({
+      title: 'Section Content',
+      html: `
+        <div style="text-align: left; max-height: 400px; overflow-y: auto; white-space: pre-wrap;">
+          ${escapeHtml(container.innerText)}
+        </div>
+      `,
+      width: '800px',
+      confirmButtonColor: '#3085d6'
+    });
   }
-  document.addEventListener('DOMContentLoaded', () => { <% sections.forEach(section => { %>loadSectionContent('<%= section.key %>');<% }); %> });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    <% sections.forEach(section => { %>
+      loadSectionContent('<%= section.key %>');
+    <% }); %>
+  });
 </script>
 
 <style>
-  .section-card { transition: transform 0.2s, box-shadow 0.2s; }
-  .section-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.12); }
-  .content-display { font-size: 0.9rem; line-height: 1.6; }
-  .modal-xl { max-width: 90%; }
+  .section-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .section-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  }
+
+  .document-card {
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .content-display {
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .modal-xl {
+    max-width: 90%;
+  }
 </style>
 
 <%- include('../partials/footer') %>
