@@ -473,6 +473,10 @@ app.use("/jsa", jsaRoutes);
 const permitRoutes = require("./routes/permitRoutes");
 app.use("/permits", permitRoutes);
 
+// Insihgt routes
+const safetyInsightRoutes = require("./routes/safetyInsightRoutes");
+app.use("/safety-insights", safetyInsightRoutes);
+
 // Training routes
 const trainingRoutes = require("./routes/trainingRoutes");
 app.use("/training", trainingRoutes);
