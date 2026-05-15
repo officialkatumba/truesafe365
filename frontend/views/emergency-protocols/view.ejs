@@ -1,0 +1,353 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="container py-4">
+  <!-- Header -->
+  <div class="p-4 mb-4 rounded-3" style="background: linear-gradient(135deg, #c00000, #1f4e79)">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <i class="fas fa-truck-medical fa-2x text-white"></i>
+          <h2 class="text-white fw-bold mb-0"><%= protocol.title %></h2>
+        </div>
+
+        <p class="text-white-50 mb-0">
+          Emergency Protocol #<%= protocol.protocolNumber || 'N/A' %> |
+          <%= protocol.workArea?.name || 'Work Area' %> |
+          <%= protocol.periodCovered?.label || 'Recent Safety Data' %> |
+          <%= new Date(protocol.createdAt).toLocaleDateString() %>
+        </p>
+      </div>
+
+      <div>
+        <span class="badge bg-light text-dark px-3 py-2">
+          <i class="fas fa-robot me-1"></i>
+          AI Generated
+        </span>
+
+        <span class="badge <%= 
+          protocol.priorityLevel === 'critical' ? 'bg-danger' :
+          protocol.priorityLevel === 'high' ? 'bg-warning text-dark' :
+          protocol.priorityLevel === 'medium' ? 'bg-info' :
+          'bg-secondary'
+        %> ms-2 px-3 py-2">
+          <i class="fas fa-exclamation-circle me-1"></i>
+          <%= protocol.priorityLevel?.toUpperCase() || 'MEDIUM' %>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Main Content -->
+    <div class="col-lg-8">
+      <div class="card shadow-sm mb-4 border-0">
+        <div class="card-body p-4">
+
+          <!-- Executive Summary -->
+          <div class="mb-4">
+            <h5 class="fw-bold text-primary">
+              <i class="fas fa-info-circle me-2"></i>
+              Executive Summary
+            </h5>
+
+            <div class="p-3 bg-light rounded">
+              <p class="mb-0">
+                <%= protocol.summary || 'No summary generated.' %>
+              </p>
+            </div>
+          </div>
+
+          <!-- Part 1 -->
+          <div class="mb-4">
+            <h5 class="fw-bold text-danger">
+              <i class="fas fa-triangle-exclamation me-2"></i>
+              Part 1: Emergency Risk and Preparedness Assessment
+            </h5>
+
+            <div class="p-3 bg-light rounded">
+              <div style="white-space: pre-wrap; line-height: 1.7;"><%= protocol.emergencyRiskAssessment || 'No emergency risk assessment generated.' %></div>
+            </div>
+          </div>
+
+          <!-- Part 2 -->
+          <div class="mb-4">
+            <h5 class="fw-bold text-primary">
+              <i class="fas fa-list-check me-2"></i>
+              Part 2: Emergency Response Procedures and Action Plan
+            </h5>
+
+            <div class="p-3 bg-light rounded">
+              <div style="white-space: pre-wrap; line-height: 1.7;"><%= protocol.emergencyResponseProcedures || 'No emergency response procedures generated.' %></div>
+            </div>
+          </div>
+
+          <!-- Evacuation Plan -->
+          <% if (protocol.evacuationPlan) { %>
+            <div class="mb-4">
+              <h5 class="fw-bold text-danger">
+                <i class="fas fa-route me-2"></i>
+                Evacuation Plan
+              </h5>
+
+              <div class="p-3 bg-light rounded">
+                <div style="white-space: pre-wrap; line-height: 1.7;"><%= protocol.evacuationPlan %></div>
+              </div>
+            </div>
+          <% } %>
+
+          <!-- Communication Plan -->
+          <% if (protocol.communicationPlan) { %>
+            <div class="mb-4">
+              <h5 class="fw-bold text-primary">
+                <i class="fas fa-phone-volume me-2"></i>
+                Communication Plan
+              </h5>
+
+              <div class="p-3 bg-light rounded">
+                <div style="white-space: pre-wrap; line-height: 1.7;"><%= protocol.communicationPlan %></div>
+              </div>
+            </div>
+          <% } %>
+
+          <!-- Emergency Types Covered -->
+          <% if (protocol.emergencyTypesCovered && protocol.emergencyTypesCovered.length > 0) { %>
+            <div class="mb-4">
+              <h5 class="fw-bold text-danger">
+                <i class="fas fa-tags me-2"></i>
+                Emergency Types Covered
+              </h5>
+
+              <div class="p-3 bg-light rounded">
+                <div class="d-flex flex-wrap gap-2">
+                  <% protocol.emergencyTypesCovered.forEach(type => { %>
+                    <span class="badge bg-danger">
+                      <%= type %>
+                    </span>
+                  <% }) %>
+                </div>
+              </div>
+            </div>
+          <% } %>
+
+          <!-- Required Equipment -->
+          <% if (protocol.requiredEquipment && protocol.requiredEquipment.length > 0) { %>
+            <div class="mb-4">
+              <h5 class="fw-bold text-warning">
+                <i class="fas fa-toolbox me-2"></i>
+                Required Emergency Equipment
+              </h5>
+
+              <div class="p-3 bg-light rounded">
+                <ul class="mb-0">
+                  <% protocol.requiredEquipment.forEach(item => { %>
+                    <li class="mb-2"><%= item %></li>
+                  <% }) %>
+                </ul>
+              </div>
+            </div>
+          <% } %>
+
+          <!-- Required Training -->
+          <% if (protocol.requiredTraining && protocol.requiredTraining.length > 0) { %>
+            <div class="mb-4">
+              <h5 class="fw-bold text-success">
+                <i class="fas fa-graduation-cap me-2"></i>
+                Required Training and Drills
+              </h5>
+
+              <div class="p-3 bg-light rounded">
+                <ul class="mb-0">
+                  <% protocol.requiredTraining.forEach(item => { %>
+                    <li class="mb-2"><%= item %></li>
+                  <% }) %>
+                </ul>
+              </div>
+            </div>
+          <% } %>
+
+          <!-- Recommended Actions -->
+          <% if (protocol.recommendedActions && protocol.recommendedActions.length > 0) { %>
+            <div class="mb-4">
+              <h5 class="fw-bold text-success">
+                <i class="fas fa-list-check me-2"></i>
+                Recommended Actions
+              </h5>
+
+              <div class="p-3 bg-light rounded">
+                <ul class="mb-0">
+                  <% protocol.recommendedActions.forEach(item => { %>
+                    <li class="mb-2"><%= item %></li>
+                  <% }) %>
+                </ul>
+              </div>
+            </div>
+          <% } %>
+
+          <div class="alert alert-info border-info mb-0">
+            <i class="fas fa-robot me-2"></i>
+            This protocol is AI-generated from available safety records and is intended to support emergency preparedness planning, drills, and site response readiness.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+      <!-- Actions Card -->
+      <div class="card shadow-sm mb-4 border-0">
+        <div class="card-body">
+          <h6 class="fw-bold mb-3">
+            <i class="fas fa-cog me-2 text-primary"></i>
+            Actions
+          </h6>
+
+          <div class="d-grid gap-2">
+            <a
+              href="/emergency-protocols/<%= protocol._id %>/download-word"
+              class="btn btn-success"
+            >
+              <i class="fas fa-file-word me-2"></i>
+              Download Emergency Word Document
+            </a>
+
+            <a
+              href="/work-areas/<%= protocol.workArea?._id || protocol.workArea %>"
+              class="btn btn-outline-primary"
+            >
+              <i class="fas fa-arrow-left me-2"></i>
+              Back to Work Area
+            </a>
+          </div>
+
+          <div class="small text-muted mt-3">
+            <i class="fas fa-edit me-1"></i>
+            This Word document is editable, printable, signable, and suitable for emergency preparedness review.
+          </div>
+        </div>
+      </div>
+
+      <!-- Protocol Info Card -->
+      <div class="card shadow-sm mb-4 border-0">
+        <div class="card-body">
+          <h6 class="fw-bold mb-3">
+            <i class="fas fa-info-circle me-2 text-primary"></i>
+            Protocol Information
+          </h6>
+
+          <table class="table table-sm">
+            <tr>
+              <td><strong>Protocol Number:</strong></td>
+              <td>#<%= protocol.protocolNumber || 'N/A' %></td>
+            </tr>
+
+            <tr>
+              <td><strong>Work Area:</strong></td>
+              <td><%= protocol.workArea?.name || 'N/A' %></td>
+            </tr>
+
+            <tr>
+              <td><strong>Priority:</strong></td>
+              <td>
+                <span class="badge <%= 
+                  protocol.priorityLevel === 'critical' ? 'bg-danger' :
+                  protocol.priorityLevel === 'high' ? 'bg-warning text-dark' :
+                  protocol.priorityLevel === 'medium' ? 'bg-info' :
+                  'bg-secondary'
+                %>">
+                  <%= protocol.priorityLevel || 'medium' %>
+                </span>
+              </td>
+            </tr>
+
+            <tr>
+              <td><strong>Period:</strong></td>
+              <td><%= protocol.periodCovered?.label || 'Recent safety data' %></td>
+            </tr>
+
+            <tr>
+              <td><strong>Generated:</strong></td>
+              <td><%= new Date(protocol.createdAt).toLocaleDateString() %></td>
+            </tr>
+
+            <tr>
+              <td><strong>Status:</strong></td>
+              <td>
+                <span class="badge bg-primary">
+                  <%= protocol.status || 'generated' %>
+                </span>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- Data Summary Card -->
+      <div class="card shadow-sm mb-4 border-0">
+        <div class="card-body">
+          <h6 class="fw-bold mb-3">
+            <i class="fas fa-database me-2 text-primary"></i>
+            Safety Data Used
+          </h6>
+
+          <table class="table table-sm">
+            <tr>
+              <td><strong>Incidents:</strong></td>
+              <td><%= protocol.dataCounts?.incidents || 0 %></td>
+            </tr>
+
+            <tr>
+              <td><strong>Observations:</strong></td>
+              <td><%= protocol.dataCounts?.observations || 0 %></td>
+            </tr>
+
+            <tr>
+              <td><strong>Risk Assessments:</strong></td>
+              <td><%= protocol.dataCounts?.riskAssessments || 0 %></td>
+            </tr>
+
+            <tr>
+              <td><strong>JSAs:</strong></td>
+              <td><%= protocol.dataCounts?.jsas || 0 %></td>
+            </tr>
+
+            <tr>
+              <td><strong>Safety Talks:</strong></td>
+              <td><%= protocol.dataCounts?.safetyTalks || 0 %></td>
+            </tr>
+
+            <tr>
+              <td><strong>PPE Checklists:</strong></td>
+              <td><%= protocol.dataCounts?.ppeChecklists || 0 %></td>
+            </tr>
+
+            <tr>
+              <td><strong>Training:</strong></td>
+              <td><%= protocol.dataCounts?.trainingRequirements || 0 %></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- Emergency Types Card -->
+      <% if (protocol.emergencyTypesCovered && protocol.emergencyTypesCovered.length > 0) { %>
+        <div class="card shadow-sm mb-4 border-0">
+          <div class="card-body">
+            <h6 class="fw-bold mb-3">
+              <i class="fas fa-tags me-2 text-primary"></i>
+              Emergency Types
+            </h6>
+
+            <div class="d-flex flex-wrap gap-2">
+              <% protocol.emergencyTypesCovered.forEach(type => { %>
+                <span class="badge bg-secondary"><%= type %></span>
+              <% }) %>
+            </div>
+          </div>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

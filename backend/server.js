@@ -477,6 +477,9 @@ app.use("/permits", permitRoutes);
 const safetyInsightRoutes = require("./routes/safetyInsightRoutes");
 app.use("/safety-insights", safetyInsightRoutes);
 
+const emergencyProtocolRoutes = require("./routes/emergencyProtocolRoutes");
+app.use("/emergency-protocols", emergencyProtocolRoutes);
+
 // Training routes
 const trainingRoutes = require("./routes/trainingRoutes");
 app.use("/training", trainingRoutes);
