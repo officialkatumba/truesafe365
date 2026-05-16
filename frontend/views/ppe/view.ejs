@@ -1,62 +1,374 @@
 <%- include('../partials/header') %>
 <%- include('../partials/navbar') %>
 
+<%
+  const ppeItemsList = checklist.ppeItems || [];
+  const inspectionItemsList = checklist.inspectionItems || [];
+%>
+
 <div class="container py-4">
-  <div class="card shadow-lg border-0">
-    <div class="card-header" style="background: linear-gradient(135deg, #26a69a, #1e8a7a); color: white;">
-      <h4 class="mb-0"><i class="fas fa-helmet-safety me-2"></i>PPE Requirements</h4>
-      <p class="mb-0 small opacity-75">Checklist #<%= checklist.checklistNumber %> | <%= new Date(checklist.date).toLocaleDateString() %></p>
+  <!-- Header -->
+  <div class="p-4 mb-4 rounded-3" style="background: linear-gradient(135deg, #26a69a, #1e8a7a); color: white;">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <i class="fas fa-helmet-safety fa-2x text-white"></i>
+          <h3 class="fw-bold mb-0">PPE Requirements</h3>
+        </div>
+
+        <p class="mb-0 opacity-75">
+          Checklist #<%= checklist.checklistNumber || 'N/A' %> |
+          <%= checklist.date ? new Date(checklist.date).toLocaleDateString() : 'N/A' %>
+        </p>
+      </div>
+
+      <div class="text-end">
+        <span class="badge bg-light text-dark px-3 py-2">
+          <i class="fas fa-robot me-1"></i>
+          AI Generated
+        </span>
+
+        <span class="badge <%= checklist.status === 'completed' ? 'bg-success' : 'bg-warning text-dark' %> px-3 py-2 ms-2">
+          <i class="fas fa-<%= checklist.status === 'completed' ? 'check-circle' : 'clock' %> me-1"></i>
+          <%= checklist.status?.toUpperCase() || 'PENDING' %>
+        </span>
+      </div>
     </div>
-    <div class="card-body p-4">
-      <h5 class="mb-3"><%= checklist.title %></h5>
-      
-      <!-- PPE Items Table -->
-      <h6 class="fw-bold mt-3"><i class="fas fa-list-check me-2 text-success"></i>Required PPE</h6>
-      <div class="table-responsive">
-        <table class="table table-bordered">
-          <thead class="table-light">
-            <tr><th>PPE Item</th><th>Required</th><th>Condition</th><th>Quantity</th></tr>
-          </thead>
-          <tbody>
-            <% checklist.ppeItems.forEach(item => { %>
+  </div>
+
+  <div class="row">
+    <!-- Main Content -->
+    <div class="col-lg-8">
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4">
+          <h4 class="fw-bold mb-3">
+            <i class="fas fa-shield-halved me-2 text-success"></i>
+            <%= checklist.title || 'AI Generated PPE Checklist' %>
+          </h4>
+
+          <div class="alert alert-info border-info">
+            <i class="fas fa-circle-info me-2"></i>
+            This page displays the AI-generated PPE requirements for this work area. Use the Word download button to get an editable checklist that the safety officer can print, physically check, sign, and file.
+          </div>
+
+          <!-- Required PPE Beautiful List -->
+          <h5 class="fw-bold mt-4 mb-3">
+            <i class="fas fa-list-check me-2 text-success"></i>
+            AI-Generated Required PPE
+          </h5>
+
+          <% if (ppeItemsList.length > 0) { %>
+            <div class="row g-3">
+              <% ppeItemsList.forEach(item => { 
+                const itemName = item.item === 'other'
+                  ? item.customItem
+                  : String(item.item || 'PPE Item').replace(/_/g, ' ');
+              %>
+                <div class="col-md-6">
+                  <div class="ppe-card h-100 border rounded-3 p-3 bg-light">
+                    <div class="d-flex align-items-start gap-3">
+                      <div class="ppe-icon">
+                        <i class="fas fa-helmet-safety"></i>
+                      </div>
+
+                      <div class="flex-grow-1">
+                        <h6 class="fw-bold mb-1 text-capitalize">
+                          <%= itemName %>
+                        </h6>
+
+                        <div class="small text-muted mb-2">
+                          <i class="fas fa-boxes-stacked me-1"></i>
+                          Quantity:
+                          <strong><%= item.quantity || 'As needed' %></strong>
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-2">
+                          <% if (item.required) { %>
+                            <span class="badge bg-success">
+                              <i class="fas fa-check me-1"></i>
+                              Required
+                            </span>
+                          <% } else { %>
+                            <span class="badge bg-secondary">
+                              <i class="fas fa-minus-circle me-1"></i>
+                              Optional
+                            </span>
+                          <% } %>
+
+                          <span class="badge bg-light text-dark border">
+                            <i class="fas fa-clipboard-check me-1"></i>
+                            <%= item.condition || 'Good condition' %>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          <% } else { %>
+            <div class="text-center py-4 bg-light rounded">
+              <i class="fas fa-helmet-safety fa-3x text-muted mb-3"></i>
+              <p class="text-muted mb-0">No PPE items were generated for this checklist.</p>
+            </div>
+          <% } %>
+
+          <!-- Inspection Items Beautiful List -->
+          <% if (inspectionItemsList.length > 0) { %>
+            <h5 class="fw-bold mt-5 mb-3">
+              <i class="fas fa-clipboard-list me-2 text-info"></i>
+              AI-Generated Inspection Points
+            </h5>
+
+            <div class="list-group">
+              <% inspectionItemsList.forEach((item, index) => { %>
+                <div class="list-group-item border rounded-3 mb-2">
+                  <div class="d-flex align-items-start gap-3">
+                    <div class="inspection-number">
+                      <%= index + 1 %>
+                    </div>
+
+                    <div>
+                      <h6 class="fw-bold mb-1">
+                        <%= item.item || 'Inspection Item' %>
+                      </h6>
+
+                      <p class="text-muted small mb-0">
+                        <i class="fas fa-check-circle me-1 text-success"></i>
+                        Pass Criteria:
+                        <%= item.passCriteria || 'Must be safe, suitable, available, and in good condition.' %>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          <% } %>
+
+          <!-- Word Checklist Notice -->
+          <div class="mt-5 p-4 rounded-3" style="background: linear-gradient(135deg, #e8f5f3, #f8f9fa); border-left: 5px solid #26a69a;">
+            <h5 class="fw-bold text-success">
+              <i class="fas fa-file-word me-2"></i>
+              Editable Word Checklist Available
+            </h5>
+
+            <p class="mb-3 text-muted">
+              The downloadable Word document includes a proper physical checklist with tick boxes for:
+            </p>
+
+            <div class="row small">
+              <div class="col-md-6">
+                <p class="mb-2">
+                  <i class="fas fa-check text-success me-2"></i>
+                  PPE available check
+                </p>
+                <p class="mb-2">
+                  <i class="fas fa-check text-success me-2"></i>
+                  PPE condition check
+                </p>
+              </div>
+
+              <div class="col-md-6">
+                <p class="mb-2">
+                  <i class="fas fa-check text-success me-2"></i>
+                  Inspection pass/fail section
+                </p>
+                <p class="mb-2">
+                  <i class="fas fa-check text-success me-2"></i>
+                  Safety officer sign-off section
+                </p>
+              </div>
+            </div>
+
+            <a
+              href="/ppe/<%= checklist._id %>/download-word"
+              class="btn btn-success btn-lg mt-2"
+            >
+              <i class="fas fa-file-word me-2"></i>
+              Download Editable PPE Word Checklist
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+      <!-- Actions Card -->
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+          <h6 class="fw-bold mb-3">
+            <i class="fas fa-cog me-2 text-success"></i>
+            Actions
+          </h6>
+
+          <div class="d-grid gap-2">
+            <a
+              href="/ppe/<%= checklist._id %>/download-word"
+              class="btn btn-success"
+            >
+              <i class="fas fa-file-word me-2"></i>
+              Download Word Checklist
+            </a>
+
+            <% if (checklist.status !== 'completed' && user.role === 'safety_officer') { %>
+              <form method="POST" action="/ppe/<%= checklist._id %>/complete">
+                <button type="submit" class="btn btn-outline-success w-100">
+                  <i class="fas fa-check-circle me-2"></i>
+                  Mark as Completed
+                </button>
+              </form>
+            <% } %>
+
+            <a
+              href="/work-areas/<%= checklist.workArea?._id || checklist.worksite?._id %>"
+              class="btn btn-outline-primary"
+            >
+              <i class="fas fa-arrow-left me-2"></i>
+              Back to Work Area
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Checklist Info Card -->
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+          <h6 class="fw-bold mb-3">
+            <i class="fas fa-info-circle me-2 text-success"></i>
+            Checklist Information
+          </h6>
+
+          <table class="table table-sm">
             <tr>
-              <td><%= item.item === 'other' ? item.customItem : item.item.replace(/_/g, ' ') %></td>
-              <td><%= item.required ? '✓ Yes' : '✗ No' %></td>
-              <td><%= item.condition %></td>
-              <td><%= item.quantity || 'As needed' %></td>
+              <td><strong>Checklist No:</strong></td>
+              <td>#<%= checklist.checklistNumber || 'N/A' %></td>
             </tr>
-            <% }) %>
-          </tbody>
-        </table>
+
+            <tr>
+              <td><strong>Date:</strong></td>
+              <td><%= checklist.date ? new Date(checklist.date).toLocaleDateString() : 'N/A' %></td>
+            </tr>
+
+            <tr>
+              <td><strong>Status:</strong></td>
+              <td>
+                <span class="badge <%= checklist.status === 'completed' ? 'bg-success' : 'bg-warning text-dark' %>">
+                  <%= checklist.status || 'pending' %>
+                </span>
+              </td>
+            </tr>
+
+            <tr>
+              <td><strong>PPE Items:</strong></td>
+              <td><%= ppeItemsList.length %></td>
+            </tr>
+
+            <tr>
+              <td><strong>Inspection Items:</strong></td>
+              <td><%= inspectionItemsList.length %></td>
+            </tr>
+          </table>
+        </div>
       </div>
 
-      <!-- Inspection Items -->
-      <% if (checklist.inspectionItems && checklist.inspectionItems.length > 0) { %>
-      <h6 class="fw-bold mt-4"><i class="fas fa-clipboard-list me-2 text-info"></i>Inspection Checklist</h6>
-      <div class="table-responsive">
-        <table class="table table-bordered">
-          <thead class="table-light"><tr><th>Item to Inspect</th><th>Pass Criteria</th></tr></thead>
-          <tbody>
-            <% checklist.inspectionItems.forEach(item => { %>
-            <tr><td><%= item.item %></td><td><%= item.passCriteria %></td></tr>
-            <% }) %>
-          </tbody>
-        </table>
-      </div>
-      <% } %>
+      <!-- PPE Summary Card -->
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+          <h6 class="fw-bold mb-3">
+            <i class="fas fa-tags me-2 text-success"></i>
+            PPE Summary
+          </h6>
 
-      <!-- Action Buttons -->
-      <div class="mt-4 d-flex gap-2">
-        <button class="btn btn-outline-secondary" onclick="window.print()"><i class="fas fa-print me-2"></i>Print</button>
-        <% if (checklist.status !== 'completed' && user.role === 'safety_officer') { %>
-          <form method="POST" action="/ppe/<%= checklist._id %>/complete" class="d-inline">
-            <button type="submit" class="btn btn-success"><i class="fas fa-check-circle me-2"></i>Mark as Completed</button>
-          </form>
-        <% } %>
-        <a href="/work-areas/<%= checklist.worksite?._id %>" class="btn btn-outline-primary">Back to Work Area</a>
+          <% if (ppeItemsList.length > 0) { %>
+            <div class="d-flex flex-wrap gap-2">
+              <% ppeItemsList.slice(0, 10).forEach(item => { 
+                const itemName = item.item === 'other'
+                  ? item.customItem
+                  : String(item.item || 'PPE').replace(/_/g, ' ');
+              %>
+                <span class="badge bg-secondary text-capitalize">
+                  <%= itemName %>
+                </span>
+              <% }) %>
+            </div>
+
+            <% if (ppeItemsList.length > 10) { %>
+              <p class="small text-muted mt-2 mb-0">
+                +<%= ppeItemsList.length - 10 %> more PPE items
+              </p>
+            <% } %>
+          <% } else { %>
+            <p class="text-muted small mb-0">No PPE items available.</p>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Human Check Note -->
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <h6 class="fw-bold mb-2">
+            <i class="fas fa-user-shield me-2 text-success"></i>
+            Human Verification
+          </h6>
+
+          <p class="small text-muted mb-0">
+            The AI suggests the PPE requirements, but the safety officer should use the downloaded Word checklist to physically verify availability, condition, suitability, and compliance before work begins.
+          </p>
+        </div>
       </div>
     </div>
   </div>
 </div>
+
+<style>
+  .ppe-card {
+    transition: all 0.2s ease;
+  }
+
+  .ppe-card:hover {
+    background: #ffffff !important;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+  }
+
+  .ppe-icon {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    border-radius: 50%;
+    background: #26a69a;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .inspection-number {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    border-radius: 50%;
+    background: #0dcaf0;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+  }
+
+  @media print {
+    .navbar,
+    .btn,
+    form {
+      display: none !important;
+    }
+
+    .card {
+      border: none !important;
+      box-shadow: none !important;
+    }
+  }
+</style>
 
 <%- include('../partials/footer') %>

@@ -16,6 +16,35 @@
 
 // module.exports = router;
 
+// const express = require("express");
+// const router = express.Router();
+// const ppeChecklistController = require("../controllers/ppeChecklistController");
+// const { ensureAuthenticated } = require("../middlewares/auth");
+
+// router.use(ensureAuthenticated);
+
+// // Generate PPE requirements (AI-driven)
+// router.post(
+//   "/generate/:workAreaId",
+//   ppeChecklistController.generatePPERequirements,
+// );
+
+// router.get("/:id/download-word", ppeController.downloadWord);
+
+// // View PPE checklist
+// router.get("/:id", ppeChecklistController.getPPEChecklist);
+
+// // Mark as completed
+// router.post("/:id/complete", ppeChecklistController.completeChecklist);
+
+// // API endpoint
+// router.get(
+//   "/api/workarea/:workAreaId",
+//   ppeChecklistController.getWorkAreaPPEChecklists,
+// );
+
+// module.exports = router;
+
 const express = require("express");
 const router = express.Router();
 const ppeChecklistController = require("../controllers/ppeChecklistController");
@@ -29,16 +58,19 @@ router.post(
   ppeChecklistController.generatePPERequirements,
 );
 
+// Download editable Word document
+router.get("/:id/download-word", ppeChecklistController.downloadWord);
+
+// API endpoint - keep this before /:id if possible
+router.get(
+  "/api/workarea/:workAreaId",
+  ppeChecklistController.getWorkAreaPPEChecklists,
+);
+
 // View PPE checklist
 router.get("/:id", ppeChecklistController.getPPEChecklist);
 
 // Mark as completed
 router.post("/:id/complete", ppeChecklistController.completeChecklist);
-
-// API endpoint
-router.get(
-  "/api/workarea/:workAreaId",
-  ppeChecklistController.getWorkAreaPPEChecklists,
-);
 
 module.exports = router;

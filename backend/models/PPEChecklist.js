@@ -112,87 +112,234 @@
 
 // module.exports = mongoose.model("PPEChecklist", ppeChecklistSchema);
 
+// const mongoose = require("mongoose");
+// const Counter = require("./Counter");
+
+// const ppeChecklistSchema = new mongoose.Schema(
+//   {
+//     checklistNumber: { type: Number, unique: true },
+
+//     worksite: {
+//       type: mongoose.Schema.Types.ObjectId,
+//       ref: "Worksite",
+//       required: true,
+//     },
+//     createdBy: {
+//       type: mongoose.Schema.Types.ObjectId,
+//       ref: "SafetyOfficer",
+//       required: true,
+//     },
+
+//     title: String,
+//     date: { type: Date, default: Date.now },
+
+//     // For task-specific PPE
+//     applicableTasks: [String],
+//     applicableDepartments: [String],
+//     applicableShifts: [
+//       { type: String, enum: ["morning", "afternoon", "night", "all"] },
+//     ],
+
+//     // PPE items required - NO ENUM, accepts any string
+//     ppeItems: [
+//       {
+//         item: { type: String, required: true }, // Removed enum - now accepts any string
+//         customItem: String,
+//         required: { type: Boolean, default: true },
+//         condition: String,
+//         quantity: Number,
+//         location: String,
+//         reason: String, // Added to store why this PPE is needed
+//         assignedTo: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+//       },
+//     ],
+
+//     // Inspection checklist
+//     inspectionItems: [
+//       {
+//         item: String,
+//         passCriteria: String,
+//         passed: Boolean,
+//         comments: String,
+//         inspectedBy: {
+//           type: mongoose.Schema.Types.ObjectId,
+//           ref: "SafetyOfficer",
+//         },
+//         inspectedAt: Date,
+//       },
+//     ],
+
+//     // Worker sign-off
+//     workerSignoffs: [
+//       {
+//         workerId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+//         name: String,
+//         shift: String,
+//         acknowledged: Boolean,
+//         signedAt: Date,
+//         comments: String,
+//       },
+//     ],
+
+//     // Special instructions from AI
+//     specialInstructions: String,
+
+//     status: {
+//       type: String,
+//       enum: ["draft", "active", "completed", "archived"],
+//       default: "active",
+//     },
+//   },
+//   { timestamps: true },
+// );
+
+// ppeChecklistSchema.pre("save", async function (next) {
+//   if (this.isNew) {
+//     try {
+//       const counter = await Counter.findByIdAndUpdate(
+//         { _id: "ppechecklist" },
+//         { $inc: { seq: 1 } },
+//         { new: true, upsert: true },
+//       );
+//       this.checklistNumber = counter.seq + 4000;
+//     } catch (err) {
+//       return next(err);
+//     }
+//   }
+//   next();
+// });
+
+// module.exports = mongoose.model("PPEChecklist", ppeChecklistSchema);
+
 const mongoose = require("mongoose");
 const Counter = require("./Counter");
 
 const ppeChecklistSchema = new mongoose.Schema(
   {
-    checklistNumber: { type: Number, unique: true },
+    checklistNumber: {
+      type: Number,
+      unique: true,
+    },
 
+    // Worksite where this PPE checklist belongs
     worksite: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Worksite",
       required: true,
     },
-    createdBy: {
+
+    // Specific work area where this PPE checklist applies
+    // Kept optional/default null so old PPE checklist records do not break.
+    workArea: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "SafetyOfficer",
+      ref: "WorkArea",
+      default: null,
+    },
+
+    // Checklist details
+    title: {
+      type: String,
       required: true,
     },
 
-    title: String,
-    date: { type: Date, default: Date.now },
+    date: {
+      type: Date,
+      default: Date.now,
+    },
 
-    // For task-specific PPE
-    applicableTasks: [String],
-    applicableDepartments: [String],
-    applicableShifts: [
-      { type: String, enum: ["morning", "afternoon", "night", "all"] },
-    ],
-
-    // PPE items required - NO ENUM, accepts any string
+    // AI-generated PPE items
     ppeItems: [
       {
-        item: { type: String, required: true }, // Removed enum - now accepts any string
-        customItem: String,
-        required: { type: Boolean, default: true },
-        condition: String,
-        quantity: Number,
-        location: String,
-        reason: String, // Added to store why this PPE is needed
-        assignedTo: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+        item: {
+          type: String,
+          required: true,
+        },
+
+        customItem: {
+          type: String,
+          default: "",
+        },
+
+        required: {
+          type: Boolean,
+          default: true,
+        },
+
+        condition: {
+          type: String,
+          default: "Good",
+        },
+
+        quantity: {
+          type: String,
+          default: "As needed",
+        },
+
+        reason: {
+          type: String,
+          default: "",
+        },
       },
     ],
 
-    // Inspection checklist
+    // AI-generated inspection checklist
     inspectionItems: [
       {
-        item: String,
-        passCriteria: String,
-        passed: Boolean,
-        comments: String,
-        inspectedBy: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "SafetyOfficer",
+        item: {
+          type: String,
+          required: true,
         },
-        inspectedAt: Date,
+
+        passCriteria: {
+          type: String,
+          required: true,
+        },
       },
     ],
 
-    // Worker sign-off
-    workerSignoffs: [
-      {
-        workerId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        name: String,
-        shift: String,
-        acknowledged: Boolean,
-        signedAt: Date,
-        comments: String,
-      },
-    ],
-
-    // Special instructions from AI
-    specialInstructions: String,
-
+    // Status
     status: {
       type: String,
       enum: ["draft", "active", "completed", "archived"],
       default: "active",
     },
+
+    // Who generated/prepared the checklist
+    generatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "SafetyOfficer",
+    },
+
+    // Completion details
+    completedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "SafetyOfficer",
+    },
+
+    completedAt: {
+      type: Date,
+    },
+
+    // Optional AI metadata
+    aiGenerated: {
+      type: Boolean,
+      default: true,
+    },
+
+    aiModel: {
+      type: String,
+      default: "",
+    },
+
+    generationPrompt: {
+      type: String,
+      default: "",
+    },
   },
   { timestamps: true },
 );
 
+// Auto-increment checklist number
 ppeChecklistSchema.pre("save", async function (next) {
   if (this.isNew) {
     try {
@@ -201,11 +348,13 @@ ppeChecklistSchema.pre("save", async function (next) {
         { $inc: { seq: 1 } },
         { new: true, upsert: true },
       );
-      this.checklistNumber = counter.seq + 4000;
+
+      this.checklistNumber = counter.seq + 6000;
     } catch (err) {
       return next(err);
     }
   }
+
   next();
 });
 
