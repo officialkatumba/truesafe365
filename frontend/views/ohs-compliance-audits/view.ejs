@@ -1,0 +1,319 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<%
+  const result = audit.finalCompliance || {};
+  const score = result.overallScore || 0;
+
+  let scoreClass = 'bg-danger';
+  if (score >= 90) scoreClass = 'bg-success';
+  else if (score >= 75) scoreClass = 'bg-primary';
+  else if (score >= 60) scoreClass = 'bg-warning text-dark';
+  else if (score >= 40) scoreClass = 'bg-orange text-white';
+%>
+
+<div class="container py-4">
+  <div class="p-4 mb-4 rounded-3" style="background: linear-gradient(135deg, #198754, #0d6efd); color: white;">
+    <h3 class="fw-bold mb-1">
+      <i class="fas fa-scale-balanced me-2"></i>
+      OHS Compliance Audit Result
+    </h3>
+
+    <p class="mb-0 opacity-75">
+      Audit #<%= audit.auditNumber || 'N/A' %> |
+      <%= audit.workArea?.name || 'Work Area' %> |
+      <%= audit.actName || 'Occupational Health and Safety Bill, 2025' %>
+    </p>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="card shadow-sm border-0 text-center">
+        <div class="card-body">
+          <h6 class="text-muted">Compliance Score</h6>
+          <div class="display-4 fw-bold"><%= score %></div>
+          <span class="badge <%= scoreClass %> px-3 py-2"><%= score %>/100</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card shadow-sm border-0 text-center">
+        <div class="card-body">
+          <h6 class="text-muted">Compliance Grade</h6>
+          <h4 class="fw-bold text-capitalize">
+            <%= String(result.complianceGrade || 'not scored').replace(/_/g, ' ') %>
+          </h4>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card shadow-sm border-0 text-center">
+        <div class="card-body">
+          <h6 class="text-muted">Legal Risk Level</h6>
+          <h4 class="fw-bold text-capitalize">
+            <%= result.legalRiskLevel || 'N/A' %>
+          </h4>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4">
+          <h5 class="fw-bold text-primary">
+            <i class="fas fa-file-lines me-2"></i>
+            Executive Summary
+          </h5>
+          <p class="text-muted">
+            <%= result.executiveSummary || 'No executive summary generated.' %>
+          </p>
+        </div>
+      </div>
+
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4">
+          <h5 class="fw-bold text-primary">
+            <i class="fas fa-chart-bar me-2"></i>
+            Category Scores
+          </h5>
+
+          <% if (result.categoryScores && result.categoryScores.length > 0) { %>
+            <% result.categoryScores.forEach(function(cat) { %>
+              <div class="mb-3">
+                <div class="d-flex justify-content-between">
+                  <strong><%= cat.category %></strong>
+                  <span><%= cat.score || 0 %>/<%= cat.maxScore || 0 %></span>
+                </div>
+
+                <div class="progress mb-1" style="height: 10px;">
+                  <div
+                    class="progress-bar"
+                    style="width: <%= cat.percentage || 0 %>%"
+                  ></div>
+                </div>
+
+                <p class="small text-muted mb-0">
+                  <%= cat.comment || '' %>
+                </p>
+              </div>
+            <% }); %>
+          <% } else { %>
+            <p class="text-muted">No category scores generated.</p>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4">
+          <h5 class="fw-bold text-danger">
+            <i class="fas fa-triangle-exclamation me-2"></i>
+            Critical Non-Compliances
+          </h5>
+
+          <% if (result.criticalNonCompliances && result.criticalNonCompliances.length > 0) { %>
+            <ul>
+              <% result.criticalNonCompliances.forEach(function(item) { %>
+                <li><%= item %></li>
+              <% }); %>
+            </ul>
+          <% } else { %>
+            <p class="text-muted">No critical non-compliances listed.</p>
+          <% } %>
+
+          <h5 class="fw-bold text-warning mt-4">
+            <i class="fas fa-circle-half-stroke me-2"></i>
+            Partial Compliances
+          </h5>
+
+          <% if (result.partialCompliances && result.partialCompliances.length > 0) { %>
+            <ul>
+              <% result.partialCompliances.forEach(function(item) { %>
+                <li><%= item %></li>
+              <% }); %>
+            </ul>
+          <% } else { %>
+            <p class="text-muted">No partial compliance issues listed.</p>
+          <% } %>
+
+          <h5 class="fw-bold text-success mt-4">
+            <i class="fas fa-circle-check me-2"></i>
+            Strengths
+          </h5>
+
+          <% if (result.strengths && result.strengths.length > 0) { %>
+            <ul>
+              <% result.strengths.forEach(function(item) { %>
+                <li><%= item %></li>
+              <% }); %>
+            </ul>
+          <% } else { %>
+            <p class="text-muted">No strengths listed.</p>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4">
+          <h5 class="fw-bold text-primary">
+            <i class="fas fa-list-check me-2"></i>
+            AI Recommendations
+          </h5>
+
+          <% if (result.recommendations && result.recommendations.length > 0) { %>
+            <ul>
+              <% result.recommendations.forEach(function(item) { %>
+                <li><%= item %></li>
+              <% }); %>
+            </ul>
+          <% } else { %>
+            <p class="text-muted">No recommendations listed.</p>
+          <% } %>
+
+          <h5 class="fw-bold text-danger mt-4">Immediate Actions</h5>
+
+          <% if (result.immediateActions && result.immediateActions.length > 0) { %>
+            <ul>
+              <% result.immediateActions.forEach(function(item) { %>
+                <li><%= item %></li>
+              <% }); %>
+            </ul>
+          <% } else { %>
+            <p class="text-muted">No immediate actions listed.</p>
+          <% } %>
+
+          <h5 class="fw-bold text-warning mt-4">Follow-Up Actions</h5>
+
+          <% if (result.followUpActions && result.followUpActions.length > 0) { %>
+            <ul>
+              <% result.followUpActions.forEach(function(item) { %>
+                <li><%= item %></li>
+              <% }); %>
+            </ul>
+          <% } else { %>
+            <p class="text-muted">No follow-up actions listed.</p>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4">
+          <h5 class="fw-bold text-primary">
+            <i class="fas fa-gavel me-2"></i>
+            Management Advice
+          </h5>
+          <p class="text-muted mb-0">
+            <%= result.managementAdvice || 'No management advice generated.' %>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+          <h6 class="fw-bold mb-3">
+            <i class="fas fa-cog me-2 text-primary"></i>
+            Actions
+          </h6>
+
+          <div class="d-grid gap-2">
+            <a
+              href="/ohs-compliance-audits/<%= audit._id %>/download-word"
+              class="btn btn-success"
+            >
+              <i class="fas fa-file-word me-2"></i>
+              Download Word Compliance Report
+            </a>
+
+            
+
+            <a
+              href="/ohs-compliance-audits/<%= audit._id %>/interview"
+              class="btn btn-outline-secondary"
+            >
+              <i class="fas fa-clipboard-question me-2"></i>
+              View Interview
+            </a>
+
+            <a
+              href="/work-areas/<%= audit.workArea?._id || audit.workArea %>"
+              class="btn btn-outline-primary"
+            >
+              <i class="fas fa-arrow-left me-2"></i>
+              Back to Work Area
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <h6 class="fw-bold mb-3">Data Used</h6>
+
+          <table class="table table-sm">
+            <tr>
+              <td>Risk Assessments</td>
+              <td><%= audit.dataCounts?.riskAssessments || 0 %></td>
+            </tr>
+            <tr>
+              <td>Incidents</td>
+              <td><%= audit.dataCounts?.incidents || 0 %></td>
+            </tr>
+            <tr>
+              <td>Observations</td>
+              <td><%= audit.dataCounts?.observations || 0 %></td>
+            </tr>
+            <tr>
+              <td>JSAs</td>
+              <td><%= audit.dataCounts?.jsas || 0 %></td>
+            </tr>
+            <tr>
+              <td>PPE</td>
+              <td><%= audit.dataCounts?.ppeChecklists || 0 %></td>
+            </tr>
+            <tr>
+              <td>Training</td>
+              <td><%= audit.dataCounts?.trainingRequirements || 0 %></td>
+            </tr>
+            <tr>
+              <td>Emergency</td>
+              <td><%= audit.dataCounts?.emergencyProtocols || 0 %></td>
+            </tr>
+            <tr>
+              <td>Safety Talks</td>
+              <td><%= audit.dataCounts?.safetyTalks || 0 %></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .bg-orange {
+    background-color: #fd7e14 !important;
+  }
+
+  @media print {
+    .navbar,
+    .btn,
+    form {
+      display: none !important;
+    }
+
+    .card {
+      box-shadow: none !important;
+    }
+
+    .container {
+      max-width: 100% !important;
+    }
+  }
+</style>
+
+<%- include('../partials/footer') %>

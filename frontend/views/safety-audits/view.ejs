@@ -1,0 +1,268 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<%
+  const score = audit.finalScore || {};
+  const overallScore = score.overallScore || 0;
+
+  let scoreClass = 'bg-danger';
+  if (overallScore >= 90) scoreClass = 'bg-success';
+  else if (overallScore >= 75) scoreClass = 'bg-primary';
+  else if (overallScore >= 60) scoreClass = 'bg-warning text-dark';
+  else if (overallScore >= 40) scoreClass = 'bg-orange text-white';
+%>
+
+<div class="container py-4">
+  <div class="p-4 mb-4 rounded-3" style="background: linear-gradient(135deg, #0d6efd, #198754); color: white;">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div>
+        <h3 class="fw-bold mb-1">
+          <i class="fas fa-gauge-high me-2"></i>
+          AI Safety Audit Scorecard
+        </h3>
+        <p class="mb-0 opacity-75">
+          Audit #<%= audit.auditNumber || 'N/A' %> |
+          <%= audit.workArea?.name || 'Work Area' %> |
+          <%= audit.auditPeriod?.label || 'Recent safety data' %>
+        </p>
+      </div>
+
+      <span class="badge bg-light text-dark px-3 py-2">
+        <i class="fas fa-robot me-1"></i>
+        AI Scored
+      </span>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="card shadow-sm border-0 text-center h-100">
+        <div class="card-body">
+          <h6 class="text-muted">Overall Safety Score</h6>
+          <div class="display-4 fw-bold"><%= overallScore %></div>
+          <span class="badge <%= scoreClass %> px-3 py-2">
+            <%= overallScore %>/100
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card shadow-sm border-0 text-center h-100">
+        <div class="card-body">
+          <h6 class="text-muted">Grade</h6>
+          <h3 class="fw-bold text-capitalize">
+            <%= String(score.grade || 'not scored').replace(/_/g, ' ') %>
+          </h3>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card shadow-sm border-0 text-center h-100">
+        <div class="card-body">
+          <h6 class="text-muted">Risk Level</h6>
+          <h3 class="fw-bold text-capitalize">
+            <%= score.riskLevel || 'N/A' %>
+          </h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4">
+          <h5 class="fw-bold text-primary">
+            <i class="fas fa-info-circle me-2"></i>
+            Score Summary
+          </h5>
+          <p class="text-muted"><%= score.scoreSummary || 'No score summary generated.' %></p>
+
+          <hr>
+
+          <h5 class="fw-bold text-primary mt-4">
+            <i class="fas fa-chart-bar me-2"></i>
+            Section Scores
+          </h5>
+
+          <% if (score.sectionScores && score.sectionScores.length > 0) { %>
+            <% score.sectionScores.forEach(section => { %>
+              <div class="mb-3">
+                <div class="d-flex justify-content-between">
+                  <strong><%= section.sectionName %></strong>
+                  <span><%= section.score || 0 %>/<%= section.maxScore || 0 %></span>
+                </div>
+
+                <div class="progress mb-1" style="height: 10px;">
+                  <div
+                    class="progress-bar"
+                    style="width: <%= section.percentage || 0 %>%"
+                  ></div>
+                </div>
+
+                <p class="small text-muted mb-0"><%= section.comment || '' %></p>
+              </div>
+            <% }) %>
+          <% } else { %>
+            <p class="text-muted">No section scores generated.</p>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4">
+          <h5 class="fw-bold text-danger">
+            <i class="fas fa-triangle-exclamation me-2"></i>
+            Critical Findings
+          </h5>
+
+          <% if (score.criticalFindings && score.criticalFindings.length > 0) { %>
+            <ul>
+              <% score.criticalFindings.forEach(item => { %>
+                <li><%= item %></li>
+              <% }) %>
+            </ul>
+          <% } else { %>
+            <p class="text-muted">No critical findings listed.</p>
+          <% } %>
+
+          <h5 class="fw-bold text-success mt-4">
+            <i class="fas fa-circle-check me-2"></i>
+            Positive Findings
+          </h5>
+
+          <% if (score.positiveFindings && score.positiveFindings.length > 0) { %>
+            <ul>
+              <% score.positiveFindings.forEach(item => { %>
+                <li><%= item %></li>
+              <% }) %>
+            </ul>
+          <% } else { %>
+            <p class="text-muted">No positive findings listed.</p>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4">
+          <h5 class="fw-bold text-primary">
+            <i class="fas fa-list-check me-2"></i>
+            Recommendations
+          </h5>
+
+          <% if (score.recommendations && score.recommendations.length > 0) { %>
+            <ul>
+              <% score.recommendations.forEach(item => { %>
+                <li><%= item %></li>
+              <% }) %>
+            </ul>
+          <% } else { %>
+            <p class="text-muted">No recommendations listed.</p>
+          <% } %>
+
+          <h5 class="fw-bold text-danger mt-4">
+            <i class="fas fa-bolt me-2"></i>
+            Immediate Actions
+          </h5>
+
+          <% if (score.immediateActions && score.immediateActions.length > 0) { %>
+            <ul>
+              <% score.immediateActions.forEach(item => { %>
+                <li><%= item %></li>
+              <% }) %>
+            </ul>
+          <% } else { %>
+            <p class="text-muted">No immediate actions listed.</p>
+          <% } %>
+
+          <h5 class="fw-bold text-warning mt-4">
+            <i class="fas fa-clock me-2"></i>
+            Follow-Up Actions
+          </h5>
+
+          <% if (score.followUpActions && score.followUpActions.length > 0) { %>
+            <ul>
+              <% score.followUpActions.forEach(item => { %>
+                <li><%= item %></li>
+              <% }) %>
+            </ul>
+          <% } else { %>
+            <p class="text-muted">No follow-up actions listed.</p>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4">
+          <h5 class="fw-bold text-primary">
+            <i class="fas fa-user-tie me-2"></i>
+            Management Decision Advice
+          </h5>
+          <p class="text-muted mb-0">
+            <%= score.managementDecisionAdvice || 'No management decision advice generated.' %>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+          <h6 class="fw-bold mb-3">
+            <i class="fas fa-cog me-2 text-primary"></i>
+            Actions
+          </h6>
+
+          <div class="d-grid gap-2">
+            <a href="/safety-audits/<%= audit._id %>/download-word" class="btn btn-success">
+              <i class="fas fa-file-word me-2"></i>
+              Download Word Audit Report
+            </a>
+
+            <a href="/safety-audits/<%= audit._id %>/interview" class="btn btn-outline-secondary">
+              <i class="fas fa-clipboard-question me-2"></i>
+              View Interview
+            </a>
+
+            <a href="/work-areas/<%= audit.workArea?._id || audit.workArea %>" class="btn btn-outline-primary">
+              <i class="fas fa-arrow-left me-2"></i>
+              Back to Work Area
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+          <h6 class="fw-bold mb-3">
+            <i class="fas fa-database me-2 text-primary"></i>
+            Data Used
+          </h6>
+
+          <table class="table table-sm">
+            <tr><td>Incidents</td><td><%= audit.dataCounts?.incidents || 0 %></td></tr>
+            <tr><td>Observations</td><td><%= audit.dataCounts?.observations || 0 %></td></tr>
+            <tr><td>Risk Assessments</td><td><%= audit.dataCounts?.riskAssessments || 0 %></td></tr>
+            <tr><td>JSAs</td><td><%= audit.dataCounts?.jsas || 0 %></td></tr>
+            <tr><td>PPE Checklists</td><td><%= audit.dataCounts?.ppeChecklists || 0 %></td></tr>
+            <tr><td>Training</td><td><%= audit.dataCounts?.trainingRequirements || 0 %></td></tr>
+            <tr><td>Emergency Protocols</td><td><%= audit.dataCounts?.emergencyProtocols || 0 %></td></tr>
+            <tr><td>Safety Talks</td><td><%= audit.dataCounts?.safetyTalks || 0 %></td></tr>
+            <tr><td>Safety Insights</td><td><%= audit.dataCounts?.safetyInsights || 0 %></td></tr>
+            <tr><td>Permits</td><td><%= audit.dataCounts?.permits || 0 %></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .bg-orange {
+    background-color: #fd7e14 !important;
+  }
+</style>
+
+<%- include('../partials/footer') %>

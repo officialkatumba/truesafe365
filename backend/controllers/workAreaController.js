@@ -13,6 +13,8 @@ const mongoose = require("mongoose");
 const TrainingRequirement = require("../models/TrainingRequirement");
 const SafetyInsight = require("../models/SafetyInsight");
 const EmergencyProtocol = require("../models/EmergencyProtocol");
+const SafetyAuditScorecard = require("../models/SafetyAuditScorecard");
+const OHSComplianceAudit = require("../models/OHSComplianceAudit");
 
 // Helper function to check if user has access to worksite
 async function checkWorksiteAccess(user, worksite) {
@@ -524,6 +526,12 @@ exports.getWorkArea = async (req, res) => {
       return res.redirect("/dashboard");
     }
 
+    const safetyAudits = await SafetyAuditScorecard.find({
+      workArea: workArea._id,
+    })
+      .sort({ createdAt: -1 })
+      .limit(10);
+
     const recentIncidents = await Incident.find({ workArea: workArea._id })
       .sort({ createdAt: -1 })
       .limit(5);
@@ -581,6 +589,12 @@ exports.getWorkArea = async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(10);
 
+    const ohsComplianceAudits = await OHSComplianceAudit.find({
+      workArea: workArea._id,
+    })
+      .sort({ createdAt: -1 })
+      .limit(10);
+
     // ==========  AI SAFETY INSIGHTS ==========
     const SafetyInsight = require("../models/SafetyInsight");
 
@@ -615,6 +629,8 @@ exports.getWorkArea = async (req, res) => {
       trainingRequirements,
       safetyInsights,
       emergencyProtocols,
+      safetyAudits,
+      ohsComplianceAudits,
     });
   } catch (error) {
     console.error("Error viewing work area:", error);

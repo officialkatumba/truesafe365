@@ -389,21 +389,33 @@
               </button>
             </li>
             <li class="nav-item" role="presentation">
+              <button class="nav-link" id="ohs-compliance-tab" data-bs-toggle="tab" data-bs-target="#ohs-compliance" type="button" role="tab">
+                <i class="fas fa-scale-balanced me-1"></i> OHS Compliance
+                <span class="badge bg-secondary ms-1"><%= ohsComplianceAudits?.length || 0 %></span>
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
               <button class="nav-link" id="ppe-tab" data-bs-toggle="tab" data-bs-target="#ppe" type="button" role="tab">
                 <i class="fas fa-helmet-safety me-1"></i> PPE Checklists
                 <span class="badge bg-secondary ms-1"><%= ppeChecklists?.length || 0 %></span>
               </button>
             </li>
             <li class="nav-item" role="presentation">
-              <button class="nav-link" id="observations-tab" data-bs-toggle="tab" data-bs-target="#observations" type="button" role="tab">
-                <i class="fas fa-eye me-1"></i> Safety Observations
-                <span class="badge bg-secondary ms-1"><%= safetyObservations?.length || 0 %></span>
-              </button>
-            </li>
-            <li class="nav-item" role="presentation">
               <button class="nav-link" id="training-tab" data-bs-toggle="tab" data-bs-target="#training" type="button" role="tab">
                 <i class="fas fa-graduation-cap me-1"></i> Training
                 <span class="badge bg-secondary ms-1"><%= trainingRequirements?.length || 0 %></span>
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="safety-audits-tab" data-bs-toggle="tab" data-bs-target="#safety-audits" type="button" role="tab">
+                <i class="fas fa-gauge-high me-1"></i> Safety Audits
+                <span class="badge bg-secondary ms-1"><%= safetyAudits?.length || 0 %></span>
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="observations-tab" data-bs-toggle="tab" data-bs-target="#observations" type="button" role="tab">
+                <i class="fas fa-eye me-1"></i> Safety Observations
+                <span class="badge bg-secondary ms-1"><%= safetyObservations?.length || 0 %></span>
               </button>
             </li>
           </ul>
@@ -752,6 +764,90 @@
               <% } %>
             </div>
 
+            <!-- OHS Compliance Tab -->
+            <div class="tab-pane fade" id="ohs-compliance" role="tabpanel">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0">
+                  <i class="fas fa-scale-balanced me-2" style="color: #198754;"></i>
+                  OHS Compliance Audit
+                </h5>
+
+                <% if (user.role === 'safety_officer') { %>
+                  <form method="POST" action="/ohs-compliance-audits/generate/<%= workArea._id %>" class="d-inline">
+                    <button
+                      type="submit"
+                      class="btn btn-sm"
+                      style="background: #198754; color: white; border-radius: 40px;"
+                    >
+                      <i class="fas fa-robot me-1"></i>
+                      Generate OHS Compliance Audit
+                    </button>
+                  </form>
+                <% } %>
+              </div>
+
+              <div class="alert alert-light border">
+                <strong>What this does:</strong>
+                <div class="small text-muted">
+                  This audit checks the work area against critical Occupational Health and Safety Bill, 2025 requirements. The safety officer answers legal compliance questions, then AI evaluates compliance level, legal risk, and recommendations.
+                </div>
+              </div>
+
+              <% if (typeof ohsComplianceAudits !== 'undefined' && ohsComplianceAudits.length > 0) { %>
+                <div class="list-group">
+                  <% ohsComplianceAudits.slice(0, 5).forEach(audit => { %>
+                    <a
+                      href="<%= audit.auditStatus === 'score_generated' ? '/ohs-compliance-audits/' + audit._id : '/ohs-compliance-audits/' + audit._id + '/interview' %>"
+                      class="list-group-item list-group-item-action"
+                    >
+                      <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                          <strong><%= audit.title %></strong>
+
+                          <span class="badge <%= 
+                            audit.auditStatus === 'score_generated' ? 'bg-success' :
+                            audit.auditStatus === 'responses_submitted' ? 'bg-info' :
+                            'bg-warning text-dark'
+                          %> ms-2">
+                            <%= String(audit.auditStatus || 'questions_generated').replace(/_/g, ' ') %>
+                          </span>
+
+                          <% if (audit.finalCompliance?.overallScore !== undefined) { %>
+                            <span class="badge bg-primary ms-1">
+                              <%= audit.finalCompliance.overallScore %>/100
+                            </span>
+                          <% } %>
+
+                          <div class="small text-muted mt-1">
+                            <i class="fas fa-calendar me-1"></i>
+                            <%= new Date(audit.createdAt).toLocaleDateString() %>
+                            |
+                            <%= audit.actName %>
+                          </div>
+                        </div>
+
+                        <i class="fas fa-chevron-right text-muted mt-2"></i>
+                      </div>
+                    </a>
+                  <% }) %>
+                </div>
+              <% } else { %>
+                <div class="text-center py-4">
+                  <i class="fas fa-scale-balanced fa-3x text-muted mb-3"></i>
+                  <p class="text-muted">No OHS compliance audit generated yet.</p>
+
+                  <% if (user.role === 'safety_officer') { %>
+                    <form method="POST" action="/ohs-compliance-audits/generate/<%= workArea._id %>">
+                      <button type="submit" class="btn btn-success btn-sm">
+                        <i class="fas fa-robot me-1"></i>
+                        Generate First OHS Compliance Audit
+                      </button>
+                    </form>
+                  <% } %>
+                </div>
+              <% } %>
+            </div>
+
             <!-- PPE Checklists Tab -->
             <div class="tab-pane fade" id="ppe" role="tabpanel">
               <div class="d-flex justify-content-between align-items-center mb-3">
@@ -838,6 +934,106 @@
                     <a href="/training/generate/<%= workArea._id %>" class="btn btn-primary btn-sm">
                       <i class="fas fa-magic me-1"></i> Generate Your First Training Requirement
                     </a>
+                  <% } %>
+                </div>
+              <% } %>
+            </div>
+
+            <!-- Safety Audits Tab -->
+            <div class="tab-pane fade" id="safety-audits" role="tabpanel">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0">
+                  <i class="fas fa-gauge-high me-2" style="color: #0d6efd;"></i>
+                  AI Safety Audit Scorecard
+                </h5>
+
+                <% if (user.role === 'safety_officer') { %>
+                  <form method="POST" action="/safety-audits/generate/<%= workArea._id %>" class="d-inline">
+                    <button
+                      type="submit"
+                      class="btn btn-sm"
+                      style="background: #0d6efd; color: white; border-radius: 40px;"
+                    >
+                      <i class="fas fa-robot me-1"></i>
+                      Initiate Safety Score Audit
+                    </button>
+                  </form>
+                <% } %>
+              </div>
+
+              <div class="alert alert-light border">
+                <div class="d-flex align-items-start">
+                  <i class="fas fa-circle-info me-2 mt-1" style="color: #0d6efd;"></i>
+                  <div>
+                    <strong>What this does:</strong>
+                    <div class="small text-muted">
+                      AI analyzes all safety documents, generates audit interview questions, records safety officer responses, then computes a safety score and management recommendations.
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <% if (typeof safetyAudits !== 'undefined' && safetyAudits.length > 0) { %>
+                <div class="list-group">
+                  <% safetyAudits.slice(0, 5).forEach(audit => { 
+                    const score = audit.finalScore?.overallScore;
+                  %>
+                    <a
+                      href="<%= audit.auditStatus === 'score_generated' ? '/safety-audits/' + audit._id : '/safety-audits/' + audit._id + '/interview' %>"
+                      class="list-group-item list-group-item-action"
+                    >
+                      <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                          <strong><%= audit.title %></strong>
+
+                          <span class="badge <%= 
+                            audit.auditStatus === 'score_generated' ? 'bg-success' :
+                            audit.auditStatus === 'responses_submitted' ? 'bg-info' :
+                            'bg-warning text-dark'
+                          %> ms-2">
+                            <%= String(audit.auditStatus || 'questions_generated').replace(/_/g, ' ') %>
+                          </span>
+
+                          <% if (score !== undefined && score !== null) { %>
+                            <span class="badge bg-primary ms-1">
+                              Score: <%= score %>/100
+                            </span>
+                          <% } %>
+
+                          <div class="small text-muted mt-1">
+                            <i class="fas fa-calendar me-1"></i>
+                            <%= new Date(audit.createdAt).toLocaleDateString() %>
+                            |
+                            <i class="fas fa-database me-1"></i>
+                            <%= audit.auditPeriod?.label || 'Recent safety data' %>
+                          </div>
+
+                          <% if (audit.finalScore?.scoreSummary) { %>
+                            <div class="small text-muted mt-2">
+                              <%= audit.finalScore.scoreSummary.substring(0, 180) %><%= audit.finalScore.scoreSummary.length > 180 ? '...' : '' %>
+                            </div>
+                          <% } %>
+                        </div>
+
+                        <i class="fas fa-chevron-right text-muted mt-2"></i>
+                      </div>
+                    </a>
+                  <% }) %>
+                </div>
+              <% } else { %>
+                <div class="text-center py-4">
+                  <i class="fas fa-gauge-high fa-3x text-muted mb-3"></i>
+                  <p class="text-muted">
+                    No AI safety score audits generated yet.
+                  </p>
+
+                  <% if (user.role === 'safety_officer') { %>
+                    <form method="POST" action="/safety-audits/generate/<%= workArea._id %>">
+                      <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="fas fa-robot me-1"></i>
+                        Initiate First Safety Score Audit
+                      </button>
+                    </form>
                   <% } %>
                 </div>
               <% } %>

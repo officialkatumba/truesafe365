@@ -483,6 +483,12 @@ app.use("/emergency-protocols", emergencyProtocolRoutes);
 // Training routes
 const trainingRoutes = require("./routes/trainingRoutes");
 app.use("/training", trainingRoutes);
+// Safety Audit Scorecard routes
+const safetyAuditScorecardRoutes = require("./routes/safetyAuditScorecardRoutes");
+app.use("/safety-audits", safetyAuditScorecardRoutes);
+// OHS Compliance Audit routes
+const ohsComplianceAuditRoutes = require("./routes/ohsComplianceAuditRoutes");
+app.use("/ohs-compliance-audits", ohsComplianceAuditRoutes);
 // -------------------- SERVER --------------------
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));

@@ -1,0 +1,121 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="container py-4">
+  <div class="p-4 mb-4 rounded-3" style="background: linear-gradient(135deg, #198754, #0d6efd); color: white;">
+    <h3 class="fw-bold mb-1">
+      <i class="fas fa-scale-balanced me-2"></i>
+      OHS Compliance Audit Interview
+    </h3>
+    <p class="mb-0 opacity-75">
+      Audit #<%= audit.auditNumber || 'N/A' %> |
+      <%= audit.workArea?.name || 'Work Area' %> |
+      <%= audit.actName %>
+    </p>
+  </div>
+
+  <div class="alert alert-info">
+    <i class="fas fa-circle-info me-2"></i>
+    Answer each legal compliance question honestly. AI will evaluate the answers and generate the compliance score.
+  </div>
+
+  <form method="POST" action="/ohs-compliance-audits/<%= audit._id %>/submit-responses">
+    <% audit.legalRequirements.forEach((requirement, requirementIndex) => { %>
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-success text-white">
+          <h5 class="mb-1">
+            <%= requirement.code %> — <%= requirement.section %>: <%= requirement.title %>
+          </h5>
+          <small><%= requirement.category %></small>
+        </div>
+
+        <div class="card-body">
+          <div class="alert alert-light border">
+            <strong>Legal Requirement:</strong>
+            <div><%= requirement.legalRequirement %></div>
+          </div>
+
+          <% requirement.questions.forEach((question, questionIndex) => { %>
+            <div class="border rounded-3 p-3 mb-3 bg-light">
+              <h6 class="fw-bold">
+                Question <%= questionIndex + 1 %>
+              </h6>
+
+              <p><%= question.questionText %></p>
+
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <label class="form-label fw-bold">Compliance Status</label>
+                  <select
+                    class="form-select"
+                    name="responses[<%= requirementIndex %>][<%= questionIndex %>][complianceStatus]"
+                    required
+                  >
+                    <option value="not_answered">Not Answered</option>
+                    <option value="compliant">Compliant</option>
+                    <option value="partially_compliant">Partially Compliant</option>
+                    <option value="non_compliant">Non-Compliant</option>
+                    <option value="not_applicable">Not Applicable</option>
+                  </select>
+                </div>
+
+                <div class="col-md-8">
+                  <label class="form-label fw-bold">Officer Answer</label>
+                  <textarea
+                    class="form-control"
+                    name="responses[<%= requirementIndex %>][<%= questionIndex %>][answerText]"
+                    rows="3"
+                    placeholder="Explain the current compliance situation..."
+                  ></textarea>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Evidence Note</label>
+                  <textarea
+                    class="form-control"
+                    name="responses[<%= requirementIndex %>][<%= questionIndex %>][evidenceNote]"
+                    rows="2"
+                    placeholder="Mention evidence such as documents, registers, training records, inspection reports..."
+                  ></textarea>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Corrective Action</label>
+                  <textarea
+                    class="form-control"
+                    name="responses[<%= requirementIndex %>][<%= questionIndex %>][correctiveAction]"
+                    rows="2"
+                    placeholder="What action is planned or required?"
+                  ></textarea>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label fw-bold">Target Date</label>
+                  <input
+                    type="date"
+                    class="form-control"
+                    name="responses[<%= requirementIndex %>][<%= questionIndex %>][targetDate]"
+                  >
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    <% }) %>
+
+    <div class="d-flex justify-content-between mb-5">
+      <a href="/work-areas/<%= audit.workArea?._id || audit.workArea %>" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>
+        Back to Work Area
+      </a>
+
+      <button type="submit" class="btn btn-success btn-lg">
+        <i class="fas fa-robot me-2"></i>
+        Submit and Generate OHS Compliance Score
+      </button>
+    </div>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,164 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="container py-4">
+  <div class="p-4 mb-4 rounded-3" style="background: linear-gradient(135deg, #0d6efd, #198754); color: white;">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div>
+        <h3 class="fw-bold mb-1">
+          <i class="fas fa-clipboard-question me-2"></i>
+          AI Safety Audit Interview
+        </h3>
+        <p class="mb-0 opacity-75">
+          Audit #<%= audit.auditNumber || 'N/A' %> |
+          <%= audit.workArea?.name || 'Work Area' %> |
+          <%= audit.auditPeriod?.label || 'Recent safety data' %>
+        </p>
+      </div>
+
+      <span class="badge bg-light text-dark px-3 py-2">
+        <i class="fas fa-robot me-1"></i>
+        AI Questions Generated
+      </span>
+    </div>
+  </div>
+
+  <div class="alert alert-info border-info">
+    <i class="fas fa-circle-info me-2"></i>
+    Answer the AI-generated audit questions honestly. After submission, AI will evaluate the responses and compute the safety score.
+  </div>
+
+  <form method="POST" action="/safety-audits/<%= audit._id %>/submit-responses">
+    <% if (audit.auditSections && audit.auditSections.length > 0) { %>
+      <% audit.auditSections.forEach((section, sectionIndex) => { %>
+        <div class="card shadow-sm border-0 mb-4">
+          <div class="card-header text-white" style="background: #0d6efd;">
+            <h5 class="mb-0">
+              <i class="fas fa-folder-open me-2"></i>
+              <%= section.sectionName %>
+            </h5>
+            <% if (section.sectionDescription) { %>
+              <small class="opacity-75"><%= section.sectionDescription %></small>
+            <% } %>
+          </div>
+
+          <div class="card-body">
+            <% if (section.sourceDocuments && section.sourceDocuments.length > 0) { %>
+              <div class="mb-3 small text-muted">
+                <i class="fas fa-database me-1"></i>
+                Source documents:
+                <%= section.sourceDocuments.join(', ') %>
+              </div>
+            <% } %>
+
+            <% section.questions.forEach((question, questionIndex) => { %>
+              <div class="border rounded-3 p-3 mb-3 bg-light">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                  <h6 class="fw-bold mb-2">
+                    Question <%= questionIndex + 1 %>
+                  </h6>
+
+                  <span class="badge <%= 
+                    question.concernLevel === 'critical' ? 'bg-danger' :
+                    question.concernLevel === 'high' ? 'bg-warning text-dark' :
+                    question.concernLevel === 'medium' ? 'bg-info' :
+                    'bg-secondary'
+                  %>">
+                    <%= question.concernLevel || 'medium' %>
+                  </span>
+                </div>
+
+                <p class="mb-2">
+                  <strong><%= question.questionText %></strong>
+                </p>
+
+                <% if (question.evidenceFound) { %>
+                  <div class="small text-muted mb-2">
+                    <i class="fas fa-search me-1"></i>
+                    <strong>Evidence / Gap:</strong>
+                    <%= question.evidenceFound %>
+                  </div>
+                <% } %>
+
+                <% if (question.whyItMatters) { %>
+                  <div class="small text-muted mb-2">
+                    <i class="fas fa-triangle-exclamation me-1"></i>
+                    <strong>Why it matters:</strong>
+                    <%= question.whyItMatters %>
+                  </div>
+                <% } %>
+
+                <% if (question.expectedGoodResponse) { %>
+                  <div class="small text-muted mb-3">
+                    <i class="fas fa-check-circle me-1"></i>
+                    <strong>Expected good response:</strong>
+                    <%= question.expectedGoodResponse %>
+                  </div>
+                <% } %>
+
+                <div class="row g-3">
+                  <div class="col-md-4">
+                    <label class="form-label fw-bold">Status</label>
+                    <select
+                      class="form-select"
+                      name="responses[<%= sectionIndex %>][<%= questionIndex %>][status]"
+                      required
+                    >
+                      <option value="not_answered">Not Answered</option>
+                      <option value="fixed">Fixed / Completed</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="not_fixed">Not Fixed</option>
+                      <option value="not_applicable">Not Applicable</option>
+                    </select>
+                  </div>
+
+                  <div class="col-md-8">
+                    <label class="form-label fw-bold">Officer Response</label>
+                    <textarea
+                      class="form-control"
+                      name="responses[<%= sectionIndex %>][<%= questionIndex %>][answerText]"
+                      rows="3"
+                      placeholder="Explain what has been done, what is pending, or why this is not applicable..."
+                    ></textarea>
+                  </div>
+
+                  <div class="col-12">
+                    <label class="form-label fw-bold">Evidence Note</label>
+                    <textarea
+                      class="form-control"
+                      name="responses[<%= sectionIndex %>][<%= questionIndex %>][evidenceNote]"
+                      rows="2"
+                      placeholder="Mention supporting evidence such as updated document, toolbox talk, corrective action, inspection, photo reference, etc..."
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+      <% }) %>
+
+      <div class="d-flex justify-content-between gap-3 mb-5">
+        <a href="/work-areas/<%= audit.workArea?._id || audit.workArea %>" class="btn btn-outline-secondary">
+          <i class="fas fa-arrow-left me-2"></i>
+          Back to Work Area
+        </a>
+
+        <button type="submit" class="btn btn-success btn-lg">
+          <i class="fas fa-robot me-2"></i>
+          Submit Responses and Generate Safety Score
+        </button>
+      </div>
+    <% } else { %>
+      <div class="text-center py-5">
+        <i class="fas fa-circle-exclamation fa-3x text-muted mb-3"></i>
+        <p class="text-muted">No audit questions were generated.</p>
+        <a href="/work-areas/<%= audit.workArea?._id || audit.workArea %>" class="btn btn-outline-primary">
+          Back to Work Area
+        </a>
+      </div>
+    <% } %>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>
