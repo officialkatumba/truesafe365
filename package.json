@@ -1,16 +1,15 @@
 {
-  "name": "katumba-true-safe",
+  "name": "all-safe",
   "version": "1.0.0",
-  "main": "backend/server.js",
+  "description": "Safety Management System built for standalone safety officers",
+  "main": "app.js",
   "scripts": {
-    "start": "node backend/server.js",
-    "dev": "nodemon backend/server.js",
-    "seed:system-owner": "node backend/utils/seedSystemOwner.js"
+    "start": "node app.js",
+    "dev": "nodemon app.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Samuel Katumba",
   "license": "ISC",
-  "description": "AI-assisted safety and environmental management system for worksites",
   "dependencies": {
     "@google-cloud/storage": "^7.16.0",
     "bcrypt": "^6.0.0",
