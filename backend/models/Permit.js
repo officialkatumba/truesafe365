@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { addShiftContext } = require("../utils/shiftContext");
 const Counter = require("./Counter");
 
 const permitSchema = new mongoose.Schema(
@@ -307,5 +308,7 @@ permitSchema.methods.addMonitoring = function (monitoringData) {
   this.monitoring.push(monitoringData);
   return this.save();
 };
+
+addShiftContext(permitSchema, {});
 
 module.exports = mongoose.model("Permit", permitSchema);

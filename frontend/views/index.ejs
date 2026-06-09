@@ -33,6 +33,7 @@
       </button>
 
       <div class="ts-nav-links" data-mobile-menu>
+        <a class="ts-incident-nav" href="#staff-incident-report" data-incident-jump>Incident</a>
         <% if (user) { %>
           <a href="/dashboard/officer">Dashboard</a>
           <a href="/api/users/logout">Sign out</a>
@@ -45,7 +46,7 @@
 
     <div class="ts-hero-center">
       <p class="ts-eyebrow">PREDICTIVE PROTECTION &amp; DAILY TEAM ALIGNMENT</p>
-      <h1 id="TrueSafe365-title">Expose Hidden Risks. Generate Dynamic Safety Talks.</h1>
+      <h1 id="TrueSafe365-title">Expose Hidden Risks. Get Real Time Safety Insights</h1>
 
       <p class="ts-hero-copy">
         Isolated near-misses and scattered field logs hide deadly patterns that human eyes overlook. <strong>TrueSafe365</strong> uses AI to instantly turn your real-time site data into high-value safety insights and hyper-relevant, localized daily safety talk topics that keep your entire team safer every single shift.
@@ -68,6 +69,18 @@
         ></iframe>
       </div>
     </div>
+
+    <form id="staff-incident-report" class="ts-staff-report-card" action="/incidents/access-code" method="POST">
+      <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+      <div>
+        <span>Staff incident reporting</span>
+        <strong>Have a work-area code?</strong>
+        <small>Report an incident, near miss, or hazard without creating an account.</small>
+      </div>
+      <label class="visually-hidden" for="incidentAccessCode">Work-area incident code</label>
+      <input id="incidentAccessCode" name="incidentAccessCode" type="text" placeholder="Enter code e.g. TS-ABC123" required autocomplete="off" />
+      <button type="submit">Report Now</button>
+    </form>
 
     <div class="ts-floating-note ts-note-left">
       <span>Daily Safety Talks</span>
@@ -103,6 +116,7 @@
 
       <div class="ts-nav-links" data-mobile-menu>
         <a href="/">Home</a>
+        <a class="ts-incident-nav" href="/#staff-incident-report">Incident</a>
         <% if (user) { %>
           <a href="/dashboard/officer">Dashboard</a>
           <a href="/api/users/logout">Sign out</a>
@@ -299,6 +313,18 @@
     transition: all 0.2s ease;
   }
 
+
+  .ts-nav-links a.ts-incident-nav {
+    background: linear-gradient(135deg, var(--ts-red), var(--ts-red-dark));
+    border-color: rgba(220, 38, 38, 0.38);
+    color: #fff;
+    box-shadow: 0 12px 28px rgba(220, 38, 38, 0.2);
+  }
+  .ts-nav-links a.ts-incident-nav:hover {
+    background: var(--ts-red-dark);
+    border-color: var(--ts-red-dark);
+    color: #fff;
+  }
   .ts-nav-links a:hover {
     background: var(--ts-red);
     color: #fff;
@@ -479,6 +505,64 @@
     transform: rotate(3deg);
   }
 
+  .ts-staff-report-card {
+    align-items: stretch;
+    background: rgba(255, 255, 255, 0.88);
+    border: 1px solid rgba(220, 38, 38, 0.18);
+    border-radius: 28px;
+    box-shadow: 0 22px 60px rgba(190, 18, 60, 0.12);
+    display: grid;
+    gap: 0.85rem;
+    grid-template-columns: minmax(0, 1.15fr) minmax(180px, 0.75fr) auto;
+    margin: 1.5rem auto 0;
+    max-width: 780px;
+    padding: 0.9rem;
+    position: relative;
+    scroll-margin-top: 7rem;
+    text-align: left;
+    z-index: 30;
+  }
+
+  .ts-staff-report-card span {
+    color: var(--ts-red-dark);
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .ts-staff-report-card strong {
+    display: block;
+    font-size: 1rem;
+  }
+
+  .ts-staff-report-card small {
+    color: var(--ts-muted);
+    display: block;
+    font-size: 0.78rem;
+    line-height: 1.45;
+  }
+
+  .ts-staff-report-card input {
+    border: 1px solid rgba(148, 163, 184, 0.45);
+    border-radius: 999px;
+    color: var(--ts-ink);
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    padding: 0.85rem 1rem;
+    text-transform: uppercase;
+  }
+
+  .ts-staff-report-card button {
+    background: linear-gradient(135deg, var(--ts-red), var(--ts-red-dark));
+    border: 0;
+    border-radius: 999px;
+    color: white;
+    font-weight: 900;
+    padding: 0.85rem 1.2rem;
+    white-space: nowrap;
+  }
   .ts-home-video {
     background: #fff;
     border: 1px solid var(--ts-line);
@@ -763,6 +847,10 @@
       top: calc(100% + 0.75rem);
       z-index: 999;
     }
+    .ts-staff-report-card {
+      grid-template-columns: 1fr;
+      text-align: center;
+    }
     .ts-nav-links.show { display: flex; }
     .ts-nav-links a { justify-content: center; width: 100%; }
   }
@@ -774,6 +862,20 @@
     .ts-hero-copy { font-size: 1rem; }
     .ts-onboarding-intro h2 { font-size: clamp(1.9rem, 10vw, 3rem); }
   }
+
+  .swal2-popup.all-safe-medical-alert {
+    border-radius: 1.25rem;
+    border-top: 5px solid var(--ts-red);
+    box-shadow: 0 24px 70px rgba(190, 18, 60, 0.18);
+  }
+
+  .swal2-confirm.all-safe-medical-confirm {
+    background: linear-gradient(135deg, var(--ts-red), var(--ts-red-dark)) !important;
+    border-radius: 999px !important;
+    box-shadow: 0 12px 28px rgba(190, 18, 60, 0.2) !important;
+    padding-left: 1.4rem !important;
+    padding-right: 1.4rem !important;
+  }
 </style>
 
 <script>
@@ -781,6 +883,18 @@
     const hero = document.querySelector(".ts-screen-hero");
     const onboarding = document.querySelector(".ts-screen-onboarding");
     const goOnboardingButton = document.querySelector("[data-go-onboarding]");
+
+
+    const incidentJumpLinks = document.querySelectorAll("[data-incident-jump]");
+    incidentJumpLinks.forEach((link) => {
+      link.addEventListener("click", (event) => {
+        const target = document.querySelector("#staff-incident-report");
+        if (!target) return;
+        event.preventDefault();
+        showScreen(hero, "welcome");
+        target.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    });
 
     // Screen navigation logic
     const showScreen = function (screen, hash) {
@@ -888,5 +1002,36 @@
   });
 </script>
 
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  <% if (typeof success !== 'undefined' && success.length > 0) { %>
+    Swal.fire({
+      icon: 'success',
+      title: 'Success!',
+      text: "<%= success[0] %>",
+      timer: 3000,
+      showConfirmButton: true,
+      customClass: {
+        popup: 'all-safe-medical-alert',
+        confirmButton: 'all-safe-medical-confirm'
+      }
+    });
+  <% } %>
+
+  <% if (typeof error !== 'undefined' && error.length > 0) { %>
+    Swal.fire({
+      icon: 'error',
+      title: 'Oops!',
+      text: "<%= error[0] %>",
+      timer: 3000,
+      showConfirmButton: true,
+      customClass: {
+        popup: 'all-safe-medical-alert',
+        confirmButton: 'all-safe-medical-confirm'
+      }
+    });
+  <% } %>
+</script>
 </body>
 </html>

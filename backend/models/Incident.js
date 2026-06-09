@@ -210,6 +210,11 @@ const incidentSchema = new mongoose.Schema(
     approvedAt: Date,
     approvalComments: String,
 
+    publicAccess: {
+      codeUsed: String,
+      accessedAt: Date,
+      consumedAt: Date,
+    },
     // For anonymous reporting
     anonymous: { type: Boolean, default: true },
 

@@ -505,6 +505,9 @@ exports.createWorkArea = async (req, res) => {
     });
 
     await workArea.save();
+    if (!workArea.publicIncidentShare?.code) {
+      await workArea.generateIncidentShareCode();
+    }
 
     await SafetyHub.findOneAndUpdate(
       { officerId: req.user._id, workArea: workArea._id },
@@ -543,6 +546,10 @@ exports.getWorkArea = async (req, res) => {
     if (!workArea) {
       req.flash("error", "Work area not found");
       return res.redirect("/dashboard/officer");
+    }
+
+    if (!workArea.publicIncidentShare?.code || workArea.publicIncidentShare?.status !== "active") {
+      await workArea.generateIncidentShareCode();
     }
 
     const [recentIncidents, activeAssessments, riskAssessments, safetyTalks, todaySafetyTalk, permits, jsa, ppeChecklists, safetyObservations, trainingRequirements, safetyInsights, emergencyProtocols, environmentalAssessments, safetyAudits, ohsComplianceAudits] =
@@ -593,6 +600,23 @@ exports.getWorkArea = async (req, res) => {
   }
 };
 
+exports.regenerateIncidentShareCode = async (req, res) => {
+  try {
+    const workArea = await findOwnedWorkArea(req, req.params.id);
+    if (!workArea) {
+      req.flash("error", "Work area not found");
+      return res.redirect("/dashboard/officer");
+    }
+
+    const code = await workArea.generateIncidentShareCode();
+    req.flash("success", `New staff incident reporting code generated: ${code}`);
+    return res.redirect(`/work-areas/${workArea._id}`);
+  } catch (error) {
+    console.error("Error regenerating incident share code:", error);
+    req.flash("error", "Unable to regenerate incident reporting code");
+    return res.redirect(`/work-areas/${req.params.id}`);
+  }
+};
 exports.showEditWorkAreaForm = async (req, res) => {
   const workArea = await findOwnedWorkArea(req, req.params.id);
   if (!workArea) {

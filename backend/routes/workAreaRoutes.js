@@ -9,6 +9,9 @@ router.use(ensureAuthenticated);
 router.get("/create", workAreaController.showCreateWorkAreaForm);
 router.post("/create", workAreaController.createWorkArea);
 
+// Share-code routes
+router.post("/:id/incident-share-code/regenerate", workAreaController.regenerateIncidentShareCode);
+
 // View routes
 router.get("/:id", workAreaController.getWorkArea);
 

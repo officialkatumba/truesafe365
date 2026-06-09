@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { addShiftContext } = require("../utils/shiftContext");
 const Counter = require("./Counter");
 const { addAiReviewFields } = require("../utils/aiReviewSchema");
 
@@ -237,6 +238,7 @@ const safetyAuditScorecardSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+addShiftContext(safetyAuditScorecardSchema, {});
 addAiReviewFields(safetyAuditScorecardSchema);
 
 safetyAuditScorecardSchema.pre("save", async function (next) {

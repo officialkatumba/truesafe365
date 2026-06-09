@@ -208,6 +208,7 @@
 // module.exports = mongoose.model("PPEChecklist", ppeChecklistSchema);
 
 const mongoose = require("mongoose");
+const { addShiftContext } = require("../utils/shiftContext");
 const Counter = require("./Counter");
 const { addAiReviewFields } = require("../utils/aiReviewSchema");
 
@@ -327,6 +328,7 @@ const ppeChecklistSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+addShiftContext(ppeChecklistSchema, {});
 addAiReviewFields(ppeChecklistSchema);
 
 // Auto-increment checklist number

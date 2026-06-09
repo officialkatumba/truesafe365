@@ -13,7 +13,7 @@
         <i class="fas fa-exclamation-triangle me-2"></i>Report an Incident
       </h4>
       <p class="mb-0 small text-white-50">
-        Work Area: <%= workArea.name %>
+        Work Area: <%= workArea.name %><% if (typeof accessCode !== "undefined" && accessCode) { %> | Code: <%= accessCode %><% } %>
       </p>
     </div>
 
@@ -62,7 +62,7 @@
             <i class="fas fa-info-circle me-2"></i>
             <strong>Why report?</strong> Reporting incidents helps prevent
             future accidents and keeps everyone safe. You can report
-            anonymously.
+            anonymously.<% if (typeof publicAccess !== "undefined" && publicAccess) { %> This shared work-area code remains active until the safety officer manually rotates it.<% } %>
           </div>
 
           <div class="mb-4">

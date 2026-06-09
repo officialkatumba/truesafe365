@@ -249,9 +249,11 @@
 //   return this.save();
 // };
 
+
 // module.exports = mongoose.model("SafetyTalk", safetyTalkSchema);
 
 const mongoose = require("mongoose");
+const { addShiftContext } = require("../utils/shiftContext");
 const Counter = require("./Counter");
 
 const safetyTalkSchema = new mongoose.Schema(
@@ -414,5 +416,7 @@ safetyTalkSchema.pre("save", async function (next) {
   }
   next();
 });
+
+addShiftContext(safetyTalkSchema, { workAreaField: "workArea", targetWorkAreasField: "targetWorkAreas" });
 
 module.exports = mongoose.model("SafetyTalk", safetyTalkSchema);

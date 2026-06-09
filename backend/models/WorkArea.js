@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 const mongoose = require("mongoose");
 const Counter = require("./Counter");
 
@@ -352,7 +353,45 @@ const workAreaSchema = new mongoose.Schema(
         { type: mongoose.Schema.Types.ObjectId, ref: "EnvironmentalAssessment" },
       ],
     },
-    statistics: {
+    publicIncidentShare: {
+      code: { type: String, trim: true, uppercase: true },
+      generatedAt: Date,
+      lastUsedAt: Date,
+      lastUsedByIncident: { type: mongoose.Schema.Types.ObjectId, ref: "Incident" },
+      useCount: { type: Number, default: 0 },
+      rotateManually: { type: Boolean, default: true },
+      status: {
+        type: String,
+        enum: ["active", "rotated", "revoked"],
+        default: "active",
+      },
+    },
+    automation: {
+      safetyInsightNeedsRefresh: { type: Boolean, default: false },
+      safetyInsightReason: String,
+      safetyTalkNeedsRefresh: { type: Boolean, default: false },
+      safetyTalkReason: String,
+      lastIncidentAt: Date,
+      lastAutomationAt: Date,
+      suggestedDocuments: [
+        {
+          documentType: String,
+          reason: String,
+          priority: {
+            type: String,
+            enum: ["low", "medium", "high", "critical"],
+            default: "medium",
+          },
+          relatedIncident: { type: mongoose.Schema.Types.ObjectId, ref: "Incident" },
+          createdAt: { type: Date, default: Date.now },
+          status: {
+            type: String,
+            enum: ["pending", "generated", "dismissed"],
+            default: "pending",
+          },
+        },
+      ],
+    },    statistics: {
       incidents: { type: Number, default: 0 },
       nearMisses: { type: Number, default: 0 },
       safetyObservations: { type: Number, default: 0 },
@@ -374,6 +413,49 @@ const workAreaSchema = new mongoose.Schema(
 );
 
 workAreaSchema.index({ officerId: 1, code: 1 }, { unique: true, sparse: true });
+workAreaSchema.index({ "publicIncidentShare.code": 1 }, { unique: true, sparse: true });
+
+workAreaSchema.statics.makeIncidentShareCode = function () {
+  return `TS-${crypto.randomBytes(3).toString("hex").toUpperCase()}`;
+};
+
+workAreaSchema.methods.generateIncidentShareCode = async function () {
+  let code;
+  let exists = true;
+
+  while (exists) {
+    code = this.constructor.makeIncidentShareCode();
+    exists = await this.constructor.exists({
+      _id: { $ne: this._id },
+      "publicIncidentShare.code": code,
+    });
+  }
+
+  this.publicIncidentShare = {
+    ...(this.publicIncidentShare?.toObject?.() || this.publicIncidentShare || {}),
+    code,
+    generatedAt: new Date(),
+    status: "active",
+    rotateManually: true,
+  };
+
+  await this.save();
+  return code;
+};
+
+workAreaSchema.methods.recordIncidentShareCodeUse = async function (incidentId) {
+  const previousUseCount = this.publicIncidentShare?.useCount || 0;
+
+  this.publicIncidentShare = {
+    ...(this.publicIncidentShare?.toObject?.() || this.publicIncidentShare || {}),
+    lastUsedAt: new Date(),
+    lastUsedByIncident: incidentId,
+    useCount: previousUseCount + 1,
+    status: "active",
+  };
+
+  await this.save();
+};
 
 workAreaSchema.pre("save", async function (next) {
   if (this.isNew) {

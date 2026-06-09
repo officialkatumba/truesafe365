@@ -86,6 +86,77 @@
         </div>
       </section>
 
+      <section class="incident-share-panel mb-4">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+          <div>
+            <p class="text-uppercase text-muted fw-semibold small mb-1">Staff Reporting Access</p>
+            <h5 class="fw-bold mb-2"><i class="fas fa-qrcode me-2"></i>Shared work-area incident code</h5>
+            <p class="text-muted mb-0">Give this code to staff assigned to this work area. They can report incidents, near misses, and hazards from the homepage without logging in. The code stays active until you manually rotate it.</p>
+          </div>
+          <form method="POST" action="/work-areas/<%= workArea._id %>/incident-share-code/regenerate" class="d-inline">
+            <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+            <button type="submit" class="btn btn-outline-danger rounded-pill fw-semibold">
+              <i class="fas fa-rotate me-1"></i> Rotate Code
+            </button>
+          </form>
+        </div>
+        <div class="row g-3 mt-2 align-items-stretch">
+          <div class="col-lg-4">
+            <div class="share-code-box h-100">
+              <span>Current Code</span>
+              <strong><%= workArea.publicIncidentShare?.code || 'Generating...' %></strong>
+              <small>Used <%= workArea.publicIncidentShare?.useCount || 0 %> time(s)</small>
+            </div>
+          </div>
+          <div class="col-lg-8">
+            <div class="share-link-box h-100">
+              <label class="form-label small text-muted fw-semibold" for="staffReportLink">Staff reporting link</label>
+              <div class="input-group">
+                <input id="staffReportLink" class="form-control" readonly value="/incidents/public/<%= workArea.publicIncidentShare?.code || '' %>">
+                <button class="btn btn-outline-secondary" type="button" data-copy-target="staffReportLink"><i class="fas fa-copy me-1"></i>Copy</button>
+              </div>
+              <div class="mt-2 d-flex flex-wrap gap-2">
+                <a class="btn btn-success btn-sm rounded-pill" href="https://wa.me/?text=Report%20a%20TrueSafe365%20incident%20for%20<%= encodeURIComponent(workArea.name || 'this work area') %>%20using%20code%20<%= encodeURIComponent(workArea.publicIncidentShare?.code || '') %>%20at%20https%3A%2F%2Fwww.safety365.work" target="_blank" rel="noopener noreferrer">
+                  <i class="fab fa-whatsapp me-1"></i>Share on WhatsApp
+                </a>
+                <span class="small text-muted align-self-center">Rotate only if the code is abused or exposed outside the work area.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <% if (workArea.automation?.safetyInsightNeedsRefresh || workArea.automation?.safetyTalkNeedsRefresh || (workArea.automation?.suggestedDocuments || []).length) { %>
+        <section class="automation-refresh-panel mb-4">
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+            <div>
+              <p class="text-uppercase fw-semibold small mb-1">Automation Triggered</p>
+              <h5 class="fw-bold mb-2"><i class="fas fa-bolt me-2"></i>New incident data changed this work area</h5>
+              <p class="mb-0">TrueSafe365 has marked the safety insight and safety talk as needing review because a new incident, near miss, or hazard report was submitted for this work area.</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+              <form method="POST" action="/safety-insights/generate/<%= workArea._id %>">
+                <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+                <button type="submit" class="btn btn-light btn-sm rounded-pill fw-semibold"><i class="fas fa-brain me-1"></i>Refresh Insight</button>
+              </form>
+              <form method="POST" action="/safety-talks/generate/<%= workArea._id %>">
+                <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+                <button type="submit" class="btn btn-light btn-sm rounded-pill fw-semibold"><i class="fas fa-chalkboard-teacher me-1"></i>Refresh Talk</button>
+              </form>
+            </div>
+          </div>
+          <% const pendingSuggestions = (workArea.automation?.suggestedDocuments || []).filter(item => item.status === 'pending').slice(-6).reverse(); %>
+          <% if (pendingSuggestions.length) { %>
+            <div class="automation-suggestion-list mt-3">
+              <% pendingSuggestions.forEach(item => { %>
+                <span class="automation-suggestion-pill <%= item.priority || 'medium' %>">
+                  <strong><%= (item.documentType || 'document').replace(/_/g, ' ') %></strong>
+                  <small><%= item.reason %></small>
+                </span>
+              <% }) %>
+            </div>
+          <% } %>
+        </section>
+      <% } %>
       <!-- Daily Safety Talk Section -->
       <div class="safety-talk-container mb-4">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -149,7 +220,68 @@
       </div>
 
       <style>
-        .safety-talk-container {
+        .incident-share-panel {
+          background: rgba(255, 255, 255, 0.92);
+          border: 1px solid rgba(225, 29, 72, 0.16);
+          border-radius: 22px;
+          box-shadow: 0 18px 45px rgba(190, 18, 60, 0.09);
+          padding: 1.25rem;
+        }
+        .share-code-box,
+        .share-link-box {
+          background: #fff7f8;
+          border: 1px solid rgba(225, 29, 72, 0.14);
+          border-radius: 18px;
+          padding: 1rem;
+        }
+        .share-code-box span {
+          color: #be123c;
+          display: block;
+          font-size: 0.75rem;
+          font-weight: 800;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+        }
+        .share-code-box strong {
+          color: #111827;
+          display: block;
+          font-size: clamp(1.7rem, 4vw, 2.5rem);
+          letter-spacing: 0.08em;
+          line-height: 1.1;
+          margin: 0.35rem 0;
+        }
+        .automation-refresh-panel {
+          background: linear-gradient(135deg, #be123c, #7f1d1d);
+          border-radius: 22px;
+          box-shadow: 0 20px 55px rgba(127, 29, 29, 0.22);
+          color: #fff;
+          padding: 1.25rem;
+        }
+        .automation-refresh-panel p {
+          color: rgba(255, 255, 255, 0.86);
+        }
+        .automation-suggestion-list {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.65rem;
+        }
+        .automation-suggestion-pill {
+          background: rgba(255, 255, 255, 0.12);
+          border: 1px solid rgba(255, 255, 255, 0.22);
+          border-radius: 16px;
+          display: inline-flex;
+          flex-direction: column;
+          gap: 0.2rem;
+          max-width: 260px;
+          padding: 0.75rem 0.9rem;
+        }
+        .automation-suggestion-pill strong {
+          text-transform: capitalize;
+        }
+        .automation-suggestion-pill small {
+          color: rgba(255, 255, 255, 0.78);
+          line-height: 1.35;
+        }        .safety-talk-container {
           background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
           border-radius: 12px;
           padding: 1rem;
@@ -1120,4 +1252,21 @@
   // You can add any dynamic functionality here if needed
 </script>
 
+<script>
+  document.querySelectorAll('[data-copy-target]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const input = document.getElementById(button.dataset.copyTarget);
+      const absolute = new URL(input.value, window.location.origin).href;
+      try {
+        await navigator.clipboard.writeText(absolute);
+        if (window.Swal) {
+          Swal.fire('Copied', 'Staff reporting link copied.', 'success');
+        }
+      } catch (error) {
+        input.value = absolute;
+        input.select();
+      }
+    });
+  });
+</script>
 <%- include('../partials/footer') %>

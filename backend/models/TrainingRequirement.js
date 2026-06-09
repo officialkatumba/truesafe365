@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { addShiftContext } = require("../utils/shiftContext");
 const Counter = require("./Counter");
 const { addAiReviewFields } = require("../utils/aiReviewSchema");
 
@@ -155,6 +156,7 @@ const trainingRequirementSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+addShiftContext(trainingRequirementSchema, {});
 addAiReviewFields(trainingRequirementSchema);
 
 // Auto-increment requirement number

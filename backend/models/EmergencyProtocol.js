@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { addShiftContext } = require("../utils/shiftContext");
 const Counter = require("./Counter");
 const { addAiReviewFields } = require("../utils/aiReviewSchema");
 
@@ -119,6 +120,7 @@ const emergencyProtocolSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+addShiftContext(emergencyProtocolSchema, {});
 addAiReviewFields(emergencyProtocolSchema);
 
 emergencyProtocolSchema.pre("save", async function (next) {

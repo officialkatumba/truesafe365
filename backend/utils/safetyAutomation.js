@@ -5,6 +5,106 @@ const SafetyTalk = require("../models/SafetyTalk");
 const Alert = require("../models/Alert");
 const { createAlert, getWorkAreaAlertRecipients } = require("./alertService");
 
+function getIncidentDocumentSuggestions(incident) {
+  const priority = ["critical", "fatality"].includes(incident.severity)
+    ? "critical"
+    : incident.severity === "high"
+      ? "high"
+      : "medium";
+
+  const suggestions = [
+    {
+      documentType: "safety_insight",
+      reason: "New incident data should be included in the work-area safety insight trend analysis.",
+      priority,
+      relatedIncident: incident._id,
+    },
+    {
+      documentType: "safety_talk",
+      reason: "The next safety talk should reflect the new report so staff discuss the actual event and controls.",
+      priority,
+      relatedIncident: incident._id,
+    },
+  ];
+
+  if (["incident", "near_miss", "hazard_observation", "unsafe_condition"].includes(incident.type)) {
+    suggestions.push({
+      documentType: "risk_assessment",
+      reason: "Review whether existing risk controls still match the reported condition.",
+      priority,
+      relatedIncident: incident._id,
+    });
+    suggestions.push({
+      documentType: "jsa",
+      reason: "Review the job steps and controls for the work activity involved in the report.",
+      priority,
+      relatedIncident: incident._id,
+    });
+  }
+
+  if (["environmental", "property_damage"].includes(incident.type)) {
+    suggestions.push({
+      documentType: "environmental_assessment",
+      reason: "Environmental/property-damage reports should refresh screening and control requirements.",
+      priority,
+      relatedIncident: incident._id,
+    });
+  }
+
+  if (["critical", "fatality"].includes(incident.severity)) {
+    suggestions.push({
+      documentType: "emergency_protocol",
+      reason: "Critical events should trigger emergency-preparedness review for the work area and shift.",
+      priority: "critical",
+      relatedIncident: incident._id,
+    });
+  }
+
+  return suggestions;
+}
+
+async function handleIncidentReportedAutomation(incident) {
+  const workArea = await WorkArea.findById(incident.workArea);
+  if (!workArea) return null;
+
+  const reason = `Incident #${incident.incidentNumber || incident._id} (${incident.type}, ${incident.severity}) was reported for ${incident.shift || "unknown"} shift.`;
+  const existingSuggestions = workArea.automation?.suggestedDocuments || [];
+  const newSuggestions = getIncidentDocumentSuggestions(incident);
+
+  workArea.automation = {
+    ...(workArea.automation?.toObject?.() || workArea.automation || {}),
+    safetyInsightNeedsRefresh: true,
+    safetyInsightReason: reason,
+    safetyTalkNeedsRefresh: true,
+    safetyTalkReason: reason,
+    lastIncidentAt: incident.createdAt || new Date(),
+    lastAutomationAt: new Date(),
+    suggestedDocuments: [...existingSuggestions, ...newSuggestions].slice(-20),
+  };
+
+  workArea.aiContext = {
+    ...(workArea.aiContext?.toObject?.() || workArea.aiContext || {}),
+    recentChanges: [workArea.aiContext?.recentChanges, reason].filter(Boolean).join("\n"),
+    lastUpdated: new Date(),
+  };
+
+  if (!workArea.concernsRegister) workArea.concernsRegister = [];
+  workArea.concernsRegister.push({
+    concern: `${incident.type.replace(/_/g, " ")} reported: ${incident.description}`.substring(0, 280),
+    source: "incident",
+    category: incident.type,
+    riskAssessment: {
+      severity: incident.severity,
+      likelihood: "possible",
+      riskLevel: ["critical", "fatality"].includes(incident.severity) ? "critical" : incident.severity,
+    },
+    status: "active",
+  });
+
+  await workArea.save();
+  await createDraftTalkRecommendation(incident);
+  return workArea;
+}
 async function createDraftTalkRecommendation(incident) {
   const existing = await SafetyTalk.findOne({
     "basedOn.recentIncidents": incident._id,
@@ -193,6 +293,7 @@ cron.schedule("0 8 * * 1", async () => {
 
 module.exports = {
   createDraftTalkRecommendation,
+  handleIncidentReportedAutomation,
   processIncidentDraftTalks,
   createCorrectiveActionReminders,
   createNoRecentSafetyTalkReminders,

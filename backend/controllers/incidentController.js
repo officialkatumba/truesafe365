@@ -5,7 +5,78 @@ const {
   shouldAlertForIncident,
 } = require("../utils/alertService");
 const { trackUsage } = require("../utils/usageTracker");
+const { handleIncidentReportedAutomation } = require("../utils/safetyAutomation");
 
+function normalizeIncidentAccessCode(value) {
+  return String(value || "").trim().toUpperCase().replace(/\s+/g, "");
+}
+
+async function findWorkAreaByActiveShareCode(code) {
+  const normalizedCode = normalizeIncidentAccessCode(code);
+  if (!normalizedCode) return null;
+
+  return WorkArea.findOne({
+    "publicIncidentShare.code": normalizedCode,
+    "publicIncidentShare.status": "active",
+  });
+}
+
+exports.accessIncidentShareCode = async (req, res) => {
+  try {
+    const code = normalizeIncidentAccessCode(req.body.incidentAccessCode);
+    const workArea = await findWorkAreaByActiveShareCode(code);
+
+    if (!workArea) {
+      req.flash("error", "Wrong Code, Contact Your Safety Officer");
+      return res.redirect("/#staff-incident-report");
+    }
+
+    return res.redirect(`/incidents/public/${encodeURIComponent(code)}`);
+  } catch (error) {
+    console.error("Error checking incident share code:", error);
+    req.flash("error", "Unable to open staff incident reporting. Please try again or contact the safety officer.");
+    return res.redirect("/#staff-incident-report");
+  }
+};
+
+exports.showPublicIncidentReportForm = async (req, res) => {
+  try {
+    const code = normalizeIncidentAccessCode(req.params.accessCode);
+    const workArea = await findWorkAreaByActiveShareCode(code);
+
+    if (!workArea) {
+      req.flash("error", "Wrong Code, Contact Your Safety Officer");
+      return res.redirect("/#staff-incident-report");
+    }
+
+    return res.render("incidents/public-report", {
+      workArea,
+      anonymous: true,
+      step: 1,
+      accessCode: code,
+      publicAccess: true,
+    });
+  } catch (error) {
+    console.error("Error loading public report form:", error);
+    req.flash("error", "Error loading staff incident report form");
+    return res.redirect("/#staff-incident-report");
+  }
+};
+
+exports.submitPublicIncidentReport = async (req, res) => {
+  const code = normalizeIncidentAccessCode(req.params.accessCode);
+  const workArea = await findWorkAreaByActiveShareCode(code);
+
+  if (!workArea) {
+    req.flash("error", "Wrong Code, Contact Your Safety Officer");
+    return res.redirect("/#staff-incident-report");
+  }
+
+  req.params.workAreaId = workArea._id.toString();
+  req.publicIncidentWorkArea = workArea;
+  req.publicIncidentShareCode = code;
+  return exports.submitIncidentReport(req, res);
+};
 // ========== PUBLIC ROUTES (No Login Required) ==========
 
 // Show public incident report form with guided steps
@@ -16,7 +87,7 @@ exports.showIncidentReportForm = async (req, res) => {
 
     if (!workArea) {
       req.flash("error", "Work area not found");
-      return res.redirect("/");
+      return res.redirect("/#staff-incident-report");
     }
 
     res.render("incidents/public-report", {
@@ -86,10 +157,11 @@ exports.submitIncidentReport = async (req, res) => {
       confirmedAccuracy,
     } = req.body;
 
-    const workArea = await WorkArea.findById(workAreaId);
+    const shareCodeUsed = req.publicIncidentShareCode;
+    const workArea = req.publicIncidentWorkArea || (await WorkArea.findById(workAreaId));
     if (!workArea) {
       req.flash("error", "Work area not found");
-      return res.redirect("/");
+      return res.redirect("/#staff-incident-report");
     }
 
     // Build equipment array
@@ -159,10 +231,30 @@ exports.submitIncidentReport = async (req, res) => {
         type === "near_miss" ? potentialConsequences : null,
       whyDidNotHappen: type === "near_miss" ? whyDidNotHappen : null,
       anonymous: anonymous === "true",
+      publicAccess: shareCodeUsed
+        ? {
+            codeUsed: shareCodeUsed,
+            accessedAt: new Date(),
+          }
+        : undefined,
       status: "reported",
     });
 
     await newIncident.save();
+
+    if (!workArea.documents) workArea.documents = {};
+    if (!workArea.documents.incidents) workArea.documents.incidents = [];
+    workArea.documents.incidents.push(newIncident._id);
+
+    if (shareCodeUsed) {
+      await Incident.updateOne(
+        { _id: newIncident._id },
+        { $set: { "publicAccess.consumedAt": new Date() } },
+      );
+      await workArea.recordIncidentShareCodeUse(newIncident._id);
+    } else {
+      await workArea.save();
+    }
 
     await trackUsage({
       user: req.user?._id,
@@ -182,6 +274,8 @@ exports.submitIncidentReport = async (req, res) => {
       });
     }
 
+    await handleIncidentReportedAutomation(newIncident);
+
     req.flash(
       "success",
       "✓ Incident reported successfully! Thank you for helping keep our workplace safe. A safety officer will review your report.",
@@ -190,6 +284,9 @@ exports.submitIncidentReport = async (req, res) => {
   } catch (error) {
     console.error("Error submitting incident:", error);
     req.flash("error", "Error submitting incident: " + error.message);
+    if (req.publicIncidentShareCode) {
+      return res.redirect(`/incidents/public/${encodeURIComponent(req.publicIncidentShareCode)}`);
+    }
     res.redirect(`/incidents/report/${req.params.workAreaId}`);
   }
 };

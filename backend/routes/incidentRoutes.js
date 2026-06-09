@@ -25,8 +25,7 @@
 // // ========== PUBLIC ROUTES (No authentication required) ==========
 // router.get("/report/:workAreaId", incidentController.showIncidentReportForm);
 // router.post("/report/:workAreaId", incidentController.submitIncidentReport);
-// router.get("/thank-you", incidentController.thankYou);
-
+//
 // // ========== SAFETY OFFICER ROUTES (Authentication required) ==========
 // router.get("/", ensureAuthenticated, incidentController.getMyIncidents);
 // router.get("/:id", ensureAuthenticated, incidentController.getIncident);
@@ -80,14 +79,19 @@ const Incident = require("../models/Incident");
 const ownIncident = ensureOwnedDocument(Incident);
 const ownWorkArea = ensureOwnedWorkArea();
 
-// All routes require authentication (safety officers and workers)
+// Public staff incident reporting by shared work-area code
+router.post("/access-code", incidentController.accessIncidentShareCode);
+router.get("/public/:accessCode", incidentController.showPublicIncidentReportForm);
+router.post("/public/:accessCode", incidentController.submitPublicIncidentReport);
+router.get("/thank-you", incidentController.thankYou);
+
+// All remaining routes require authentication (safety officers)
 router.use(ensureAuthenticated);
 
 // Incident routes
 router.get("/", incidentController.getMyIncidents);
 router.get("/report/:workAreaId", ownWorkArea, incidentController.showIncidentReportForm);
 router.post("/report/:workAreaId", ownWorkArea, incidentController.submitIncidentReport);
-router.get("/thank-you", incidentController.thankYou);
 router.get("/api/recent/:workAreaId", ownWorkArea, incidentController.getRecentIncidents);
 router.get("/:id", ownIncident, incidentController.getIncident);
 router.get("/:id/edit", ownIncident, incidentController.showEditIncidentForm);
