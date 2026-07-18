@@ -86,7 +86,7 @@ function infoTable(audit) {
   const result = audit.finalCompliance || {};
   const rows = [
     ["Audit Number", audit.auditNumber ? `#${audit.auditNumber}` : "N/A"],
-    ["Act", audit.actName || "Occupational Health and Safety Bill, 2025"],
+    ["Act", audit.actName || "Occupational Health and Safety Act No. 16 of 2025"],
     ["Work Area", audit.workArea?.name || "N/A"],
     [
       "Compliance Score",

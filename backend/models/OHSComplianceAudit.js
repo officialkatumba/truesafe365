@@ -20,7 +20,7 @@ const ohsComplianceAuditSchema = new mongoose.Schema(
 
     actName: {
       type: String,
-      default: "Occupational Health and Safety Bill, 2025",
+      default: "Occupational Health and Safety Act No. 16 of 2025",
     },
 
     auditStatus: {

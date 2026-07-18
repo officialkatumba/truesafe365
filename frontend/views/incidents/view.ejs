@@ -24,14 +24,24 @@
         %> px-3 py-2 fs-6">
           <i class="fas fa-chart-line me-1"></i><%= incident.severity?.toUpperCase() %>
         </span>
-        <span class="badge <%= 
-          incident.status === 'closed' ? 'bg-success' : 
-          incident.status === 'resolved' ? 'bg-primary' : 
-          incident.status === 'under_investigation' ? 'bg-warning text-dark' : 
-          'bg-secondary' 
+        <span class="badge <%=
+          incident.status === 'closed' ? 'bg-success' :
+          incident.status === 'resolved' ? 'bg-primary' :
+          incident.status === 'under_investigation' ? 'bg-warning text-dark' :
+          'bg-secondary'
         %> px-3 py-2 fs-6 ms-2">
           <i class="fas fa-flag-checkered me-1"></i><%= incident.status?.toUpperCase() %>
         </span>
+        <% if (incident.classification?.isLTI) { %>
+          <span class="badge bg-danger px-3 py-2 fs-6 ms-2">
+            <i class="fas fa-user-injured me-1"></i>LTI
+          </span>
+        <% } %>
+        <% if (incident.classification?.isRecordable) { %>
+          <span class="badge bg-dark px-3 py-2 fs-6 ms-2">
+            <i class="fas fa-clipboard-list me-1"></i>TRIR RECORDABLE
+          </span>
+        <% } %>
       </div>
     </div>
   </div>
@@ -334,6 +344,11 @@
                   <i class="fas fa-search me-2"></i>Add Investigation
                 </button>
               <% } %>
+              <% if (incident.injuries?.occurred) { %>
+                <button class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#classificationModal">
+                  <i class="fas fa-user-injured me-2"></i>Classify Injury (LTI/TRIR)
+                </button>
+              <% } %>
               <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#actionModal">
                 <i class="fas fa-plus-circle me-2"></i>Add Corrective Action
               </button>
@@ -424,6 +439,43 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
           <button type="submit" class="btn btn-info text-white">Save Investigation</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Injury Classification Modal (LTI/TRIR) -->
+<div class="modal fade" id="classificationModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title"><i class="fas fa-user-injured me-2"></i>Classify Injury</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="/incidents/<%= incident._id %>/edit">
+        <div class="modal-body">
+          <p class="text-muted small">
+            Classify this injury for Zambian OHS Act No. 16 of 2025 recordkeeping. An LTI (Lost Time Injury) is any work injury that keeps the person off work beyond the day of the incident. A TRIR-recordable injury is any work injury requiring medical treatment beyond first aid, restricted duty, days away, or death.
+          </p>
+          <div class="form-check mb-3">
+            <input type="hidden" name="isLTI" value="no">
+            <input class="form-check-input" type="checkbox" name="isLTI" id="isLTI" value="yes" <%= incident.classification?.isLTI ? 'checked' : '' %>>
+            <label class="form-check-label fw-bold" for="isLTI">Lost Time Injury (LTI)</label>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">Lost Time (days)</label>
+            <input type="number" min="0" name="lostTimeDays" class="form-control" value="<%= incident.classification?.lostTimeDays || 0 %>">
+          </div>
+          <div class="form-check mb-3">
+            <input type="hidden" name="isRecordable" value="no">
+            <input class="form-check-input" type="checkbox" name="isRecordable" id="isRecordable" value="yes" <%= incident.classification?.isRecordable ? 'checked' : '' %>>
+            <label class="form-check-label fw-bold" for="isRecordable">TRIR Recordable Injury</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-dark">Save Classification</button>
         </div>
       </form>
     </div>

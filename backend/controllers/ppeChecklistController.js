@@ -8,6 +8,10 @@
 // const { generatePPEWordBuffer } = require("../utils/ppeWordGenerator");
 const { AI_MODEL, AI_MAX_TOKENS } = require("../utils/aiConfig");
 const { approveReviewedDocument, ensureReviewable, isApproved, recordRevision, regenerateStructuredOutput, trackAiCompletion } = require("../utils/aiReview");
+const {
+  professionalSafetyGuidance,
+  miningContextGuidance,
+} = require("../utils/aiPromptGuidance");
 
 // const openai = new OpenAI({
 //   apiKey: process.env.OPENAI_API_KEY,
@@ -355,7 +359,10 @@ exports.generatePPERequirements = async (req, res) => {
         .filter(Boolean)
         .join(", ") || "General";
 
-    const prompt = `You are a senior safety officer creating a PPE (Personal Protective Equipment) requirements checklist for a work area.
+    const prompt = `You are a senior safety officer creating a PPE (Personal Protective Equipment) requirements checklist for a Zambian work area.
+
+${professionalSafetyGuidance}
+${miningContextGuidance}
 
 WORK AREA CONTEXT:
 - Name: ${workArea.name}

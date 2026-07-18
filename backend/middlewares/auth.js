@@ -6,4 +6,10 @@ exports.ensureAuthenticated = (req, res, next) => {
 };
 
 exports.ensureSafetyOfficer = exports.ensureAuthenticated;
-exports.ensureAdmin = exports.ensureAuthenticated;
+
+exports.ensureAdmin = (req, res, next) => {
+  if (req.isAuthenticated() && req.user?.role === "admin") return next();
+
+  req.flash("error", "You do not have permission to access that page");
+  return res.redirect("/dashboard/officer");
+};

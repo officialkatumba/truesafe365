@@ -1,0 +1,74 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="container py-4">
+  <div class="card shadow-lg border-0" style="border-radius: 20px;">
+    <div class="card-header" style="background: linear-gradient(135deg, #1e3c5c, #2f5597); color: white; border-radius: 20px 20px 0 0;">
+      <h4 class="mb-0"><i class="fas fa-truck me-2"></i><%= template.label %></h4>
+      <p class="mb-0 small opacity-75">Work Area: <%= workArea.name %></p>
+    </div>
+    <div class="card-body p-4">
+      <form method="POST" data-autosave="transport-checklist">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-bold">Driver Name <span class="text-danger">*</span></label>
+            <input type="text" name="driverName" class="form-control" required>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-bold">Vehicle Registration</label>
+            <input type="text" name="vehicleRegistration" class="form-control">
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-bold">Route / Haul</label>
+            <input type="text" name="route" class="form-control" placeholder="e.g., Pit A to Processing Plant">
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-bold">Date/Time</label>
+            <input type="datetime-local" name="date" class="form-control">
+          </div>
+        </div>
+
+        <hr>
+        <h6 class="fw-bold mb-3">Checklist Items</h6>
+        <% template.items.forEach((item, index) => { %>
+          <div class="mb-3 p-3 border rounded">
+            <div class="d-flex justify-content-between align-items-start">
+              <label class="form-label fw-semibold mb-2">
+                <%= item.question %>
+                <% if (item.critical) { %><span class="badge bg-danger ms-1">Critical</span><% } %>
+              </label>
+            </div>
+            <div class="d-flex gap-3 mb-2">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="response_<%= index %>" value="yes" id="yes-<%= index %>" required>
+                <label class="form-check-label" for="yes-<%= index %>">Yes</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="response_<%= index %>" value="no" id="no-<%= index %>">
+                <label class="form-check-label" for="no-<%= index %>">No</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="response_<%= index %>" value="na" id="na-<%= index %>">
+                <label class="form-check-label" for="na-<%= index %>">N/A</label>
+              </div>
+            </div>
+            <input type="text" name="notes_<%= index %>" class="form-control form-control-sm" placeholder="Notes (optional)">
+          </div>
+        <% }) %>
+
+        <div class="d-flex justify-content-between gap-3 mt-4">
+          <a href="/work-areas/<%= workArea._id %>" class="btn btn-outline-secondary px-4">
+            <i class="fas fa-times me-2"></i>Cancel
+          </a>
+          <button type="submit" class="btn btn-primary px-5">
+            <i class="fas fa-check-circle me-2"></i>Submit Checklist
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

@@ -26,9 +26,10 @@ async function seedSafetyOfficer() {
     existingUser.name = existingUser.name || seedName;
     existingUser.isActive = true;
     existingUser.hadLoggedIn = false;
+    existingUser.role = "admin";
     await existingUser.setPassword(seedPassword);
     await existingUser.save();
-    console.log(`Updated safety officer account: ${seedEmail}`);
+    console.log(`Updated platform owner account: ${seedEmail}`);
     return;
   }
 
@@ -38,11 +39,12 @@ async function seedSafetyOfficer() {
       name: seedName,
       isActive: true,
       hadLoggedIn: false,
+      role: "admin",
     }),
     seedPassword,
   );
 
-  console.log(`Created safety officer account: ${seedEmail}`);
+  console.log(`Created platform owner account: ${seedEmail}`);
 }
 
 seedSafetyOfficer()

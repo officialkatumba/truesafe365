@@ -428,14 +428,35 @@ exports.updateIncident = async (req, res) => {
       return res.redirect("/incidents");
     }
 
-    const { severity, description, status, immediateAction, locationDetails } =
-      req.body;
+    const {
+      severity,
+      description,
+      status,
+      immediateAction,
+      locationDetails,
+      isLTI,
+      isRecordable,
+      lostTimeDays,
+    } = req.body;
 
     if (severity) incident.severity = severity;
     if (description) incident.description = description;
     if (status) incident.status = status;
     if (immediateAction) incident.immediateAction = immediateAction;
     if (locationDetails) incident.locationDetails = locationDetails;
+
+    const checkboxOn = (value) =>
+      Array.isArray(value) ? value.includes("yes") : value === "yes";
+
+    if (isLTI !== undefined || isRecordable !== undefined) {
+      incident.classification = {
+        isLTI: checkboxOn(isLTI),
+        isRecordable: checkboxOn(isRecordable),
+        lostTimeDays: lostTimeDays ? parseInt(lostTimeDays, 10) || 0 : 0,
+        classifiedBy: req.user._id,
+        classifiedAt: new Date(),
+      };
+    }
 
     await incident.save();
 

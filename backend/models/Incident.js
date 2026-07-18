@@ -127,6 +127,15 @@ const incidentSchema = new mongoose.Schema(
       ambulanceCalled: Boolean,
     },
 
+    // Injury classification (Zambian OHS Act No. 16 of 2025 recordkeeping)
+    classification: {
+      isLTI: { type: Boolean, default: false }, // Lost Time Injury
+      isRecordable: { type: Boolean, default: false }, // Counts toward TRIR
+      lostTimeDays: { type: Number, default: 0 },
+      classifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      classifiedAt: Date,
+    },
+
     // For near-misses
     potentialConsequences: String,
     whyDidNotHappen: String, // What prevented it from becoming an incident

@@ -20,8 +20,8 @@ exports.registerSafetyOfficer = async (req, res) => {
       return res.redirect("/register/safety-officer");
     }
 
-    if (password.length < 6) {
-      req.flash("error", "Password must be at least 6 characters long");
+    if (password.length < 10) {
+      req.flash("error", "Password must be at least 10 characters long");
       return res.redirect("/register/safety-officer");
     }
 

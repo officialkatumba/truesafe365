@@ -8,6 +8,7 @@ const path = require("path");
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
 const helmet = require("helmet");
+const compression = require("compression");
 const { rateLimit } = require("express-rate-limit");
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
@@ -27,6 +28,7 @@ mongoose
 const app = express();
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
+app.use(compression());
 
 const blockedProbePaths = new Set([
   "/.vscode/sftp.json",
@@ -118,7 +120,12 @@ passport.deserializeUser(User.deserializeUser());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "../frontend/public")));
+app.use(
+  express.static(path.join(__dirname, "../frontend/public"), {
+    maxAge: process.env.NODE_ENV === "production" ? "30d" : 0,
+    etag: true,
+  }),
+);
 const { ensureCsrfToken, verifyCsrfToken } = require("./middlewares/csrf");
 const { rejectUnsafeKeys } = require("./middlewares/security");
 app.use(ensureCsrfToken);
@@ -186,6 +193,8 @@ app.use("/jsa", require("./routes/jsaRoutes"));
 app.use("/training", require("./routes/trainingRoutes"));
 app.use("/emergency-protocols", require("./routes/emergencyProtocolRoutes"));
 app.use("/environmental-assessments", require("./routes/environmentalAssessmentRoutes"));
+app.use("/governance-documents", require("./routes/governanceRoutes"));
+app.use("/transport-checklists", require("./routes/transportChecklistRoutes"));
 app.use("/alerts", require("./routes/alertRoutes"));
 
 require("./utils/safetyAutomation");

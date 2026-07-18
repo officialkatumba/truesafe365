@@ -1,0 +1,83 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="container py-4">
+  <div class="p-4 mb-4 rounded-3" style="background: linear-gradient(135deg, #1e3c5c, #2f5597);">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+      <div>
+        <h2 class="text-white fw-bold mb-1"><%= doc.title %></h2>
+        <p class="text-white-50 mb-0">
+          <%= doc.workArea?.name %> |
+          <%= doc.docType === 'committee_formation' ? 'Section 9' : 'Section 14' %>,
+          Occupational Health and Safety Act No. 16 of 2025
+        </p>
+      </div>
+      <a href="/governance-documents/<%= doc._id %>/download-word" class="btn btn-light fw-bold">
+        <i class="fas fa-file-word me-2"></i>Download Editable Word Document
+      </a>
+    </div>
+  </div>
+
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+      <% if (doc.docType === 'committee_formation') { %>
+        <h5 class="fw-bold mb-3"><i class="fas fa-users me-2 text-primary"></i>Committee Details</h5>
+        <p><strong>Date Established:</strong> <%= doc.committee?.establishedDate ? new Date(doc.committee.establishedDate).toLocaleDateString() : 'Not set' %></p>
+        <p><strong>Meeting Frequency:</strong> <%= doc.committee?.meetingFrequency %></p>
+        <p><strong>Health and Safety Representative:</strong> <%= doc.committee?.healthAndSafetyRepresentative || 'Not yet named' %></p>
+
+        <% if (doc.committee?.members?.length) { %>
+          <table class="table table-sm">
+            <thead><tr><th>Name</th><th>Role</th><th>Representing</th></tr></thead>
+            <tbody>
+              <% doc.committee.members.forEach(m => { %>
+                <tr><td><%= m.name %></td><td><%= m.role %></td><td><%= m.representing %></td></tr>
+              <% }) %>
+            </tbody>
+          </table>
+        <% } %>
+
+        <% if (doc.generatedContent?.responsibilities?.length) { %>
+          <h6 class="fw-bold mt-4">Committee Functions</h6>
+          <ul>
+            <% doc.generatedContent.responsibilities.forEach(item => { %><li><%= item %></li><% }) %>
+          </ul>
+        <% } %>
+        <% if (doc.generatedContent?.procedures?.length) { %>
+          <h6 class="fw-bold mt-4">Formation Procedure</h6>
+          <ul>
+            <% doc.generatedContent.procedures.forEach(item => { %><li><%= item %></li><% }) %>
+          </ul>
+        <% } %>
+      <% } else { %>
+        <h5 class="fw-bold mb-3"><i class="fas fa-file-signature me-2 text-primary"></i>Policy Summary</h5>
+        <p><strong>Signatory:</strong> <%= doc.policy?.ceoName || 'Not set' %> (<%= doc.policy?.ceoTitle %>)</p>
+        <p><strong>Effective Date:</strong> <%= doc.policy?.effectiveDate ? new Date(doc.policy.effectiveDate).toLocaleDateString() : 'Not set' %></p>
+
+        <% if (doc.generatedContent?.introduction) { %>
+          <h6 class="fw-bold mt-4">Policy Statement</h6>
+          <p><%= doc.generatedContent.introduction %></p>
+        <% } %>
+        <% if (doc.generatedContent?.commitments?.length) { %>
+          <h6 class="fw-bold mt-4">Commitments</h6>
+          <ul><% doc.generatedContent.commitments.forEach(item => { %><li><%= item %></li><% }) %></ul>
+        <% } %>
+        <% if (doc.generatedContent?.responsibilities?.length) { %>
+          <h6 class="fw-bold mt-4">Responsibilities</h6>
+          <ul><% doc.generatedContent.responsibilities.forEach(item => { %><li><%= item %></li><% }) %></ul>
+        <% } %>
+      <% } %>
+
+      <div class="alert alert-secondary mt-4 mb-0">
+        <i class="fas fa-info-circle me-2"></i>
+        This is a draft starting point. Review, personalize, and have it signed before filing it as your official record.
+      </div>
+    </div>
+  </div>
+
+  <a href="/work-areas/<%= doc.workArea?._id %>" class="btn btn-outline-secondary">
+    <i class="fas fa-arrow-left me-2"></i>Back to Work Area
+  </a>
+</div>
+
+<%- include('../partials/footer') %>

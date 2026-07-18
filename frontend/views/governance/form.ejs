@@ -1,0 +1,111 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="container py-4">
+  <div class="card shadow-lg border-0" style="border-radius: 20px;">
+    <div class="card-header" style="background: linear-gradient(135deg, #1e3c5c, #2f5597); color: white; border-radius: 20px 20px 0 0;">
+      <h4 class="mb-0">
+        <i class="fas fa-balance-scale me-2"></i>
+        <%= docType === 'committee_formation' ? 'Health and Safety Committee Formation' : 'Health and Safety Policy' %>
+      </h4>
+      <p class="mb-0 small opacity-75">Work Area: <%= workArea.name %></p>
+    </div>
+    <div class="card-body p-4">
+      <div class="alert alert-info mb-4">
+        <i class="fas fa-robot me-2"></i>
+        <strong>AI-Assisted Draft</strong><br>
+        <% if (docType === 'committee_formation') { %>
+          Under Section 9 of the Occupational Health and Safety Act No. 16 of 2025, workplaces must establish a Health and Safety Committee within 30 days. Fill in what you know now; the AI will draft the functions and formation procedure sections.
+        <% } else { %>
+          Under Section 14 of the Occupational Health and Safety Act No. 16 of 2025, every workplace needs a CEO-signed Health and Safety Policy. The AI will draft the policy statement, commitments, and responsibilities based on your input.
+        <% } %>
+      </div>
+
+      <% if (docType === 'committee_formation') { %>
+        <form method="POST" action="/governance-documents/generate/committee/<%= workArea._id %>" data-autosave="governance-committee">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">Date Established</label>
+              <input type="date" name="establishedDate" class="form-control">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">Meeting Frequency</label>
+              <select name="meetingFrequency" class="form-select">
+                <option value="Monthly" selected>Monthly</option>
+                <option value="Quarterly">Quarterly</option>
+                <option value="Bi-monthly">Bi-monthly</option>
+              </select>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">Health and Safety Representative</label>
+            <input type="text" name="healthAndSafetyRepresentative" class="form-control" placeholder="Elected by employee committee members">
+          </div>
+
+          <label class="form-label fw-bold">Committee Members</label>
+          <div id="memberRows">
+            <% for (let i = 0; i < 4; i++) { %>
+              <div class="row mb-2">
+                <div class="col-md-5">
+                  <input type="text" name="memberName" class="form-control" placeholder="Full name">
+                </div>
+                <div class="col-md-4">
+                  <input type="text" name="memberRole" class="form-control" placeholder="Role / department">
+                </div>
+                <div class="col-md-3">
+                  <select name="memberRepresenting" class="form-select">
+                    <option value="employee">Employee rep</option>
+                    <option value="employer">Employer rep</option>
+                  </select>
+                </div>
+              </div>
+            <% } %>
+          </div>
+
+          <div class="d-flex justify-content-between gap-3 mt-4">
+            <a href="/work-areas/<%= workArea._id %>" class="btn btn-outline-secondary px-4">
+              <i class="fas fa-times me-2"></i>Cancel
+            </a>
+            <button type="submit" class="btn btn-primary px-5">
+              <i class="fas fa-magic me-2"></i>Generate Document
+            </button>
+          </div>
+        </form>
+      <% } else { %>
+        <form method="POST" action="/governance-documents/generate/policy/<%= workArea._id %>" data-autosave="governance-policy">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">CEO / Signatory Name <span class="text-danger">*</span></label>
+              <input type="text" name="ceoName" class="form-control" required placeholder="e.g., John Mwansa">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">Title</label>
+              <input type="text" name="ceoTitle" class="form-control" value="Chief Executive Officer">
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">Effective Date</label>
+              <input type="date" name="effectiveDate" class="form-control">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">Next Review Date</label>
+              <input type="date" name="reviewDate" class="form-control">
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between gap-3 mt-4">
+            <a href="/work-areas/<%= workArea._id %>" class="btn btn-outline-secondary px-4">
+              <i class="fas fa-times me-2"></i>Cancel
+            </a>
+            <button type="submit" class="btn btn-primary px-5">
+              <i class="fas fa-magic me-2"></i>Generate Policy
+            </button>
+          </div>
+        </form>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

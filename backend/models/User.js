@@ -33,6 +33,11 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    role: {
+      type: String,
+      enum: ["safety_officer", "admin"],
+      default: "safety_officer",
+    },
     resetPasswordToken: String,
     resetPasswordExpires: Date,
   },
@@ -42,10 +47,6 @@ const userSchema = new mongoose.Schema(
     toObject: { virtuals: true },
   },
 );
-
-userSchema.virtual("role").get(function () {
-  return "safety_officer";
-});
 
 userSchema.virtual("safetyOfficer").get(function () {
   return this._id;
@@ -59,7 +60,11 @@ userSchema.plugin(passportLocalMongoose, {
 });
 
 userSchema.methods.isSafetyOfficer = function () {
-  return true;
+  return this.role === "safety_officer";
+};
+
+userSchema.methods.isAdmin = function () {
+  return this.role === "admin";
 };
 
 module.exports = mongoose.model("User", userSchema);

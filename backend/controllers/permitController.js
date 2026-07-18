@@ -536,6 +536,10 @@ const SafetyObservation = require("../models/SafetyObservation");
 const { OpenAI } = require("openai");
 const { AI_MODEL, AI_MAX_TOKENS } = require("../utils/aiConfig");
 const { trackAiCompletion } = require("../utils/aiReview");
+const {
+  professionalSafetyGuidance,
+  miningContextGuidance,
+} = require("../utils/aiPromptGuidance");
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -774,7 +778,10 @@ exports.generatePermit = async (req, res) => {
       workArea.identifiedHazards?.filter((h) => h.status === "active") || [];
 
     // Build AI prompt with qualification requirements based on permit type
-    const prompt = `You are a senior safety officer creating a ${permitType.replace("_", " ").toUpperCase()} PERMIT.
+    const prompt = `You are a senior safety officer creating a ${permitType.replace("_", " ").toUpperCase()} PERMIT for a Zambian workplace.
+
+${professionalSafetyGuidance}
+${miningContextGuidance}
 
 ## WORK AREA CONTEXT:
 - Work Area: ${workArea.name}
@@ -891,8 +898,8 @@ ${
 
 ${
   permitType === "blasting"
-    ? `BLASTING REQUIREMENTS:
-- Valid Blaster's License (state/federal) - MUST be present on site at all times
+    ? `BLASTING REQUIREMENTS (also subject to the Mines and Minerals Development Act and Mines Safety Department licensing where this work area is a mine, quarry, or mineral-processing site):
+- Valid Blaster's Certificate/License issued under Zambian mines safety regulations - MUST be present on site at all times
 - Explosives Handler Certification
 - Blasting Safety Training (refresher within 3 years)
 - Site-specific blast plan approval

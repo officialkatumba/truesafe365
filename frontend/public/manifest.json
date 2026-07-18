@@ -1,0 +1,19 @@
+{
+  "name": "TrueSafe365",
+  "short_name": "TrueSafe365",
+  "description": "AI-powered health and safety companion for Zambian Safety Officers",
+  "start_url": "/dashboard/officer",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fff7f8",
+  "theme_color": "#be123c",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/images/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

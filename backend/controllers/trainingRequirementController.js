@@ -10,6 +10,10 @@ const {
 } = require("../utils/trainingWordGenerator");
 const { AI_MODEL, AI_MAX_TOKENS } = require("../utils/aiConfig");
 const { approveReviewedDocument, ensureReviewable, isApproved, recordRevision, regenerateStructuredOutput, trackAiCompletion } = require("../utils/aiReview");
+const {
+  professionalSafetyGuidance,
+  miningContextGuidance,
+} = require("../utils/aiPromptGuidance");
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -135,7 +139,10 @@ exports.generateTrainingRequirement = async (req, res) => {
         .filter(Boolean)
         .join(", ") || "Various";
 
-    const prompt = `You are a senior safety training specialist. Generate AI-recommended training requirements for a work area.
+    const prompt = `You are a senior safety training specialist for a Zambian workplace. Generate AI-recommended training requirements for a work area.
+
+${professionalSafetyGuidance}
+${miningContextGuidance}
 
 WORK AREA CONTEXT:
 - Name: ${workArea.name}

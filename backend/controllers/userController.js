@@ -67,6 +67,11 @@ exports.changePassword = async (req, res) => {
       return res.redirect("/api/users/change-password");
     }
 
+    if (!newPassword || newPassword.length < 10) {
+      req.flash("error", "Password must be at least 10 characters long");
+      return res.redirect("/api/users/change-password");
+    }
+
     const user = await User.findById(req.user._id);
     if (!user) {
       req.flash("error", "User not found");
@@ -172,6 +177,11 @@ exports.resetPassword = async (req, res) => {
 
   if (newPassword !== confirmPassword) {
     req.flash("error", "Passwords do not match");
+    return res.redirect(`/api/users/reset-password/${token}`);
+  }
+
+  if (!newPassword || newPassword.length < 10) {
+    req.flash("error", "Password must be at least 10 characters long");
     return res.redirect(`/api/users/reset-password/${token}`);
   }
 

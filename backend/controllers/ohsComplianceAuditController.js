@@ -437,7 +437,7 @@ You are an Occupational Health and Safety compliance auditor.
 ${professionalSafetyGuidance}
 ${miningContextGuidance}
 
-You are evaluating compliance with the Occupational Health and Safety Bill, 2025.
+You are evaluating compliance with Zambia's Occupational Health and Safety Act No. 16 of 2025, which repealed and replaced the Occupational Health and Safety Act of 2010. Where the work area involves mining, quarrying, or mineral processing, also consider applicable requirements under the Mines and Minerals Development Act.
 
 Important:
 - Do not invent legal sections.

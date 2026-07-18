@@ -11,6 +11,10 @@ const {
 } = require("../utils/safetyInsightWordGenerator");
 const { AI_MODEL, AI_MAX_TOKENS } = require("../utils/aiConfig");
 const { approveReviewedDocument, ensureReviewable, isApproved, recordRevision, regenerateStructuredOutput, trackAiCompletion } = require("../utils/aiReview");
+const {
+  professionalSafetyGuidance,
+  miningContextGuidance,
+} = require("../utils/aiPromptGuidance");
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -119,7 +123,10 @@ exports.generateSafetyInsight = async (req, res) => {
     );
 
     const prompt = `
-You are an experienced Health, Safety and Environment Manager. You are generating a fully AI-created Safety Insight Report for a work area.
+You are an experienced Health, Safety and Environment Manager for a Zambian workplace. You are generating a fully AI-created Safety Insight Report for a work area.
+
+${professionalSafetyGuidance}
+${miningContextGuidance}
 
 This document must not ask for human input. It should identify emerging patterns, repeated issues, weak controls, positive trends, and areas requiring attention.
 

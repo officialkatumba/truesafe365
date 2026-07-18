@@ -13,6 +13,10 @@ const {
   generateEmergencyProtocolWordBuffer,
 } = require("../utils/emergencyProtocolWordGenerator");
 const { AI_MODEL, AI_MAX_TOKENS } = require("../utils/aiConfig");
+const {
+  professionalSafetyGuidance,
+  miningContextGuidance,
+} = require("../utils/aiPromptGuidance");
 const { approveReviewedDocument, ensureReviewable, isApproved, recordRevision, regenerateStructuredOutput, trackAiCompletion } = require("../utils/aiReview");
 
 const openai = new OpenAI({
@@ -118,7 +122,10 @@ exports.generateEmergencyProtocol = async (req, res) => {
     );
 
     const prompt = `
-You are a senior Emergency Preparedness and Health & Safety Manager.
+You are a senior Emergency Preparedness and Health & Safety Manager for a Zambian workplace.
+
+${professionalSafetyGuidance}
+${miningContextGuidance}
 
 Generate a fully AI-created Emergency Procedure and Preparedness Protocol for the work area below. Do not ask for human input. Use the available safety data to identify likely emergency scenarios and produce practical emergency response procedures.
 

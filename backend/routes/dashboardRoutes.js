@@ -6,6 +6,7 @@ const Incident = require("../models/Incident");
 const RiskAssessment = require("../models/RiskAssessment");
 const SafetyTalk = require("../models/SafetyTalk");
 const PPEChecklist = require("../models/PPEChecklist");
+const { computeTopRiskAreas } = require("../utils/siteRiskProfiler");
 
 router.get(["/", "/officer"], ensureAuthenticated, async (req, res) => {
   try {
@@ -22,12 +23,15 @@ router.get(["/", "/officer"], ensureAuthenticated, async (req, res) => {
       ppeChecks: await PPEChecklist.countDocuments({ workArea: { $in: workAreaIds } }),
     };
 
+    const topRiskAreas = await computeTopRiskAreas(workAreas);
+
     res.render("safety-officer/dashboard", {
       user: req.user,
       officer: req.user,
       workAreas,
       stats,
       recentActivities: [],
+      topRiskAreas,
     });
   } catch (error) {
     console.error("Error loading officer dashboard:", error);

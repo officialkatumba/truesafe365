@@ -14,6 +14,8 @@ const EmergencyProtocol = require("../models/EmergencyProtocol");
 const SafetyAuditScorecard = require("../models/SafetyAuditScorecard");
 const OHSComplianceAudit = require("../models/OHSComplianceAudit");
 const EnvironmentalAssessment = require("../models/EnvironmentalAssessment");
+const GovernanceDocument = require("../models/GovernanceDocument");
+const TransportChecklist = require("../models/TransportChecklist");
 
 const shiftTimes = {
   morning: ["06:00", "14:00"],
@@ -552,7 +554,7 @@ exports.getWorkArea = async (req, res) => {
       await workArea.generateIncidentShareCode();
     }
 
-    const [recentIncidents, activeAssessments, riskAssessments, safetyTalks, todaySafetyTalk, permits, jsa, ppeChecklists, safetyObservations, trainingRequirements, safetyInsights, emergencyProtocols, environmentalAssessments, safetyAudits, ohsComplianceAudits] =
+    const [recentIncidents, activeAssessments, riskAssessments, safetyTalks, todaySafetyTalk, permits, jsa, ppeChecklists, safetyObservations, trainingRequirements, safetyInsights, emergencyProtocols, environmentalAssessments, safetyAudits, ohsComplianceAudits, governanceDocuments, transportChecklists] =
       await Promise.all([
         Incident.find({ workArea: workArea._id }).sort({ createdAt: -1 }).limit(5),
         RiskAssessment.find({ workArea: workArea._id, status: "active" }).limit(5),
@@ -572,6 +574,8 @@ exports.getWorkArea = async (req, res) => {
         EnvironmentalAssessment.find({ workArea: workArea._id }).sort({ createdAt: -1 }).limit(10),
         SafetyAuditScorecard.find({ workArea: workArea._id }).sort({ createdAt: -1 }).limit(10),
         OHSComplianceAudit.find({ workArea: workArea._id }).sort({ createdAt: -1 }).limit(10),
+        GovernanceDocument.find({ workArea: workArea._id }).sort({ createdAt: -1 }).limit(10),
+        TransportChecklist.find({ workArea: workArea._id }).sort({ createdAt: -1 }).limit(10),
       ]);
 
     res.render("work-areas/view", {
@@ -592,6 +596,8 @@ exports.getWorkArea = async (req, res) => {
       environmentalAssessments,
       safetyAudits,
       ohsComplianceAudits,
+      governanceDocuments,
+      transportChecklists,
     });
   } catch (error) {
     console.error("Error viewing work area:", error);
